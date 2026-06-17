@@ -222,12 +222,6 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview }) {
         )}
       </div>
 
-      <motion.button whileTap={{ scale: 0.97 }} onClick={onPreview}
-        style={{ background: COLORS.accentSub, border: `0.5px solid ${COLORS.accent}55`, borderRadius: 14, padding: "11px 0", color: COLORS.accent, cursor: "pointer", fontSize: 13, fontWeight: 600, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <svg width={15} height={15} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-        Ver como cliente
-      </motion.button>
-
       <div style={{ display: "flex", background: COLORS.surface, borderRadius: 14, padding: 3, gap: 3 }}>
         {["info", "progreso", "pagos", "rutinas"].map(t => (
           <button key={t} onClick={() => { setTab(t); if (t === "rutinas") cargarRutinas() }}
