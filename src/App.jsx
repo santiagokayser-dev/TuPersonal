@@ -344,9 +344,25 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado }) {
   const copiarLink = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     const link = `${window.location.origin}?invite=${user.id}`
-    await navigator.clipboard.writeText(link)
-    setLinkCopiado(true)
-    setTimeout(() => setLinkCopiado(false), 2500)
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link)
+      } else {
+        const el = document.createElement("textarea")
+        el.value = link
+        el.style.cssText = "position:fixed;opacity:0"
+        document.body.appendChild(el)
+        el.focus()
+        el.select()
+        document.execCommand("copy")
+        document.body.removeChild(el)
+      }
+      setLinkCopiado(true)
+      setTimeout(() => setLinkCopiado(false), 2500)
+    } catch {
+      setLinkCopiado("error")
+      setTimeout(() => setLinkCopiado(false), 2500)
+    }
   }
 
   return (
@@ -355,8 +371,8 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado }) {
         <div style={T.h1}>Clientes</div>
         <div style={{ display: "flex", gap: 8 }}>
           <motion.button whileTap={{ scale: 0.95 }} onClick={copiarLink}
-            style={{ background: linkCopiado ? COLORS.green + "22" : COLORS.surface, border: `0.5px solid ${linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 12, padding: "8px 12px", color: linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
-            {linkCopiado ? "¡Copiado!" : "Link"}
+            style={{ background: linkCopiado === "error" ? COLORS.red + "22" : linkCopiado ? COLORS.green + "22" : COLORS.surface, border: `0.5px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 12, padding: "8px 12px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+            {linkCopiado === "error" ? "Error al copiar" : linkCopiado ? "¡Copiado!" : "Copiar link"}
           </motion.button>
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
             style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
