@@ -9,8 +9,8 @@ const COLORS = {
 }
 
 const S = {
-  container: { background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, sans-serif" },
-  phone: { width: 375, minHeight: 720, background: COLORS.bg, borderRadius: 36, border: `2px solid ${COLORS.border}`, overflow: "hidden", display: "flex", flexDirection: "column", justifyContent: "center", padding: 32 },
+  container: { background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "flex-start", fontFamily: "-apple-system, sans-serif", padding: "0 16px" },
+  phone: { width: "100%", maxWidth: 420, background: COLORS.bg, display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 16px 32px" },
   input: { background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 16px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", marginBottom: 12, boxSizing: "border-box" },
   btn: (bg) => ({ background: bg || COLORS.accent, border: "none", borderRadius: 12, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", marginBottom: 12 }),
   btnGoogle: { background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "13px 0", color: COLORS.text, fontSize: 14, fontWeight: 500, cursor: "pointer", width: "100%", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 },

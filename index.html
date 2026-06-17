@@ -22,8 +22,14 @@
 
     <link rel="icon" type="image/png" href="/icon-192.png" />
   </head>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; width: 100%; overflow: hidden; }
+    body { background: #080808; }
+    input, button, select, textarea { font-family: inherit; }
+  </style>
   <body>
-    <div id="root"></div>
+    <div id="root" style="height:100%;"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

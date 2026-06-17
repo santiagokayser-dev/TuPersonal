@@ -676,10 +676,8 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
   )
 
   if (!previewMode && (!perfil || !perfil.nombre)) return (
-    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, sans-serif" }}>
-      <div style={{ width: 375, height: 720, background: COLORS.bg, borderRadius: 40, border: `1px solid ${COLORS.border}`, overflow: "hidden", overflowY: "auto", scrollbarWidth: "none" }}>
-        <Onboarding user={user} onComplete={(data) => setPerfil(data)} />
-      </div>
+    <div style={{ background: COLORS.bg, minHeight: "100vh", overflowY: "auto", scrollbarWidth: "none", fontFamily: "-apple-system, sans-serif" }}>
+      <Onboarding user={user} onComplete={(data) => setPerfil(data)} />
     </div>
   )
 
@@ -699,28 +697,34 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     )
   }
 
-  return (
-    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
-      <div style={{ width: 375, height: 720, background: COLORS.bg, borderRadius: 40, border: `1px solid ${previewMode ? COLORS.accent : COLORS.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {previewMode && (
-          <div style={{ background: COLORS.accent + "22", borderBottom: `0.5px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>VISTA PREVIA — Como lo ve el cliente</div>
-            <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>✕</button>
-          </div>
-        )}
-        <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
-          <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
+  const inner = (
+    <div style={{ background: COLORS.bg, height: "100%", display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
+      {previewMode && (
+        <div style={{ background: COLORS.accent + "22", borderBottom: `0.5px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+          <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>Vista previa — como lo ve el cliente</div>
+          <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>✕</button>
         </div>
-        <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", padding: "10px 0 22px" }}>
-          {navItems.map(item => (
-            <button key={item.id} onClick={() => setActivePage(item.id)}
-              style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>
-              <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
-              <span style={{ fontSize: 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
-            </button>
-          ))}
-        </nav>
+      )}
+      <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
+        <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
       </div>
+      <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", padding: "10px 0 22px", flexShrink: 0 }}>
+        {navItems.map(item => (
+          <button key={item.id} onClick={() => setActivePage(item.id)}
+            style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>
+            <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
+            <span style={{ fontSize: 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
+          </button>
+        ))}
+      </nav>
+    </div>
+  )
+
+  if (previewMode) return inner
+
+  return (
+    <div style={{ background: COLORS.bg, minHeight: "100vh", height: "100dvh", display: "flex", flexDirection: "column" }}>
+      {inner}
     </div>
   )
 }

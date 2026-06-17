@@ -35,8 +35,19 @@ const Icon = ({ name, size = 20, color = "#888888" }) => {
     arrowLeft: <path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round"/>,
     check: <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>,
     trendingUp: <><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></>,
+    logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></>,
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
+}
+
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const handle = () => setMobile(window.innerWidth < 768)
+    window.addEventListener("resize", handle)
+    return () => window.removeEventListener("resize", handle)
+  }, [])
+  return mobile
 }
 
 function normCliente(c) {
@@ -608,6 +619,7 @@ export default function App({ user, onLogout }) {
   const [clientes, setClientes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [previewCliente, setPreviewCliente] = useState(null)
+  const isMobile = useIsMobile()
 
   const nombreTrainer = user?.user_metadata?.nombre || user?.email?.split("@")[0] || "Entrenador"
 
@@ -677,25 +689,63 @@ export default function App({ user, onLogout }) {
     )
   }
 
+  const fontFamily = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
+
   return (
-    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
-      <div style={{ width: 375, height: 720, background: COLORS.bg, borderRadius: 40, border: `1px solid ${COLORS.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 0", flexShrink: 0 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text, letterSpacing: -0.3 }}>
-            TuPersonal<span style={{ color: COLORS.accent }}>.</span>
+    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", fontFamily }}>
+      {/* Sidebar — solo desktop */}
+      {!isMobile && (
+        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100vh", position: "sticky", top: 0, flexShrink: 0 }}>
+          <div style={{ padding: "28px 20px 20px" }}>
+            <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, letterSpacing: -0.3 }}>
+              TuPersonal<span style={{ color: COLORS.accent }}>.</span>
+            </div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>{nombreTrainer}</div>
           </div>
-          <button onClick={onLogout}
-            style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
-            Salir
-          </button>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
+            {navItems.map(item => {
+              const activo = activePage === item.id && !clienteSeleccionado
+              return (
+                <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null) }}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: activo ? `${COLORS.accent}18` : "none", border: "none", borderRadius: 10, color: activo ? COLORS.accent : COLORS.textSub, fontSize: 14, fontWeight: activo ? 600 : 400, cursor: "pointer", textAlign: "left", fontFamily }}>
+                  <Icon name={item.icon} size={18} color={activo ? COLORS.accent : COLORS.textMuted} />
+                  {item.label}
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ padding: "16px 20px" }}>
+            <button onClick={onLogout}
+              style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily, padding: 0 }}>
+              <Icon name="logout" size={16} color={COLORS.textMuted} />
+              Cerrar sesión
+            </button>
+          </div>
         </div>
+      )}
+
+      {/* Contenido principal */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+        {/* Header mobile */}
+        {isMobile && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 0", flexShrink: 0 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text, letterSpacing: -0.3 }}>
+              TuPersonal<span style={{ color: COLORS.accent }}>.</span>
+            </div>
+            <button onClick={onLogout}
+              style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+              Salir
+            </button>
+          </div>
+        )}
 
         <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
           <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
         </div>
-        {!clienteSeleccionado && (
-          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", padding: "10px 0 22px" }}>
+
+        {/* Nav inferior — solo mobile */}
+        {isMobile && !clienteSeleccionado && (
+          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", padding: "10px 0 22px", flexShrink: 0 }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActivePage(item.id)}
                 style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>
@@ -713,7 +763,8 @@ export default function App({ user, onLogout }) {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.85)", display: "flex", justifyContent: "center", alignItems: "center", zIndex: 100, backdropFilter: "blur(6px)" }}
             onClick={e => { if (e.target === e.currentTarget) setPreviewCliente(null) }}>
-            <motion.div initial={{ scale: 0.92, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 20 }} transition={{ duration: 0.22, ease: "easeOut" }}>
+            <motion.div initial={{ scale: 0.92, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 20 }} transition={{ duration: 0.22, ease: "easeOut" }}
+              style={{ width: 375, height: 680, borderRadius: 32, overflow: "hidden", border: `1px solid ${COLORS.accent}66` }}>
               <ClientePanel
                 user={{ id: previewCliente.user_id || previewCliente.id, email: previewCliente.email || "", user_metadata: {} }}
                 initialPerfil={{ ...previewCliente, trainer_id: previewCliente.trainer_id || user?.id }}
