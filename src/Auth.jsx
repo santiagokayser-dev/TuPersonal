@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 
@@ -16,7 +16,10 @@ const S = {
 }
 
 export default function Auth() {
-  const [modo, setModo] = useState("login")
+  const params = new URLSearchParams(window.location.search)
+  const inviteTrainerId = params.get("invite")
+
+  const [modo, setModo] = useState(inviteTrainerId ? "registro" : "login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [nombre, setNombre] = useState("")
@@ -34,21 +37,40 @@ export default function Auth() {
   }
 
   const handleRegistro = async () => {
-    if (!email || !password || !nombre) return setError("Completá todos los campos")
+    if (!email || !password) return setError("Completá email y contraseña")
     setCargando(true)
     setError("")
-    const { error } = await supabase.auth.signUp({ 
-      email, 
+
+    const metadata = inviteTrainerId
+      ? { nombre, rol: "cliente", trainer_id: inviteTrainerId }
+      : { nombre, rol: "trainer" }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
       password,
-      options: { data: { nombre } }
+      options: { data: metadata }
     })
-    if (error) setError(error.message)
-    else setMensaje("Revisá tu email para confirmar tu cuenta")
+
+    if (error) {
+      setError(error.message)
+    } else if (inviteTrainerId && data?.user) {
+      // Link client to trainer's clientes table
+      await supabase.from("clientes")
+        .update({ user_id: data.user.id })
+        .eq("email", email)
+        .eq("trainer_id", inviteTrainerId)
+      setMensaje("¡Cuenta creada! Revisá tu email para confirmar.")
+    } else {
+      setMensaje("Revisá tu email para confirmar tu cuenta")
+    }
     setCargando(false)
   }
 
   const handleGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: "google" })
+    const redirectTo = inviteTrainerId
+      ? `${window.location.origin}?invite=${inviteTrainerId}`
+      : window.location.origin
+    await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } })
   }
 
   return (
@@ -56,9 +78,15 @@ export default function Auth() {
       <div style={S.phone}>
         <div style={S.logo}>TuPersonal<span style={{ color: "#6366f1" }}>.</span></div>
 
+        {inviteTrainerId && (
+          <div style={{ background: "#312e8133", border: "0.5px solid #6366f133", borderRadius: 12, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#a5b4fc" }}>
+            Fuiste invitado por tu entrenador. Creá tu cuenta para continuar.
+          </div>
+        )}
+
         <AnimatePresence mode="wait">
           <motion.div key={modo} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.2 }}>
-            
+
             {modo === "login" ? (
               <>
                 <div style={S.title}>Bienvenido</div>
@@ -84,23 +112,27 @@ export default function Auth() {
               </>
             ) : (
               <>
-                <div style={S.title}>Crear cuenta</div>
-                <div style={S.sub}>Empezá a gestionar tus clientes</div>
+                <div style={S.title}>{inviteTrainerId ? "Crear tu cuenta" : "Crear cuenta"}</div>
+                <div style={S.sub}>{inviteTrainerId ? "Tus datos se cargan después del login" : "Empezá a gestionar tus clientes"}</div>
 
                 {error && <div style={S.error}>{error}</div>}
                 {mensaje && <div style={{ ...S.error, color: "#4ade80" }}>{mensaje}</div>}
 
-                <input style={S.input} type="text" placeholder="Tu nombre" value={nombre} onChange={e => setNombre(e.target.value)} />
+                {!inviteTrainerId && (
+                  <input style={S.input} type="text" placeholder="Tu nombre" value={nombre} onChange={e => setNombre(e.target.value)} />
+                )}
                 <input style={S.input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
-                <input style={S.input} type="password" placeholder="Contraseña" value={password} onChange={e => setPassword(e.target.value)} />
+                <input style={S.input} type="password" placeholder="Contraseña (mínimo 6 caracteres)" value={password} onChange={e => setPassword(e.target.value)} />
 
                 <motion.button whileTap={{ scale: 0.97 }} onClick={handleRegistro} style={S.btn()} disabled={cargando}>
                   {cargando ? "Creando cuenta..." : "Crear cuenta"}
                 </motion.button>
 
-                <button onClick={handleGoogle} style={S.btnGoogle}>
-                  <span style={{ fontSize: 16 }}>G</span> Continuar con Google
-                </button>
+                {!inviteTrainerId && (
+                  <button onClick={handleGoogle} style={S.btnGoogle}>
+                    <span style={{ fontSize: 16 }}>G</span> Continuar con Google
+                  </button>
+                )}
 
                 <div style={S.link} onClick={() => { setModo("login"); setError("") }}>
                   ¿Ya tenés cuenta? Iniciá sesión

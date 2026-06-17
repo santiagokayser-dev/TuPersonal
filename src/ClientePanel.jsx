@@ -1,20 +1,11 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
+import { supabase } from "./supabase"
 
 const COLORS = {
-  bg: "#080808",
-  surface: "#111111",
-  surface2: "#1a1a1a",
-  border: "#222222",
-  border2: "#2a2a2a",
-  text: "#ffffff",
-  textSub: "#888888",
-  textMuted: "#444444",
-  accent: "#6366f1",
-  accentSub: "#312e81",
-  green: "#22c55e",
-  red: "#ef4444",
-  yellow: "#f59e0b",
+  bg: "#080808", surface: "#111111", surface2: "#1a1a1a", border: "#222222", border2: "#2a2a2a",
+  text: "#ffffff", textSub: "#888888", textMuted: "#444444", accent: "#6366f1", accentSub: "#312e81",
+  green: "#22c55e", red: "#ef4444", yellow: "#f59e0b",
 }
 
 const T = {
@@ -26,6 +17,8 @@ const T = {
   num: { fontSize: 32, fontWeight: 700, color: COLORS.text, letterSpacing: -1 },
 }
 
+const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+
 const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
   const icons = {
     home: <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" strokeLinecap="round" strokeLinejoin="round"/>,
@@ -36,14 +29,11 @@ const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
     chevronRight: <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>,
     logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></>,
     check: <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>,
-    zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>,
-    fire: <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 14c-2.2 0-4-1.8-4-4 0-1.5.8-2.8 2-3.5V10c0 1.1.9 2 2 2s2-.9 2-2v-.5c1.2.7 2 2 2 3.5 0 2.2-1.8 4-4 4z" strokeLinecap="round" strokeLinejoin="round"/>,
+    plus: <><path d="M12 5v14M5 12h14"/></>,
+    edit: <><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
+    trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></>,
   }
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">
-      {icons[name]}
-    </svg>
-  )
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
 }
 
 const navItems = [
@@ -53,64 +43,146 @@ const navItems = [
   { id: "pagos", icon: "wallet", label: "Pagos" },
 ]
 
-const rutina = {
-  nombre: "Fuerza e hipertrofia",
-  dias: [
-    {
-      dia: "Día A — Empuje",
-      ejercicios: [
-        { nombre: "Press de banca", series: 4, reps: "8-10", peso: "70kg", musculo: "Pecho" },
-        { nombre: "Press militar", series: 3, reps: "10-12", peso: "45kg", musculo: "Hombros" },
-        { nombre: "Fondos en paralelas", series: 3, reps: "12", peso: "Peso corporal", musculo: "Tríceps" },
-      ]
-    },
-    {
-      dia: "Día B — Jalón",
-      ejercicios: [
-        { nombre: "Dominadas", series: 4, reps: "6-8", peso: "Peso corporal", musculo: "Espalda" },
-        { nombre: "Remo con barra", series: 3, reps: "8-10", peso: "60kg", musculo: "Espalda" },
-        { nombre: "Curl con barra", series: 3, reps: "10-12", peso: "30kg", musculo: "Bíceps" },
-      ]
-    },
-    {
-      dia: "Día C — Piernas",
-      ejercicios: [
-        { nombre: "Sentadilla con barra", series: 4, reps: "8-10", peso: "80kg", musculo: "Piernas" },
-        { nombre: "Prensa de piernas", series: 3, reps: "10-12", peso: "120kg", musculo: "Piernas" },
-        { nombre: "Curl femoral", series: 3, reps: "12-15", peso: "40kg", musculo: "Piernas" },
-      ]
-    },
-  ]
+function AvatarPicker({ preview, onChange }) {
+  const ini = "?"
+  return (
+    <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer" }}>
+      <div style={{ width: 88, height: 88, borderRadius: 28, background: COLORS.surface2, border: `2px dashed ${COLORS.border2}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0 }}>
+        {preview
+          ? <img src={preview} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          : <svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="1.5">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+        }
+        <div style={{ position: "absolute", bottom: 4, right: 4, width: 22, height: 22, borderRadius: 7, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+        </div>
+      </div>
+      <span style={{ fontSize: 12, color: COLORS.textMuted }}>Foto de perfil (opcional)</span>
+      <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) onChange(f) }} />
+    </label>
+  )
 }
 
-const progreso = [55, 60, 65, 68, 70, 72]
-const meses = ["E", "F", "M", "A", "M", "J"]
+function Onboarding({ user, onComplete }) {
+  const [datos, setDatos] = useState({ nombre: "", peso: "", altura: "", edad: "", objetivo: "" })
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
+  const [guardando, setGuardando] = useState(false)
+  const [error, setError] = useState("")
 
-function MiniBar({ data, labels }) {
-  const max = Math.max(...data)
+  const handleAvatarChange = (file) => {
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
+  }
+
+  const guardar = async () => {
+    if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
+    setGuardando(true)
+    setError("")
+
+    let avatar_url = null
+    if (avatarFile) {
+      const ext = avatarFile.name.split(".").pop()
+      const path = `${user.id}.${ext}`
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true })
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+        avatar_url = urlData.publicUrl
+      }
+    }
+
+    const { data: existente } = await supabase.from("clientes")
+      .select("id").eq("email", user.email).maybeSingle()
+
+    const campos = {
+      nombre: datos.nombre,
+      peso: Number(datos.peso) || null,
+      altura: Number(datos.altura) || null,
+      edad: Number(datos.edad) || null,
+      objetivo: datos.objetivo,
+      user_id: user.id,
+      ...(avatar_url ? { avatar_url } : {}),
+    }
+
+    let result
+    if (existente) {
+      const { data } = await supabase.from("clientes").update(campos).eq("id", existente.id).select().single()
+      result = data
+    } else {
+      const trainerId = user.user_metadata?.trainer_id
+      const { data } = await supabase.from("clientes").insert({ ...campos, email: user.email, trainer_id: trainerId }).select().single()
+      result = data
+    }
+
+    if (result) onComplete(result)
+    else setError("No se pudo guardar. Intentá de nuevo.")
+    setGuardando(false)
+  }
+
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 70 }}>
-      {data.map((h, i) => (
-        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, height: "100%", justifyContent: "flex-end" }}>
-          <motion.div
-            initial={{ height: 0 }} animate={{ height: `${(h / max) * 100}%` }}
-            transition={{ delay: i * 0.06, duration: 0.5, ease: "easeOut" }}
-            style={{ width: "100%", borderRadius: 3, background: i === data.length - 1 ? COLORS.accent : COLORS.surface2 }}
-          />
-          <div style={{ ...T.label, fontSize: 9, letterSpacing: 0 }}>{labels[i]}</div>
-        </div>
-      ))}
+    <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div>
+        <div style={{ ...T.label, marginBottom: 6 }}>Bienvenido</div>
+        <div style={T.h1}>Tu perfil</div>
+        <div style={{ ...T.body, marginTop: 8 }}>Completá tus datos para empezar. Tu entrenador los podrá ver.</div>
+      </div>
+
+      <AvatarPicker preview={avatarPreview} onChange={handleAvatarChange} />
+
+      {error && <div style={{ fontSize: 13, color: COLORS.red, background: COLORS.red + "11", borderRadius: 10, padding: "10px 14px" }}>{error}</div>}
+
+      <input placeholder="Tu nombre completo *" value={datos.nombre} onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <input placeholder="Peso (kg)" value={datos.peso} onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />
+        <input placeholder="Altura (cm)" value={datos.altura} onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />
+      </div>
+      <input placeholder="Edad" value={datos.edad} onChange={e => setDatos(p => ({ ...p, edad: e.target.value }))} style={inputStyle} type="number" />
+      <input placeholder="Objetivo (ej: bajar 5kg, ganar masa)" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
+
+      <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
+        style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
+        {guardando ? "Guardando..." : "Empezar →"}
+      </motion.button>
     </div>
   )
 }
 
-function Inicio({ onLogout }) {
+function Inicio({ perfil, onLogout, onActualizar }) {
+  const nombre = perfil?.nombre || "Atleta"
+  const ini = nombre.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+
+  const handleAvatarChange = async (file) => {
+    const ext = file.name.split(".").pop()
+    const path = `${perfil.user_id || perfil.id}.${ext}`
+    const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true })
+    if (!error) {
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+      const avatar_url = urlData.publicUrl
+      await supabase.from("clientes").update({ avatar_url }).eq("id", perfil.id)
+      onActualizar({ ...perfil, avatar_url })
+    }
+  }
+
   return (
     <>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div style={{ ...T.label, marginBottom: 6 }}>Tu entrenador: Nico Pérez</div>
-          <div style={T.h1}>Hola, Lucas</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <label style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 18, background: COLORS.accent + "22", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: COLORS.accent }}>
+              {perfil?.avatar_url
+                ? <img src={perfil.avatar_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : ini}
+            </div>
+            <div style={{ position: "absolute", bottom: -2, right: -2, width: 18, height: 18, borderRadius: 6, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarChange(f) }} />
+          </label>
+          <div>
+            <div style={{ ...T.label, marginBottom: 4 }}>Tu entrenador</div>
+            <div style={T.h1}>Hola, {nombre.split(" ")[0]}</div>
+          </div>
         </div>
         <button onClick={onLogout} style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: 8, cursor: "pointer", display: "flex" }}>
           <Icon name="logout" size={16} color={COLORS.textSub} />
@@ -119,37 +191,71 @@ function Inicio({ onLogout }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-          <div style={T.label}>Racha</div>
-          <div style={{ ...T.num, fontSize: 28, marginTop: 6 }}>12</div>
-          <div style={{ fontSize: 11, color: COLORS.green, marginTop: 2, fontWeight: 500 }}>días seguidos</div>
+          <div style={T.label}>Peso actual</div>
+          <div style={{ ...T.num, fontSize: 26, marginTop: 6 }}>{perfil?.peso ? `${perfil.peso}kg` : "—"}</div>
+          <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Actualizalo en Progreso</div>
         </div>
         <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-          <div style={T.label}>Sesiones</div>
-          <div style={{ ...T.num, fontSize: 28, marginTop: 6 }}>14</div>
-          <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Meta: 16</div>
+          <div style={T.label}>Objetivo</div>
+          <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text, marginTop: 8, lineHeight: 1.4 }}>{perfil?.objetivo || "Sin definir"}</div>
         </div>
       </div>
 
-      <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.accent}33` }}>
-        <div style={{ ...T.label, color: "#6366f1", marginBottom: 8 }}>Próxima sesión</div>
-        <div style={T.h2}>Mañana — 10:00hs</div>
-        <div style={{ ...T.body, color: "#818cf8", marginTop: 4 }}>Día A · Empuje · 60 min</div>
-      </div>
+      {perfil?.objetivo && (
+        <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.accent}33` }}>
+          <div style={{ ...T.label, color: "#6366f1", marginBottom: 6 }}>Tu meta</div>
+          <div style={T.h3}>{perfil.objetivo}</div>
+          <div style={{ ...T.body, color: "#818cf8", marginTop: 6, fontSize: 13 }}>Seguí avanzando — vas por buen camino.</div>
+        </div>
+      )}
 
       <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-        <div style={{ ...T.label, marginBottom: 10 }}>Mensaje de tu trainer</div>
-        <div style={{ ...T.body, lineHeight: 1.7 }}>
-          "Lucas, excelente semana. Esta semana subimos el peso en press de banca a 72.5kg. ¡Vamos por más!"
+        <div style={{ ...T.label, marginBottom: 8 }}>Tus datos</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+          {[
+            { l: "Peso", v: perfil?.peso ? `${perfil.peso}kg` : "—" },
+            { l: "Altura", v: perfil?.altura ? `${perfil.altura}cm` : "—" },
+            { l: "Edad", v: perfil?.edad ? `${perfil.edad}a` : "—" },
+          ].map((m, i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.text }}>{m.v}</div>
+              <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{m.l}</div>
+            </div>
+          ))}
         </div>
-        <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 10 }}>Nico · hace 2 horas</div>
       </div>
     </>
   )
 }
 
-function Rutina() {
+function Rutina({ perfil }) {
+  const [rutinas, setRutinas] = useState([])
+  const [cargando, setCargando] = useState(true)
   const [diaAbierto, setDiaAbierto] = useState(0)
   const [ejercicioActivo, setEjercicioActivo] = useState(null)
+
+  useEffect(() => {
+    if (!perfil?.id) { setCargando(false); return }
+    supabase.from("rutinas").select("*")
+      .or(`cliente_id.eq.${perfil.id},clientes_asignados.cs.{${perfil.id}}`)
+      .then(({ data }) => {
+        if (data) setRutinas(data)
+        setCargando(false)
+      })
+  }, [perfil?.id])
+
+  if (cargando) return <div style={{ padding: 20, color: COLORS.textMuted, fontSize: 14 }}>Cargando...</div>
+  if (rutinas.length === 0) return (
+    <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+      <div style={T.h1}>Mi rutina</div>
+      <div style={{ background: COLORS.surface, borderRadius: 16, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
+        Tu entrenador todavía no te asignó una rutina.
+      </div>
+    </div>
+  )
+
+  const rutina = rutinas[0]
+  const dias = (() => { try { return JSON.parse(rutina.dias || "[]") } catch { return [] } })()
 
   return (
     <>
@@ -159,31 +265,26 @@ function Rutina() {
       </div>
 
       <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 16, border: `0.5px solid ${COLORS.accent}33` }}>
-        <div style={{ ...T.label, color: "#6366f1", marginBottom: 6 }}>Diseñado por Nico Pérez</div>
+        <div style={{ ...T.label, color: "#6366f1", marginBottom: 6 }}>Rutina asignada</div>
         <div style={T.h3}>{rutina.nombre}</div>
-        <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
-          {["Lun", "Mié", "Vie"].map((d, i) => (
-            <div key={i} style={{ flex: 1, background: COLORS.accent + "22", borderRadius: 10, padding: "7px 0", textAlign: "center" }}>
-              <div style={{ fontSize: 12, fontWeight: 600, color: "#a5b4fc" }}>{d}</div>
-            </div>
-          ))}
-        </div>
+        <div style={{ ...T.body, color: "#818cf8", marginTop: 4, fontSize: 13 }}>{dias.length} días de entrenamiento</div>
       </div>
 
-      {rutina.dias.map((dia, i) => {
+      {dias.map((dia, i) => {
         const abierto = diaAbierto === i
+        const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || []) || dia.ejercicios || []
         return (
-          <motion.div key={i} style={{ background: COLORS.surface, borderRadius: 18, border: `0.5px solid ${abierto ? COLORS.accent + "66" : COLORS.border}`, overflow: "hidden", transition: "border-color 0.2s" }}>
+          <motion.div key={i} style={{ background: COLORS.surface, borderRadius: 18, border: `0.5px solid ${abierto ? COLORS.accent + "66" : COLORS.border}`, overflow: "hidden" }}>
             <div onClick={() => setDiaAbierto(abierto ? -1 : i)}
               style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 14, background: abierto ? COLORS.accent : COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s", flexShrink: 0 }}>
-                <span style={{ fontSize: 16 }}>{i === 0 ? "A" : i === 1 ? "B" : "C"}</span>
+              <div style={{ width: 40, height: 40, borderRadius: 14, background: abierto ? COLORS.accent : COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: abierto ? "#fff" : COLORS.textSub, flexShrink: 0 }}>
+                {String.fromCharCode(65 + i)}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={T.h3}>{dia.dia}</div>
-                <div style={{ ...T.body, fontSize: 12, marginTop: 2 }}>{dia.ejercicios.length} ejercicios</div>
+                <div style={T.h3}>{dia.nombre || `Día ${i + 1}`}</div>
+                <div style={{ ...T.body, fontSize: 12, marginTop: 2 }}>{ejercicios.length} ejercicios</div>
               </div>
-              <motion.div animate={{ rotate: abierto ? 180 : 0 }} transition={{ duration: 0.2 }}>
+              <motion.div animate={{ rotate: abierto ? 90 : 0 }} transition={{ duration: 0.2 }}>
                 <Icon name="chevronRight" size={16} color={COLORS.textMuted} />
               </motion.div>
             </div>
@@ -192,37 +293,37 @@ function Rutina() {
               {abierto && (
                 <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}
                   style={{ overflow: "hidden", borderTop: `0.5px solid ${COLORS.border}` }}>
-                  {dia.ejercicios.map((ej, j) => {
+                  {ejercicios.map((ej, j) => {
                     const activo = ejercicioActivo === `${i}-${j}`
+                    const ytUrl = ej.video || `https://www.youtube.com/results?search_query=${encodeURIComponent((ej.nombre || "") + " técnica correcta")}`
                     return (
                       <div key={j}>
                         <div onClick={() => setEjercicioActivo(activo ? null : `${i}-${j}`)}
-                          style={{ padding: "14px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `0.5px solid ${COLORS.border}`, cursor: "pointer" }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 10, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, color: COLORS.accent, flexShrink: 0 }}>{j + 1}</div>
+                          style={{ padding: "13px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `0.5px solid ${COLORS.border}`, cursor: "pointer" }}>
+                          <div style={{ width: 30, height: 30, borderRadius: 9, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: COLORS.accent, flexShrink: 0 }}>{j + 1}</div>
                           <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{ej.nombre}</div>
-                            <div style={{ display: "flex", gap: 6, marginTop: 5 }}>
-                              {[`${ej.series} series`, `${ej.reps} reps`, ej.peso].map((tag, k) => (
+                            <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{ej.nombre || "Ejercicio"}</div>
+                            <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                              {[ej.series && `${ej.series} series`, ej.reps && `${ej.reps} reps`, ej.rir !== undefined && ej.rir !== "" && `RIR ${ej.rir}`, ej.descanso && `${ej.descanso}s`].filter(Boolean).map((tag, k) => (
                                 <span key={k} style={{ fontSize: 11, color: COLORS.textMuted, background: COLORS.surface2, borderRadius: 6, padding: "2px 7px" }}>{tag}</span>
                               ))}
                             </div>
                           </div>
                           <Icon name="chevronRight" size={14} color={COLORS.textMuted} />
                         </div>
-
                         <AnimatePresence>
                           {activo && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
                               style={{ overflow: "hidden", background: COLORS.bg, borderBottom: `0.5px solid ${COLORS.border}` }}>
-                              <div style={{ padding: "12px 18px" }}>
-                                <a href={`https://www.youtube.com/results?search_query=${encodeURIComponent(ej.nombre + " técnica correcta")}`}
-                                  target="_blank" rel="noopener noreferrer"
+                              <div style={{ padding: "12px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
+                                {ej.notas && <div style={{ fontSize: 13, color: COLORS.textSub, fontStyle: "italic" }}>"{ej.notas}"</div>}
+                                <a href={ytUrl} target="_blank" rel="noopener noreferrer"
                                   style={{ display: "flex", alignItems: "center", gap: 10, background: "#3a1a1a", borderRadius: 12, padding: "11px 14px", textDecoration: "none" }}>
                                   <div style={{ width: 30, height: 30, borderRadius: 9, background: "#ef444422", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     <Icon name="play" size={13} color={COLORS.red} />
                                   </div>
                                   <div>
-                                    <div style={{ fontSize: 13, fontWeight: 500, color: "#fca5a5" }}>Ver técnica correcta</div>
+                                    <div style={{ fontSize: 13, fontWeight: 500, color: "#fca5a5" }}>Ver técnica</div>
                                     <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 1 }}>YouTube · {ej.nombre}</div>
                                   </div>
                                 </a>
@@ -243,84 +344,264 @@ function Rutina() {
   )
 }
 
-function Progreso() {
+function Progreso({ perfil, onActualizar }) {
+  const [editandoPeso, setEditandoPeso] = useState(false)
+  const [pesoNuevo, setPesoNuevo] = useState("")
+  const [guardandoPeso, setGuardandoPeso] = useState(false)
+
+  const [cargas, setCargas] = useState(perfil?.cargas || {})
+  const [editandoCarga, setEditandoCarga] = useState(null)
+  const [valorCarga, setValorCarga] = useState("")
+  const [ejercicioNuevo, setEjercicioNuevo] = useState("")
+  const [agregando, setAgregando] = useState(false)
+  const [guardandoCarga, setGuardandoCarga] = useState(false)
+
+  const pesoHistorial = perfil?.peso_historial || []
+  const pesoActual = perfil?.peso
+
+  const guardarPeso = async () => {
+    const p = Number(pesoNuevo)
+    if (!p || !perfil?.id) return
+    setGuardandoPeso(true)
+    const historial = [...pesoHistorial, { fecha: new Date().toISOString().split("T")[0], peso: p }]
+    const { data } = await supabase.from("clientes").update({ peso: p, peso_historial: historial }).eq("id", perfil.id).select().single()
+    if (data) onActualizar(data)
+    setPesoNuevo("")
+    setEditandoPeso(false)
+    setGuardandoPeso(false)
+  }
+
+  const guardarCarga = async (nombre, valor) => {
+    if (!perfil?.id) return
+    setGuardandoCarga(true)
+    const nuevasCargas = { ...cargas, [nombre]: valor }
+    const { data } = await supabase.from("clientes").update({ cargas: nuevasCargas }).eq("id", perfil.id).select().single()
+    if (data) {
+      setCargas(nuevasCargas)
+      onActualizar(data)
+    }
+    setEditandoCarga(null)
+    setValorCarga("")
+    setGuardandoCarga(false)
+  }
+
+  const eliminarCarga = async (nombre) => {
+    if (!perfil?.id) return
+    const nuevasCargas = { ...cargas }
+    delete nuevasCargas[nombre]
+    await supabase.from("clientes").update({ cargas: nuevasCargas }).eq("id", perfil.id)
+    setCargas(nuevasCargas)
+    onActualizar({ ...perfil, cargas: nuevasCargas })
+  }
+
+  const agregarEjercicio = () => {
+    if (!ejercicioNuevo.trim()) return
+    setEditandoCarga(ejercicioNuevo.trim())
+    setValorCarga("")
+    setEjercicioNuevo("")
+    setAgregando(false)
+  }
+
+  const miniChartPts = pesoHistorial.slice(-6)
+  const max = miniChartPts.length > 0 ? Math.max(...miniChartPts.map(p => p.peso)) : 1
+  const min = miniChartPts.length > 0 ? Math.min(...miniChartPts.map(p => p.peso)) : 0
+  const range = max - min || 1
+
   return (
     <>
+      <div style={T.h1}>Mi progreso</div>
+
+      {/* Peso corporal */}
+      <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div>
+            <div style={T.label}>Peso corporal</div>
+            <div style={{ ...T.num, fontSize: 28, marginTop: 6 }}>{pesoActual ? `${pesoActual} kg` : "—"}</div>
+            {pesoHistorial.length > 0 && (
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>
+                Última actualización: {pesoHistorial[pesoHistorial.length - 1].fecha}
+              </div>
+            )}
+          </div>
+          {miniChartPts.length > 1 && (
+            <svg width={70} height={36} viewBox="0 0 70 36">
+              <polyline
+                points={miniChartPts.map((p, i) => `${(i / (miniChartPts.length - 1)) * 70},${36 - ((p.peso - min) / range) * 32}`).join(" ")}
+                fill="none" stroke={COLORS.accent} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </div>
+
+        {editandoPeso ? (
+          <div style={{ marginTop: 14, display: "flex", gap: 8 }}>
+            <input placeholder="Nuevo peso (kg)" value={pesoNuevo} onChange={e => setPesoNuevo(e.target.value)} type="number"
+              style={{ ...inputStyle, flex: 1, marginBottom: 0 }} autoFocus />
+            <button onClick={guardarPeso} disabled={guardandoPeso}
+              style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "0 16px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0, opacity: guardandoPeso ? 0.5 : 1 }}>
+              {guardandoPeso ? "..." : "OK"}
+            </button>
+            <button onClick={() => setEditandoPeso(false)}
+              style={{ background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "0 12px", color: COLORS.textSub, fontSize: 14, cursor: "pointer", flexShrink: 0 }}>
+              ✕
+            </button>
+          </div>
+        ) : (
+          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setEditandoPeso(true)}
+            style={{ marginTop: 14, background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "10px 0", color: COLORS.text, fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%" }}>
+            Actualizar peso
+          </motion.button>
+        )}
+      </div>
+
+      {/* Cargas por ejercicio */}
       <div>
-        <div style={{ ...T.label, marginBottom: 6 }}>Evolución</div>
-        <div style={T.h1}>Mi progreso</div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div style={T.label}>Mis cargas</div>
+          <button onClick={() => setAgregando(!agregando)}
+            style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: COLORS.accent, fontSize: 12, fontWeight: 600, padding: 0 }}>
+            <Icon name="plus" size={14} color={COLORS.accent} /> Agregar
+          </button>
+        </div>
+
+        <AnimatePresence>
+          {agregando && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+              style={{ overflow: "hidden", marginBottom: 8 }}>
+              <div style={{ display: "flex", gap: 8 }}>
+                <input placeholder="Nombre del ejercicio" value={ejercicioNuevo} onChange={e => setEjercicioNuevo(e.target.value)} onKeyDown={e => e.key === "Enter" && agregarEjercicio()}
+                  style={{ ...inputStyle, flex: 1, marginBottom: 0 }} autoFocus />
+                <button onClick={agregarEjercicio}
+                  style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "0 14px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
+                  +
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {Object.keys(cargas).length === 0 && !agregando && (
+          <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
+            Agregá tus ejercicios y la carga que usás en cada uno.
+          </div>
+        )}
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {Object.entries(cargas).map(([nombre, carga]) => (
+            <motion.div key={nombre} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+              style={{ background: COLORS.surface, borderRadius: 14, padding: "13px 16px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text }}>{nombre}</div>
+                {editandoCarga === nombre ? (
+                  <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                    <input placeholder="ej: 80kg, 3×10" value={valorCarga} onChange={e => setValorCarga(e.target.value)} onKeyDown={e => e.key === "Enter" && guardarCarga(nombre, valorCarga)}
+                      style={{ ...inputStyle, flex: 1, marginBottom: 0, fontSize: 13, padding: "8px 12px" }} autoFocus />
+                    <button onClick={() => guardarCarga(nombre, valorCarga)} disabled={guardandoCarga}
+                      style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "0 12px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0, opacity: guardandoCarga ? 0.5 : 1 }}>
+                      OK
+                    </button>
+                    <button onClick={() => setEditandoCarga(null)}
+                      style={{ background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "0 10px", color: COLORS.textSub, fontSize: 13, cursor: "pointer" }}>
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.accent, marginTop: 4 }}>{carga || "—"}</div>
+                )}
+              </div>
+              {editandoCarga !== nombre && (
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button onClick={() => { setEditandoCarga(nombre); setValorCarga(carga) }}
+                    style={{ background: COLORS.surface2, border: "none", borderRadius: 9, padding: "6px 8px", cursor: "pointer", display: "flex" }}>
+                    <Icon name="edit" size={13} color={COLORS.textSub} />
+                  </button>
+                  <button onClick={() => eliminarCarga(nombre)}
+                    style={{ background: "#3a1a1a", border: "none", borderRadius: 9, padding: "6px 8px", cursor: "pointer", display: "flex" }}>
+                    <Icon name="trash" size={13} color={COLORS.red} />
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {[
-          { label: "Peso actual", value: "85kg", sub: "Objetivo: 82kg", subColor: COLORS.textMuted },
-          { label: "Bench max", value: "72kg", sub: "+17kg desde enero", subColor: COLORS.green },
-        ].map((m, i) => (
-          <div key={i} style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-            <div style={T.label}>{m.label}</div>
-            <div style={{ ...T.num, fontSize: 24, marginTop: 6 }}>{m.value}</div>
-            <div style={{ fontSize: 11, color: m.subColor, marginTop: 4, fontWeight: 500 }}>{m.sub}</div>
+      {pesoHistorial.length > 0 && (
+        <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
+          <div style={{ ...T.label, marginBottom: 10 }}>Historial de peso</div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            {[...pesoHistorial].reverse().slice(0, 5).map((h, i) => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13 }}>
+                <span style={{ color: COLORS.textSub }}>{h.fecha}</span>
+                <span style={{ fontWeight: 600, color: COLORS.text }}>{h.peso} kg</span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-
-      <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-        <div style={{ ...T.label, marginBottom: 14 }}>Press de banca (kg)</div>
-        <MiniBar data={progreso} labels={meses} />
-      </div>
-
-      <div style={{ ...T.label, marginTop: 4 }}>Objetivos</div>
-      {[
-        { label: "Bajar a 82kg", pct: 75, color: COLORS.green },
-        { label: "Press de banca 80kg", pct: 90, color: COLORS.accent },
-        { label: "Asistencia mensual", pct: 87, color: COLORS.yellow },
-      ].map((o, i) => (
-        <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-          style={{ background: COLORS.surface, borderRadius: 14, padding: "14px 16px", border: `0.5px solid ${COLORS.border}` }}>
-          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 10 }}>
-            <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text }}>{o.label}</div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: o.color }}>{o.pct}%</div>
-          </div>
-          <div style={{ background: COLORS.surface2, borderRadius: 20, height: 5, overflow: "hidden" }}>
-            <motion.div initial={{ width: 0 }} animate={{ width: `${o.pct}%` }} transition={{ delay: i * 0.1 + 0.3, duration: 0.7, ease: "easeOut" }}
-              style={{ height: "100%", borderRadius: 20, background: o.color }} />
-          </div>
-        </motion.div>
-      ))}
+        </div>
+      )}
     </>
   )
 }
 
-function Pagos() {
-  const crearPago = async () => {
+function AliasCard({ alias, monto }) {
+  // Siempre construir el link de MP: si ya es una URL completa la usamos, si no construimos link.mercadopago.com.ar/USERNAME
+  const mpUrl = alias.startsWith("http")
+    ? alias
+    : `https://link.mercadopago.com.ar/${alias.replace(/^@/, "")}`
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <a href={mpUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block" }}>
+        <motion.div whileTap={{ scale: 0.97 }}
+          style={{ padding: "14px 20px", borderRadius: 14, background: "#009ee3", color: "#fff", fontSize: 14, fontWeight: 600, textAlign: "center", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          Pagar con Mercado Pago
+        </motion.div>
+      </a>
+      {monto && (
+        <div style={{ fontSize: 12, color: COLORS.textMuted, textAlign: "center", marginTop: 8 }}>
+          Monto: <strong style={{ color: COLORS.text }}>${Number(monto).toLocaleString("es-AR")}</strong>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function Pagos({ perfil }) {
+  const [mpSettings, setMpSettings] = useState(null)
+  const [generando, setGenerando] = useState(false)
+  const [error, setError] = useState("")
+
+  useEffect(() => {
+    if (!perfil?.trainer_id) return
+    supabase.from("trainer_settings").select("mp_alias,mp_access_token").eq("trainer_id", perfil.trainer_id).maybeSingle()
+      .then(({ data }) => setMpSettings(data || {}))
+  }, [perfil?.trainer_id])
+
+  const pagarConMP = async () => {
+    if (!mpSettings?.mp_access_token || !perfil?.precio) return
+    setGenerando(true)
+    setError("")
     try {
       const res = await fetch("https://api.mercadopago.com/checkout/preferences", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer APP_USR-7417603565938023-061519-6416808ae70250449d00b0f8954b61c5-3474234843`
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${mpSettings.mp_access_token}` },
         body: JSON.stringify({
-          items: [{
-            title: "Plan mensual FitDesk",
-            quantity: 1,
-            unit_price: 32000,
-            currency_id: "ARS"
-          }],
-          back_urls: {
-            success: "https://fitdesk.app/pago-exitoso",
-  failure: "https://fitdesk.app/pago-fallido",
-  pending: "https://fitdesk.app/pago-pendiente"
-          },
-          auto_return: "approved"
+          items: [{ title: "Plan mensual entrenamiento personal", quantity: 1, unit_price: Number(perfil.precio), currency_id: "ARS" }],
+          back_urls: { success: window.location.href, failure: window.location.href, pending: window.location.href },
+          auto_return: "approved",
         })
       })
       const data = await res.json()
       if (data.init_point) window.open(data.init_point, "_blank")
-    } catch (e) {
-      console.error(e)
-    }
+      else setError("No se pudo generar el link. Verificá el Access Token con tu entrenador.")
+    } catch { setError("Error al conectar con Mercado Pago.") }
+    setGenerando(false)
   }
+
+  const hasAccessToken = !!mpSettings?.mp_access_token
+  const hasAlias = !!mpSettings?.mp_alias
+  const aliasUrl = hasAlias ? `https://mpago.la/${mpSettings.mp_alias}` : null
 
   return (
     <>
@@ -330,54 +611,89 @@ function Pagos() {
       </div>
 
       <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
-        <div style={T.label}>Próximo vencimiento</div>
-        <div style={{ ...T.num, fontSize: 26, marginTop: 8 }}>1 de julio</div>
-        <div style={{ ...T.body, marginTop: 4 }}>Plan mensual · $32.000</div>
-        <motion.button whileTap={{ scale: 0.97 }} onClick={crearPago}
-          style={{ width: "100%", padding: "13px 0", borderRadius: 14, background: "#009ee3", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 16 }}>
-          Pagar con Mercado Pago
-        </motion.button>
+        <div style={T.label}>Plan mensual</div>
+        <div style={{ ...T.num, fontSize: 32, marginTop: 8, color: COLORS.text }}>
+          {perfil?.precio ? `$${Number(perfil.precio).toLocaleString("es-AR")}` : "—"}
+        </div>
+        <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>por mes · entrenamiento personal</div>
+
+        {error && <div style={{ fontSize: 12, color: COLORS.red, marginTop: 12 }}>{error}</div>}
+
+        {mpSettings === null ? (
+          <div style={{ marginTop: 16, height: 44, background: COLORS.surface2, borderRadius: 12 }} />
+        ) : hasAccessToken && perfil?.precio ? (
+          <motion.button whileTap={{ scale: 0.97 }} onClick={pagarConMP} disabled={generando}
+            style={{ width: "100%", padding: "13px 0", borderRadius: 14, background: "#009ee3", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 16, opacity: generando ? 0.7 : 1 }}>
+            {generando ? "Generando link..." : "Pagar con Mercado Pago"}
+          </motion.button>
+        ) : hasAlias ? (
+          <AliasCard alias={mpSettings.mp_alias} monto={perfil?.precio} />
+        ) : (
+          <div style={{ marginTop: 16, fontSize: 13, color: COLORS.textMuted, background: COLORS.surface2, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
+            Coordiná el pago con tu entrenador
+          </div>
+        )}
       </div>
 
-      <div style={T.label}>Historial</div>
-      {[
-        { mes: "Junio 2025", fecha: "1 jun · Mercado Pago", monto: "$32.000", color: COLORS.green },
-        { mes: "Mayo 2025", fecha: "1 may · Transferencia", monto: "$28.000", color: COLORS.green },
-        { mes: "Abril 2025", fecha: "1 abr · Transferencia", monto: "$25.000", color: COLORS.green },
-      ].map((p, i) => (
-        <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.08 }}
-          style={{ background: COLORS.surface, borderRadius: 14, padding: "14px 16px", border: `0.5px solid ${COLORS.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={T.h3}>{p.mes}</div>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3 }}>{p.fecha}</div>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>{p.monto}</div>
-            <div style={{ width: 20, height: 20, borderRadius: 6, background: COLORS.green + "22", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon name="check" size={11} color={COLORS.green} />
-            </div>
-          </div>
-        </motion.div>
-      ))}
+      <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 12 }}>
+        El seguimiento de pagos y historial lo gestiona tu entrenador.
+      </div>
     </>
   )
 }
 
-export default function ClientePanel({ onLogout }) {
+export default function ClientePanel({ user, onLogout, initialPerfil = null, previewMode = false }) {
+  const [perfil, setPerfil] = useState(initialPerfil)
+  const [cargando, setCargando] = useState(!initialPerfil)
   const [activePage, setActivePage] = useState("inicio")
+
+  useEffect(() => {
+    if (initialPerfil) return
+    const cargar = async () => {
+      setCargando(true)
+      let { data } = await supabase.from("clientes").select("*").eq("user_id", user.id).maybeSingle()
+      if (!data) {
+        const res = await supabase.from("clientes").select("*").eq("email", user.email).maybeSingle()
+        data = res.data
+        if (data) {
+          await supabase.from("clientes").update({ user_id: user.id }).eq("id", data.id)
+          data.user_id = user.id
+        }
+      }
+      setPerfil(data)
+      setCargando(false)
+    }
+    cargar()
+  }, [user?.id, user?.email, initialPerfil])
 
   const screenStyle = { flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none" }
 
+  if (cargando) return (
+    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, sans-serif" }}>
+      <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.4 }}
+        style={{ fontSize: 13, color: COLORS.textMuted }}>Cargando...</motion.div>
+    </div>
+  )
+
+  if (!previewMode && (!perfil || !perfil.nombre)) return (
+    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, sans-serif" }}>
+      <div style={{ width: 375, height: 720, background: COLORS.bg, borderRadius: 40, border: `1px solid ${COLORS.border}`, overflow: "hidden", overflowY: "auto", scrollbarWidth: "none" }}>
+        <Onboarding user={user} onComplete={(data) => setPerfil(data)} />
+      </div>
+    </div>
+  )
+
+  const perfilMock = perfil || { nombre: "Cliente", objetivo: "Sin definir", peso: null, altura: null, edad: null, precio: null }
+
   const renderPage = () => {
     const pages = {
-      inicio: <Inicio onLogout={onLogout} />,
-      rutina: <Rutina />,
-      progreso: <Progreso />,
-      pagos: <Pagos />,
+      inicio: <Inicio perfil={perfilMock} onLogout={onLogout} onActualizar={previewMode ? () => {} : setPerfil} />,
+      rutina: <Rutina perfil={perfilMock} />,
+      progreso: <Progreso perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} />,
+      pagos: <Pagos perfil={perfilMock} />,
     }
     return (
-      <motion.div key={activePage} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
-        style={screenStyle}>
+      <motion.div key={activePage} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={screenStyle}>
         {pages[activePage]}
       </motion.div>
     )
@@ -385,7 +701,13 @@ export default function ClientePanel({ onLogout }) {
 
   return (
     <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
-      <div style={{ width: 375, height: 720, background: COLORS.bg, borderRadius: 40, border: `1px solid ${COLORS.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ width: 375, height: 720, background: COLORS.bg, borderRadius: 40, border: `1px solid ${previewMode ? COLORS.accent : COLORS.border}`, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        {previewMode && (
+          <div style={{ background: COLORS.accent + "22", borderBottom: `0.5px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>VISTA PREVIA — Como lo ve el cliente</div>
+            <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>✕</button>
+          </div>
+        )}
         <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
           <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
         </div>

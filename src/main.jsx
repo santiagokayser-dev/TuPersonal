@@ -38,8 +38,8 @@ const r = params.get("rol") || session.user.user_metadata?.rol || "trainer"
 
   if (loading) return null
   if (!session) return <Auth />
-  if (rol === "cliente") return <ClientePanel onLogout={handleLogout} />
-  return <App />
+  if (rol === "cliente") return <ClientePanel user={session.user} onLogout={handleLogout} />
+  return <App user={session.user} onLogout={handleLogout} />
 }
 
 createRoot(document.getElementById('root')).render(
