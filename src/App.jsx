@@ -692,10 +692,10 @@ export default function App({ user, onLogout }) {
   const fontFamily = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
 
   return (
-    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", fontFamily }}>
+    <div style={{ background: COLORS.bg, height: "100dvh", display: "flex", fontFamily }}>
       {/* Sidebar — solo desktop */}
       {!isMobile && (
-        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100vh", position: "sticky", top: 0, flexShrink: 0 }}>
+        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100dvh", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "28px 20px 20px" }}>
             <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, letterSpacing: -0.3 }}>
               TuPersonal<span style={{ color: COLORS.accent }}>.</span>
@@ -725,7 +725,7 @@ export default function App({ user, onLogout }) {
       )}
 
       {/* Contenido principal */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
         {/* Header mobile */}
         {isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 0", flexShrink: 0 }}>

@@ -723,7 +723,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
   if (previewMode) return inner
 
   return (
-    <div style={{ background: COLORS.bg, minHeight: "100vh", height: "100dvh", display: "flex", flexDirection: "column" }}>
+    <div style={{ background: COLORS.bg, height: "100dvh", display: "flex", flexDirection: "column" }}>
       {inner}
     </div>
   )
