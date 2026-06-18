@@ -77,80 +77,191 @@ const navItems = [
   { id: "pagos", icon: "wallet", label: "Finanzas" },
 ]
 
-const barData = [40, 55, 62, 70, 80, 95]
-const barLabels = ["E", "F", "M", "A", "M", "J"]
+function useAnimatedNumber(target, duration = 900) {
+  const [val, setVal] = useState(0)
+  useEffect(() => {
+    const n = typeof target === "number" ? target : parseFloat(String(target).replace(/[^0-9.]/g, "")) || 0
+    if (n === 0) { setVal(0); return }
+    const start = Date.now()
+    const tick = () => {
+      const t = Math.min((Date.now() - start) / duration, 1)
+      const eased = 1 - Math.pow(1 - t, 3)
+      setVal(Math.round(n * eased))
+      if (t < 1) requestAnimationFrame(tick)
+    }
+    requestAnimationFrame(tick)
+  }, [target])
+  return val
+}
 
-function MiniBar({ data, labels }) {
+function LineChart({ data, labels, color = COLORS.accent }) {
+  const W = 280, H = 72
   const max = Math.max(...data)
+  const min = Math.min(...data)
+  const range = max - min || 1
+  const pad = { l: 4, r: 4, t: 8, b: 20 }
+  const pts = data.map((v, i) => [
+    pad.l + (i / (data.length - 1)) * (W - pad.l - pad.r),
+    pad.t + (1 - (v - min) / range) * (H - pad.t - pad.b),
+  ])
+  const pathD = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0]},${p[1]}`).join(" ")
+  const fillD = `${pathD} L${pts[pts.length - 1][0]},${H - pad.b} L${pts[0][0]},${H - pad.b} Z`
+  const gradId = "lg1"
   return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 60 }}>
-      {data.map((h, i) => (
-        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4, height: "100%", justifyContent: "flex-end" }}>
-          <motion.div initial={{ height: 0 }} animate={{ height: `${(h / max) * 100}%` }} transition={{ delay: i * 0.06, duration: 0.5, ease: "easeOut" }}
-            style={{ width: "100%", borderRadius: 3, background: i === data.length - 1 ? COLORS.accent : COLORS.surface2 }} />
-          <div style={{ ...T.label, fontSize: 9, letterSpacing: 0 }}>{labels[i]}</div>
-        </div>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+      <defs>
+        <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[0.25, 0.5, 0.75].map(t => {
+        const y = pad.t + t * (H - pad.t - pad.b)
+        return <line key={t} x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke={COLORS.border} strokeWidth="0.5" strokeDasharray="3,3" />
+      })}
+      <motion.path d={fillD} fill={`url(#${gradId})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} />
+      <motion.path d={pathD} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+        initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: "easeOut" }} />
+      {pts.map((p, i) => (
+        <motion.circle key={i} cx={p[0]} cy={p[1]} r={i === data.length - 1 ? 3.5 : 2.5}
+          fill={i === data.length - 1 ? color : COLORS.bg} stroke={color} strokeWidth={1.5}
+          initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8 + i * 0.04 }} />
       ))}
-    </div>
+      {labels.map((l, i) => (
+        <text key={i} x={pts[i][0]} y={H - 4} textAnchor="middle" fontSize="9" fill={COLORS.textMuted} fontFamily="-apple-system,sans-serif">{l}</text>
+      ))}
+    </svg>
   )
 }
 
-function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil }) {
+function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente }) {
   const pendientes = clientes.filter(c => c.estadoColor === COLORS.red || c.estadoColor === COLORS.yellow).length
+  const alDia = clientes.length - pendientes
   const totalMensual = clientes.reduce((s, c) => s + (Number(c.precio) || 0), 0)
-  const hoy = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
-  const nombre = nombreTrainer || "Entrenador"
+  const cobrado = clientes.filter(c => !c.meses_deuda).reduce((s, c) => s + (Number(c.precio) || 0), 0)
+  const nombre = (nombreTrainer || "Entrenador").split(" ")[0]
+  const hora = new Date().getHours()
+  const saludo = hora < 12 ? "Buenos días" : hora < 19 ? "Buenas tardes" : "Buenas noches"
+
+  const animTotal = useAnimatedNumber(totalMensual)
+  const animCobrado = useAnimatedNumber(cobrado)
+
+  const barData = [40, 55, 62, 70, 80, Math.max(95, Math.round(totalMensual / 1000) || 95)]
+  const barLabels = ["E", "F", "M", "A", "M", "J"]
+
+  const [hovCard, setHovCard] = useState(null)
 
   return (
     <>
-      <div style={{ paddingBottom: 8 }}>
-        <div style={{ ...T.label, marginBottom: 8 }}>{hoy.charAt(0).toUpperCase() + hoy.slice(1)}</div>
-        <div style={T.h1}>Hola, {nombre.split(" ")[0]}</div>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, letterSpacing: -0.5 }}>
+            {saludo}, {nombre} 👋
+          </div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 5, lineHeight: 1.4 }}>
+            {clientes.length > 0
+              ? <>{clientes.length} {clientes.length === 1 ? "cliente" : "clientes"} · <span style={{ color: pendientes > 0 ? COLORS.yellow : COLORS.green }}>{pendientes === 0 ? "todos al día" : `${pendientes} pendiente${pendientes > 1 ? "s" : ""}`}</span>{totalMensual > 0 ? ` · $${(totalMensual / 1000).toFixed(0)}K proyectados` : ""}</>
+              : "Empezá agregando tu primer cliente"
+            }
+          </div>
+        </div>
+        <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={onNuevoCliente}
+          style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "9px 14px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 6, boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
+          <Icon name="plus" size={14} color="#fff" />
+          Nuevo
+        </motion.button>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {[
-          { label: "Clientes activos", value: String(clientes.length), change: "Total registrados", icon: "users", changeColor: COLORS.textMuted },
-          { label: "Facturación mens.", value: totalMensual > 0 ? `$${(totalMensual / 1000).toFixed(0)}K` : "-", change: "Si cobran todos", icon: "wallet", changeColor: COLORS.textMuted },
-          { label: "Al día", value: String(clientes.length - pendientes), change: "pagos confirmados", icon: "check", changeColor: COLORS.green },
-          { label: "Pendientes", value: String(pendientes), change: pendientes > 0 ? "revisar cobros" : "todo en orden", icon: "trendingUp", changeColor: pendientes > 0 ? COLORS.yellow : COLORS.green },
-        ].map((m, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }}
-            style={{ background: COLORS.surface, borderRadius: 16, padding: "14px 14px 12px", border: `0.5px solid ${COLORS.border}` }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
-              <div style={T.label}>{m.label}</div>
-              <Icon name={m.icon} size={14} color={COLORS.textMuted} />
+
+      {/* Hero card — Facturación */}
+      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}cc 0%, ${COLORS.surface} 60%)`, borderRadius: 20, padding: "18px 20px 16px", border: `0.5px solid ${COLORS.accent}44`, position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: "50%", background: COLORS.accent + "0d" }} />
+        <div style={{ ...T.label, color: "#a5b4fc88" }}>Facturación mensual</div>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6, marginBottom: 2 }}>
+          <div style={{ fontSize: 36, fontWeight: 800, color: COLORS.text, letterSpacing: -1.5 }}>
+            ${animTotal > 0 ? (animTotal >= 1000 ? `${(animTotal / 1000).toFixed(0)}K` : animTotal.toLocaleString("es-AR")) : "—"}
+          </div>
+          {cobrado > 0 && cobrado < totalMensual && (
+            <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, background: COLORS.green + "18", borderRadius: 8, padding: "2px 8px" }}>
+              ${(cobrado / 1000).toFixed(0)}K cobrado
             </div>
-            <div style={{ ...T.num, fontSize: 24, marginBottom: 4 }}>{m.value}</div>
-            <div style={{ fontSize: 11, color: m.changeColor, fontWeight: 500 }}>{m.change}</div>
+          )}
+        </div>
+        <div style={{ fontSize: 12, color: "#a5b4fc88" }}>
+          {totalMensual > 0 ? `${alDia} de ${clientes.filter(c => Number(c.precio) > 0).length} clientes al día` : "Asigná precios para ver proyección"}
+        </div>
+      </motion.div>
+
+      {/* 3 métricas secundarias */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+        {[
+          { label: "Clientes", value: clientes.length, icon: "users", color: COLORS.accent },
+          { label: "Al día", value: alDia, icon: "check", color: COLORS.green },
+          { label: "Pendientes", value: pendientes, icon: "trendingUp", color: pendientes > 0 ? COLORS.yellow : COLORS.textMuted },
+        ].map((m, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
+            onMouseEnter={() => setHovCard(i)} onMouseLeave={() => setHovCard(null)}
+            style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 12px 10px", border: `0.5px solid ${hovCard === i ? COLORS.border2 : COLORS.border}`, transition: "border-color 0.2s, transform 0.15s", transform: hovCard === i ? "translateY(-1px)" : "none" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+              <div style={{ ...T.label, fontSize: 10 }}>{m.label}</div>
+              <Icon name={m.icon} size={13} color={m.color} />
+            </div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: m.color, letterSpacing: -1 }}>{m.value}</div>
           </motion.div>
         ))}
       </div>
-      <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-        <div style={{ ...T.label, marginBottom: 14 }}>Ingresos — últimos 6 meses</div>
-        <MiniBar data={barData} labels={barLabels} />
-      </div>
+
+      {/* Gráfico */}
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
+        style={{ background: COLORS.surface, borderRadius: 16, padding: "14px 16px 10px", border: `0.5px solid ${COLORS.border}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={T.label}>Ingresos — últimos 6 meses</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.accent }}>
+            ${barData[barData.length - 1]}K
+          </div>
+        </div>
+        <LineChart data={barData} labels={barLabels} />
+      </motion.div>
+
+      {/* Clientes recientes */}
       {clientes.length > 0 && (
         <>
-          <div style={T.label}>Clientes recientes</div>
-          {clientes.slice(0, 3).map((c, i) => (
-            <motion.div key={c.id || i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-              onClick={() => onVerPerfil?.(c)}
-              style={{ background: COLORS.surface, borderRadius: 16, padding: "12px 14px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12, cursor: onVerPerfil ? "pointer" : "default" }}>
-              <div style={{ width: 38, height: 38, borderRadius: 12, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: COLORS.accent, flexShrink: 0 }}>{c.ini}</div>
-              <div style={{ flex: 1 }}>
-                <div style={T.h3}>{c.nombre}</div>
-                <div style={{ ...T.body, fontSize: 12, marginTop: 1 }}>{c.objetivo || "Sin objetivo definido"}</div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={T.label}>Clientes recientes</div>
+            <div style={{ fontSize: 12, color: COLORS.accent, cursor: "pointer", fontWeight: 500 }} onClick={onNuevoCliente}>ver todos →</div>
+          </div>
+          {clientes.slice(0, 4).map((c, i) => (
+            <motion.div key={c.id || i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.32 + i * 0.07 }}
+              whileHover={{ y: -1 }} onClick={() => onVerPerfil?.(c)}
+              style={{ background: COLORS.surface, borderRadius: 14, padding: "11px 14px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+              <div style={{ width: 40, height: 40, borderRadius: 13, background: c.estadoColor + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: c.estadoColor, flexShrink: 0 }}>{c.ini}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {c.objetivo || "Sin objetivo"}{c.precio ? ` · $${(Number(c.precio) / 1000).toFixed(0)}K/mes` : ""}
+                </div>
               </div>
-              <div style={{ fontSize: 11, fontWeight: 600, color: c.estadoColor }}>{c.estado}</div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: c.estadoColor, background: c.estadoColor + "18", borderRadius: 6, padding: "2px 7px" }}>{c.estado}</div>
+                <Icon name="chevronRight" size={12} color={COLORS.textMuted} />
+              </div>
             </motion.div>
           ))}
         </>
       )}
+
       {clientes.length === 0 && (
-        <div style={{ background: COLORS.surface, borderRadius: 16, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 4 }}>Aún no tenés clientes cargados</div>
-          <div style={{ fontSize: 12, color: COLORS.textMuted + "88" }}>Agregá tu primer cliente desde la sección Clientes</div>
-        </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
+          style={{ background: COLORS.surface, borderRadius: 16, padding: "28px 20px", border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>🏋️</div>
+          <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>Bienvenido a TuPersonal</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>Agregá tu primer cliente para empezar a gestionar tu negocio</div>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={onNuevoCliente}
+            style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 24px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
+            + Agregar primer cliente
+          </motion.button>
+        </motion.div>
       )}
     </>
   )
@@ -969,7 +1080,7 @@ export default function App({ user, onLogout }) {
     )
 
     const pages = {
-      inicio: <Inicio clientes={clientes} nombreTrainer={nombreTrainer} onVerPerfil={setClienteSeleccionado} />,
+      inicio: <Inicio clientes={clientes} nombreTrainer={nombreTrainer} onVerPerfil={setClienteSeleccionado} onNuevoCliente={() => setActivePage("clientes")} />,
       chat: <Chat user={user} clientes={clientes} modo="trainer" />,
       clientes: <Clientes
         clientes={clientes}
@@ -1002,11 +1113,17 @@ export default function App({ user, onLogout }) {
       {/* Sidebar — solo desktop */}
       {!isMobile && (
         <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100dvh", position: "sticky", top: 0, flexShrink: 0 }}>
-          <div style={{ padding: "28px 20px 20px" }}>
-            <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, letterSpacing: -0.3 }}>
-              TuPersonal<span style={{ color: COLORS.accent }}>.</span>
+          <div style={{ padding: "24px 20px 18px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#fff", letterSpacing: -0.5, flexShrink: 0 }}>TP</div>
+              <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text, letterSpacing: -0.3 }}>TuPersonal<span style={{ color: COLORS.accent }}>.</span></div>
             </div>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>{nombreTrainer}</div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 22, height: 22, borderRadius: 7, background: COLORS.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 700, color: COLORS.accent }}>
+                {(nombreTrainer || "E").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+              </div>
+              <div style={{ fontSize: 12, color: "#888", fontWeight: 500 }}>{nombreTrainer}</div>
+            </div>
           </div>
           <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
             {navItems.map(item => {
