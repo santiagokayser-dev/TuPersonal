@@ -5,6 +5,11 @@ import { EJERCICIOS } from "./ejercicios"
 import { supabase } from "./supabase"
 import CreadorRutinasNuevo from "./CreadorRutinasNuevo"
 import ClientePanel from "./ClientePanel"
+import Chat from "./Chat"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+
+const API_KEY = "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"
 
 const COLORS = {
   bg: "#080808", surface: "#111111", surface2: "#1a1a1a", border: "#222222", border2: "#2a2a2a",
@@ -36,6 +41,9 @@ const Icon = ({ name, size = 20, color = "#888888" }) => {
     check: <path d="M20 6L9 17l-5-5" strokeLinecap="round" strokeLinejoin="round"/>,
     trendingUp: <><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></>,
     logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></>,
+    chat: <><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></>,
+    sparkle: <><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/></>,
+    download: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></>,
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
 }
@@ -63,6 +71,7 @@ function normCliente(c) {
 const navItems = [
   { id: "inicio", icon: "home", label: "Inicio" },
   { id: "clientes", icon: "users", label: "Clientes" },
+  { id: "chat", icon: "chat", label: "Chat" },
   { id: "rutinas", icon: "dumbbell", label: "Rutinas" },
   { id: "agenda", icon: "calendar", label: "Agenda" },
   { id: "pagos", icon: "wallet", label: "Finanzas" },
@@ -146,7 +155,7 @@ function Inicio({ clientes = [], nombreTrainer = "" }) {
   )
 }
 
-function PerfilCliente({ cliente, onBack, onEliminar, onPreview }) {
+function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar }) {
   const [tab, setTab] = useState("info")
   const [editando, setEditando] = useState(false)
   const [datos, setDatos] = useState(cliente)
@@ -154,6 +163,8 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview }) {
   const [eliminando, setEliminando] = useState(false)
   const [rutinas, setRutinas] = useState([])
   const [cargandoRutinas, setCargandoRutinas] = useState(false)
+  const [iaResultado, setIaResultado] = useState({})
+  const [iaLoading, setIaLoading] = useState({})
 
   const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
@@ -184,6 +195,59 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview }) {
     const { data } = await supabase.from("rutinas").select("*").eq("cliente_id", cliente.id)
     if (data) setRutinas(data)
     setCargandoRutinas(false)
+  }
+
+  const ajustarConIA = async (rutina) => {
+    setIaLoading(prev => ({ ...prev, [rutina.id]: true }))
+    setIaResultado(prev => ({ ...prev, [rutina.id]: null }))
+    try {
+      const dias = typeof rutina.dias === "string" ? JSON.parse(rutina.dias) : rutina.dias
+      const resumen = dias?.map(d => `${d.nombre}: ${d.bloques?.map(b => b.ejercicios?.map(e => e.nombre).join(", ") || b.nombre || "").join(", ")}`).join(" | ") || ""
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": API_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 400,
+          messages: [{ role: "user", content: `Sos personal trainer experto. Analizá la rutina "${rutina.nombre}" de ${datos.nombre} (peso: ${datos.peso || "?"}kg, objetivo: ${datos.objetivo || "general"}). Ejercicios: ${resumen}. Cargas actuales: ${JSON.stringify(datos.cargas || {})}. Peso histórico (últimos 3): ${JSON.stringify((datos.peso_historial || []).slice(-3))}. Sugerí ajustes de progresión en máximo 120 palabras, usando bullet points (•). En español, directo.` }]
+        })
+      })
+      const d = await res.json()
+      setIaResultado(prev => ({ ...prev, [rutina.id]: d.content?.[0]?.text || "Sin respuesta" }))
+    } catch {
+      setIaResultado(prev => ({ ...prev, [rutina.id]: "Error al conectar con IA. Intentá de nuevo." }))
+    }
+    setIaLoading(prev => ({ ...prev, [rutina.id]: false }))
+  }
+
+  const exportarPDF = (rutina) => {
+    const doc = new jsPDF()
+    const dias = typeof rutina.dias === "string" ? JSON.parse(rutina.dias) : (rutina.dias || [])
+    doc.setFontSize(18)
+    doc.setTextColor(40, 40, 40)
+    doc.text(rutina.nombre, 14, 20)
+    doc.setFontSize(11)
+    doc.setTextColor(100)
+    doc.text(`Cliente: ${datos.nombre}`, 14, 28)
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-AR")}`, 14, 34)
+    let y = 44
+    dias.forEach(dia => {
+      const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || [b]) || []
+      doc.setFontSize(13)
+      doc.setTextColor(40)
+      doc.text(dia.nombre || "Día", 14, y)
+      y += 4
+      autoTable(doc, {
+        startY: y,
+        head: [["Ejercicio", "Series", "Reps", "RIR", "Descanso"]],
+        body: ejercicios.map(e => [e.nombre || "", e.series || "", e.reps || "", e.rir !== undefined ? e.rir : "", e.descanso ? `${e.descanso}s` : ""]),
+        styles: { fontSize: 10, cellPadding: 3 },
+        headStyles: { fillColor: [99, 102, 241] },
+        margin: { left: 14, right: 14 },
+      })
+      y = doc.lastAutoTable.finalY + 10
+    })
+    doc.save(`${rutina.nombre} - ${datos.nombre}.pdf`)
   }
 
   return (
@@ -284,13 +348,49 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview }) {
             </>
           )}
           {tab === "progreso" && (
-            <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
-              Próximamente — registro de progreso
-            </div>
+            <>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+                  <div style={T.label}>Peso actual</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{datos.peso ? `${datos.peso} kg` : "—"}</div>
+                </div>
+                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+                  <div style={T.label}>Registros</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{(datos.peso_historial || []).length}</div>
+                </div>
+              </div>
+              {(datos.peso_historial || []).length > 0 && (
+                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+                  <div style={{ ...T.label, marginBottom: 10 }}>Historial de peso</div>
+                  {[...(datos.peso_historial || [])].reverse().slice(0, 6).map((h, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderBottom: i < 5 ? `0.5px solid ${COLORS.border}` : "none" }}>
+                      <span style={{ color: COLORS.textSub }}>{h.fecha}</span>
+                      <span style={{ fontWeight: 600, color: COLORS.text }}>{h.peso} kg</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {Object.keys(datos.cargas || {}).length > 0 && (
+                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+                  <div style={{ ...T.label, marginBottom: 10 }}>Cargas registradas</div>
+                  {Object.entries(datos.cargas || {}).map(([nombre, carga], i, arr) => (
+                    <div key={nombre} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length - 1 ? `0.5px solid ${COLORS.border}` : "none" }}>
+                      <span style={{ color: COLORS.textSub }}>{nombre}</span>
+                      <span style={{ fontWeight: 600, color: COLORS.accent }}>{carga}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {(datos.peso_historial || []).length === 0 && Object.keys(datos.cargas || {}).length === 0 && (
+                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
+                  El cliente aún no registró progreso
+                </div>
+              )}
+            </>
           )}
           {tab === "pagos" && (
             <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
-              Próximamente — historial de pagos
+              Gestioná los pagos desde la sección Finanzas
             </div>
           )}
           {tab === "rutinas" && (
@@ -301,12 +401,46 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview }) {
                 <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
                   Sin rutinas asignadas todavía
                 </div>
-              ) : rutinas.map((r, i) => (
-                <div key={i} style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
-                  <div style={T.h3}>{r.nombre}</div>
-                  <div style={{ ...T.body, marginTop: 4 }}>{r.dias?.length || 0} días</div>
-                </div>
-              ))}
+              ) : rutinas.map((r) => {
+                const dias = typeof r.dias === "string" ? (() => { try { return JSON.parse(r.dias) } catch { return [] } })() : (r.dias || [])
+                return (
+                  <div key={r.id} style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                      <div>
+                        <div style={T.h3}>{r.nombre}</div>
+                        <div style={{ ...T.body, marginTop: 2 }}>{dias.length} {dias.length === 1 ? "día" : "días"}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <motion.button whileTap={{ scale: 0.96 }} onClick={() => ajustarConIA(r)} disabled={iaLoading[r.id]}
+                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.accentSub, border: `0.5px solid ${COLORS.accent}44`, borderRadius: 10, padding: "9px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: iaLoading[r.id] ? 0.6 : 1 }}>
+                        <Icon name="sparkle" size={13} color={COLORS.accent} />
+                        {iaLoading[r.id] ? "Analizando..." : "Ajustar con IA"}
+                      </motion.button>
+                      <motion.button whileTap={{ scale: 0.96 }} onClick={() => exportarPDF(r)}
+                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "9px 0", color: COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        <Icon name="download" size={13} color={COLORS.textSub} />
+                        Exportar PDF
+                      </motion.button>
+                    </div>
+                    <AnimatePresence>
+                      {iaResultado[r.id] && (
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
+                          style={{ overflow: "hidden" }}>
+                          <div style={{ background: COLORS.accentSub + "44", border: `0.5px solid ${COLORS.accent}44`, borderRadius: 12, padding: "12px 14px" }}>
+                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+                              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent }}>Sugerencia IA</div>
+                              <button onClick={() => setIaResultado(prev => ({ ...prev, [r.id]: null }))}
+                                style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>✕</button>
+                            </div>
+                            <div style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{iaResultado[r.id]}</div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )
+              })}
             </>
           )}
         </motion.div>
@@ -680,6 +814,7 @@ export default function App({ user, onLogout }) {
 
     const pages = {
       inicio: <Inicio clientes={clientes} nombreTrainer={nombreTrainer} />,
+      chat: <Chat user={user} clientes={clientes} modo="trainer" />,
       clientes: <Clientes
         clientes={clientes}
         onVerPerfil={setClienteSeleccionado}

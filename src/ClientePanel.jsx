@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
+import Chat from "./Chat"
 
 const COLORS = {
   bg: "#080808", surface: "#111111", surface2: "#1a1a1a", border: "#222222", border2: "#2a2a2a",
@@ -25,6 +26,7 @@ const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
     dumbbell: <><path d="M6.5 6.5h11M6.5 17.5h11M3 9.5h2v5H3zM19 9.5h2v5h-2zM5 7.5h2v9H5zM17 7.5h2v9h-2z"/></>,
     trendingUp: <><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></>,
     wallet: <><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 13a1 1 0 100-2 1 1 0 000 2z"/></>,
+    chat: <><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></>,
     play: <polygon points="5 3 19 12 5 21 5 3"/>,
     chevronRight: <path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round"/>,
     logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></>,
@@ -40,6 +42,7 @@ const navItems = [
   { id: "inicio", icon: "home", label: "Inicio" },
   { id: "rutina", icon: "dumbbell", label: "Rutina" },
   { id: "progreso", icon: "trendingUp", label: "Progreso" },
+  { id: "chat", icon: "chat", label: "Chat" },
   { id: "pagos", icon: "wallet", label: "Pagos" },
 ]
 
@@ -356,6 +359,26 @@ function Progreso({ perfil, onActualizar }) {
   const [agregando, setAgregando] = useState(false)
   const [guardandoCarga, setGuardandoCarga] = useState(false)
 
+  const [fotos, setFotos] = useState(perfil?.fotos_progreso || [])
+  const [subiendoFoto, setSubiendoFoto] = useState(false)
+
+  const handleFotoUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file || !perfil?.id) return
+    setSubiendoFoto(true)
+    const ext = file.name.split(".").pop()
+    const path = `fotos/${perfil.id}/${Date.now()}.${ext}`
+    const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: false })
+    if (!upErr) {
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+      const nuevaFoto = { url: urlData.publicUrl, fecha: new Date().toLocaleDateString("es-AR") }
+      const nuevasFotos = [...fotos, nuevaFoto]
+      const { data } = await supabase.from("clientes").update({ fotos_progreso: nuevasFotos }).eq("id", perfil.id).select().single()
+      if (data) { setFotos(nuevasFotos); onActualizar(data) }
+    }
+    setSubiendoFoto(false)
+  }
+
   const pesoHistorial = perfil?.peso_historial || []
   const pesoActual = perfil?.peso
 
@@ -539,6 +562,33 @@ function Progreso({ perfil, onActualizar }) {
           </div>
         </div>
       )}
+
+      {/* Fotos de progreso */}
+      <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+          <div style={T.label}>Fotos de progreso</div>
+          <label style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "6px 12px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: subiendoFoto ? 0.5 : 1 }}>
+            {subiendoFoto ? "Subiendo..." : "+ Foto"}
+            <input type="file" accept="image/*" style={{ display: "none" }} onChange={handleFotoUpload} disabled={subiendoFoto} />
+          </label>
+        </div>
+        {fotos.length === 0 ? (
+          <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, padding: "12px 0" }}>
+            Subí tu primera foto para ver tu evolución
+          </div>
+        ) : (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+            {[...fotos].reverse().map((f, i) => (
+              <div key={i} style={{ borderRadius: 12, overflow: "hidden", background: COLORS.surface2 }}>
+                <div style={{ aspectRatio: "3/4", overflow: "hidden" }}>
+                  <img src={f.url} alt="progreso" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+                <div style={{ fontSize: 10, color: COLORS.textMuted, textAlign: "center", padding: "5px 0" }}>{f.fecha}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </>
   )
 }
@@ -688,6 +738,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
       inicio: <Inicio perfil={perfilMock} onLogout={onLogout} onActualizar={previewMode ? () => {} : setPerfil} />,
       rutina: <Rutina perfil={perfilMock} />,
       progreso: <Progreso perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} />,
+      chat: <Chat user={user} clienteId={perfilMock?.id} trainerId={perfilMock?.trainer_id} modo="cliente" />,
       pagos: <Pagos perfil={perfilMock} />,
     }
     return (
