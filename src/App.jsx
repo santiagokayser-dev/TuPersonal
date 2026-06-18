@@ -1223,9 +1223,7 @@ export default function App({ user, onLogout }) {
         <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100dvh", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "20px 16px 16px" }}>
             <div style={{ marginBottom: 14, padding: "0 4px" }}>
-              <div style={{ overflow: "hidden", position: "relative", height: 30, width: 180, flexShrink: 0 }}>
-                <img src="/logo.svg" alt="TuPersonal" style={{ position: "absolute", width: 446, height: "auto", left: -140, top: -128 }} />
-              </div>
+              <img src="/Logotipo.png" alt="TuPersonal" style={{ height: 48, width: "auto", display: "block" }} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 26, height: 26, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#fff" }}>
@@ -1261,9 +1259,7 @@ export default function App({ user, onLogout }) {
         {/* Header mobile */}
         {isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(16px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
-            <div style={{ overflow: "hidden", position: "relative", height: 22, width: 130, flexShrink: 0 }}>
-              <img src="/logo.svg" alt="TuPersonal" style={{ position: "absolute", width: 323, height: "auto", left: -101, top: -93 }} />
-            </div>
+            <img src="/Logotipo.png" alt="TuPersonal" style={{ height: 32, width: "auto" }} />
             <button onClick={onLogout}
               style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
               Salir

@@ -124,9 +124,7 @@ export default function Auth() {
   return (
     <div style={S.container}>
       <div style={S.phone}>
-        <div style={{ overflow: "hidden", position: "relative", height: 28, width: 170, flexShrink: 0, marginBottom: 32 }}>
-          <img src="/logo.svg" alt="TuPersonal" style={{ position: "absolute", width: 424, height: "auto", left: -133, top: -122 }} />
-        </div>
+        <img src="/Logotipo.png" alt="TuPersonal" style={{ height: 64, width: "auto", marginBottom: 32 }} />
 
         {inviteTrainerId && (
           <div style={{ background: "#1E3A8A33", border: `0.5px solid ${COLORS.accent}33`, borderRadius: 12, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#93C5FD" }}>
