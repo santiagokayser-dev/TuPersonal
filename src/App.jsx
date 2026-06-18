@@ -1223,7 +1223,9 @@ export default function App({ user, onLogout }) {
         <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100dvh", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "20px 16px 16px" }}>
             <div style={{ marginBottom: 14, padding: "0 4px" }}>
-              <img src="/logo.svg" alt="TuPersonal" style={{ height: 36, width: "auto", maxWidth: 180, objectFit: "contain", display: "block" }} />
+              <div style={{ overflow: "hidden", position: "relative", height: 30, width: 180, flexShrink: 0 }}>
+                <img src="/logo.svg" alt="TuPersonal" style={{ position: "absolute", width: 446, height: "auto", left: -140, top: -128 }} />
+              </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 26, height: 26, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#fff" }}>
@@ -1259,7 +1261,9 @@ export default function App({ user, onLogout }) {
         {/* Header mobile */}
         {isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(16px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
-            <img src="/logo.svg" alt="TuPersonal" style={{ height: 24, width: "auto", maxWidth: 140, objectFit: "contain" }} />
+            <div style={{ overflow: "hidden", position: "relative", height: 22, width: 130, flexShrink: 0 }}>
+              <img src="/logo.svg" alt="TuPersonal" style={{ position: "absolute", width: 323, height: "auto", left: -101, top: -93 }} />
+            </div>
             <button onClick={onLogout}
               style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
               Salir
@@ -1273,7 +1277,7 @@ export default function App({ user, onLogout }) {
 
         {/* Nav inferior — solo mobile */}
         {isMobile && !clienteSeleccionado && (
-          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 10, paddingBottom: "calc(10px + env(safe-area-inset-bottom))", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
+          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 10, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActivePage(item.id)}
                 style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>

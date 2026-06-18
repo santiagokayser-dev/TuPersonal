@@ -768,7 +768,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
       <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
         <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
       </div>
-      <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 10, paddingBottom: "calc(10px + env(safe-area-inset-bottom))", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
+      <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 10, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
         {navItems.map(item => (
           <button key={item.id} onClick={() => setActivePage(item.id)}
             style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>
