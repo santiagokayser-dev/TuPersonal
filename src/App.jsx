@@ -776,6 +776,149 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
   )
 }
 
+function RutinasPage({ clientes, user, onGuardar }) {
+  const [tab, setTab] = useState("lista")
+  const [rutinas, setRutinas] = useState([])
+  const [cargando, setCargando] = useState(true)
+  const [expandida, setExpandida] = useState(null)
+  const [eliminando, setEliminando] = useState(null)
+
+  const cargar = async () => {
+    setCargando(true)
+    const { data } = await supabase.from("rutinas").select("*").eq("trainer_id", user?.id).order("created_at", { ascending: false })
+    setRutinas(data || [])
+    setCargando(false)
+  }
+
+  useEffect(() => { cargar() }, [user?.id])
+
+  const eliminar = async (id) => {
+    setEliminando(id)
+    await supabase.from("rutinas").delete().eq("id", id)
+    setRutinas(prev => prev.filter(r => r.id !== id))
+    setEliminando(null)
+  }
+
+  const getNombreClientes = (asignados) => {
+    if (!asignados || !asignados.length) return "Sin asignar"
+    const nombres = asignados.map(id => {
+      const c = clientes.find(c => c.id === id)
+      return c ? c.nombre : null
+    }).filter(Boolean)
+    if (!nombres.length) return "Sin asignar"
+    if (nombres.length <= 2) return nombres.join(", ")
+    return `${nombres.slice(0, 2).join(", ")} +${nombres.length - 2}`
+  }
+
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={T.h1}>Rutinas</div>
+        <div style={{ fontSize: 12, color: COLORS.textMuted }}>{rutinas.length} creadas</div>
+      </div>
+
+      <div style={{ display: "flex", background: COLORS.surface, borderRadius: 14, padding: 3, gap: 3 }}>
+        {[["lista", "Mis rutinas"], ["crear", "Crear nueva"]].map(([id, label]) => (
+          <button key={id} onClick={() => setTab(id)}
+            style={{ flex: 1, padding: "9px 0", borderRadius: 11, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, background: tab === id ? COLORS.accent : "transparent", color: tab === id ? "#fff" : COLORS.textSub, transition: "all 0.2s" }}>
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "lista" && (
+        <motion.div key="lista" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {cargando && <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, padding: 20 }}>Cargando...</div>}
+          {!cargando && rutinas.length === 0 && (
+            <div style={{ background: COLORS.surface, borderRadius: 16, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
+              <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 8 }}>No creaste rutinas todavía</div>
+              <button onClick={() => setTab("crear")}
+                style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "9px 20px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                Crear primera rutina
+              </button>
+            </div>
+          )}
+          {rutinas.map((r) => {
+            const dias = (() => { try { return typeof r.dias === "string" ? JSON.parse(r.dias) : (r.dias || []) } catch { return [] } })()
+            const abierta = expandida === r.id
+            const asignadosArr = Array.isArray(r.clientes_asignados) ? r.clientes_asignados :
+              (() => { try { return JSON.parse(r.clientes_asignados || "[]") } catch { return [] } })()
+            return (
+              <motion.div key={r.id} layout style={{ background: COLORS.surface, borderRadius: 16, border: `0.5px solid ${COLORS.border}`, overflow: "hidden" }}>
+                <div onClick={() => setExpandida(abierta ? null : r.id)}
+                  style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 12, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon name="dumbbell" size={18} color={COLORS.accent} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.nombre}</div>
+                    <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>
+                      {dias.length} {dias.length === 1 ? "día" : "días"} · {getNombreClientes(asignadosArr)}
+                    </div>
+                  </div>
+                  <motion.div animate={{ rotate: abierta ? 90 : 0 }} transition={{ duration: 0.2 }}>
+                    <Icon name="chevronRight" size={14} color={COLORS.textMuted} />
+                  </motion.div>
+                </div>
+
+                <AnimatePresence>
+                  {abierta && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+                      style={{ overflow: "hidden" }}>
+                      <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 8, borderTop: `0.5px solid ${COLORS.border}`, paddingTop: 12 }}>
+                        {dias.map((d, i) => {
+                          const ejercicios = d.bloques?.flatMap(b => b.ejercicios || [b]) || []
+                          return (
+                            <div key={i} style={{ background: COLORS.surface2, borderRadius: 12, padding: "10px 12px" }}>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.accent, marginBottom: 6 }}>{d.nombre || `Día ${i + 1}`}</div>
+                              {ejercicios.slice(0, 4).map((e, j) => (
+                                <div key={j} style={{ fontSize: 12, color: COLORS.textSub, padding: "2px 0" }}>
+                                  {e.nombre || e} {e.series && e.reps ? `· ${e.series}×${e.reps}` : ""}
+                                </div>
+                              ))}
+                              {ejercicios.length > 4 && (
+                                <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>+{ejercicios.length - 4} más</div>
+                              )}
+                            </div>
+                          )
+                        })}
+                        {asignadosArr.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                            {asignadosArr.map(id => {
+                              const c = clientes.find(c => c.id === id)
+                              return c ? (
+                                <div key={id} style={{ background: COLORS.accentSub, borderRadius: 20, padding: "4px 10px", fontSize: 11, color: "#a5b4fc", fontWeight: 500 }}>{c.nombre}</div>
+                              ) : null
+                            })}
+                          </div>
+                        )}
+                        <button onClick={() => eliminar(r.id)} disabled={eliminando === r.id}
+                          style={{ background: "#3a1a1a", border: "0.5px solid #ef444433", borderRadius: 10, padding: "8px 0", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer", width: "100%" }}>
+                          {eliminando === r.id ? "Eliminando..." : "Eliminar rutina"}
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            )
+          })}
+        </motion.div>
+      )}
+
+      {tab === "crear" && (
+        <motion.div key="crear" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+          <CreadorRutinasNuevo clientes={clientes} onGuardar={async (datos) => {
+            await onGuardar(datos)
+            await cargar()
+            setTab("lista")
+          }} />
+        </motion.div>
+      )}
+    </>
+  )
+}
+
 export default function App({ user, onLogout }) {
   const [activePage, setActivePage] = useState("inicio")
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
@@ -833,7 +976,7 @@ export default function App({ user, onLogout }) {
         onVerPerfil={setClienteSeleccionado}
         onClienteAgregado={(c) => setClientes(prev => [...prev, c])}
       />,
-      rutinas: <CreadorRutinasNuevo clientes={clientes} onGuardar={async ({ nombre, dias, clientesAsignados }) => {
+      rutinas: <RutinasPage clientes={clientes} user={user} onGuardar={async ({ nombre, dias, clientesAsignados }) => {
         const { error } = await supabase.from("rutinas").insert({
           trainer_id: user?.id,
           nombre,
