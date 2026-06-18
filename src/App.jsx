@@ -192,7 +192,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
   const cargarRutinas = async () => {
     if (!cliente.id) return
     setCargandoRutinas(true)
-    const { data } = await supabase.from("rutinas").select("*").eq("cliente_id", cliente.id)
+    const { data } = await supabase.from("rutinas").select("*").contains("clientes_asignados", [cliente.id])
     if (data) setRutinas(data)
     setCargandoRutinas(false)
   }

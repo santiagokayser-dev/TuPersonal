@@ -240,7 +240,7 @@ function Rutina({ perfil }) {
   useEffect(() => {
     if (!perfil?.id) { setCargando(false); return }
     supabase.from("rutinas").select("*")
-      .or(`cliente_id.eq.${perfil.id},clientes_asignados.cs.{${perfil.id}}`)
+      .contains("clientes_asignados", [perfil.id])
       .then(({ data }) => {
         if (data) setRutinas(data)
         setCargando(false)
