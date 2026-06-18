@@ -573,11 +573,22 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
   )
 }
 
-function Clientes({ onVerPerfil, clientes = [], onClienteAgregado }) {
+const AVATAR_COLORS = [
+  "#6366f1","#8b5cf6","#ec4899","#f59e0b","#10b981","#3b82f6","#ef4444","#06b6d4","#f97316","#84cc16"
+]
+function avatarColor(name) {
+  return AVATAR_COLORS[(name || "?").charCodeAt(0) % AVATAR_COLORS.length]
+}
+
+function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCliente }) {
   const [mostrarForm, setMostrarForm] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [linkCopiado, setLinkCopiado] = useState(false)
   const [nuevo, setNuevo] = useState({ nombre: "", email: "", precio: "" })
+  const [busqueda, setBusqueda] = useState("")
+  const [filtro, setFiltro] = useState("todos")
+  const [menuAbierto, setMenuAbierto] = useState(null)
+  const [eliminando, setEliminando] = useState(null)
 
   const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
@@ -586,97 +597,185 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado }) {
     setCargando(true)
     const { data: { user } } = await supabase.auth.getUser()
     const { data, error } = await supabase.from("clientes").insert({
-      trainer_id: user.id,
-      nombre: nuevo.nombre,
-      email: nuevo.email || null,
-      precio: Number(nuevo.precio) || null,
+      trainer_id: user.id, nombre: nuevo.nombre, email: nuevo.email || null, precio: Number(nuevo.precio) || null,
     }).select().single()
-    if (!error && data) {
-      onClienteAgregado?.(normCliente(data))
-      setNuevo({ nombre: "", email: "", precio: "" })
-      setMostrarForm(false)
-    }
+    if (!error && data) { onClienteAgregado?.(normCliente(data)); setNuevo({ nombre: "", email: "", precio: "" }); setMostrarForm(false) }
     setCargando(false)
+  }
+
+  const eliminarCliente = async (c) => {
+    setEliminando(c.id)
+    await supabase.from("clientes").delete().eq("id", c.id)
+    onEliminarCliente?.(c.id)
+    setMenuAbierto(null)
+    setEliminando(null)
   }
 
   const copiarLink = async () => {
     const { data: { user } } = await supabase.auth.getUser()
     const link = `${window.location.origin}?invite=${user.id}`
     try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(link)
-      } else {
-        const el = document.createElement("textarea")
-        el.value = link
-        el.style.cssText = "position:fixed;opacity:0"
-        document.body.appendChild(el)
-        el.focus()
-        el.select()
-        document.execCommand("copy")
-        document.body.removeChild(el)
+      if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(link) }
+      else {
+        const el = document.createElement("textarea"); el.value = link; el.style.cssText = "position:fixed;opacity:0"
+        document.body.appendChild(el); el.focus(); el.select(); document.execCommand("copy"); document.body.removeChild(el)
       }
-      setLinkCopiado(true)
-      setTimeout(() => setLinkCopiado(false), 2500)
-    } catch {
-      setLinkCopiado("error")
-      setTimeout(() => setLinkCopiado(false), 2500)
-    }
+      setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
+    } catch { setLinkCopiado("error"); setTimeout(() => setLinkCopiado(false), 2500) }
   }
+
+  const pendientes = clientes.filter(c => c.meses_deuda > 0).length
+  const alDia = clientes.length - pendientes
+
+  // Priority sort: debt first, then al día
+  const sorted = [...clientes].sort((a, b) => (b.meses_deuda || 0) - (a.meses_deuda || 0))
+
+  const filtrados = sorted.filter(c => {
+    const matchBusqueda = !busqueda || c.nombre.toLowerCase().includes(busqueda.toLowerCase())
+    const matchFiltro = filtro === "todos" || (filtro === "aldia" && !c.meses_deuda) || (filtro === "pendientes" && c.meses_deuda > 0)
+    return matchBusqueda && matchFiltro
+  })
 
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={T.h1}>Clientes</div>
-        <div style={{ display: "flex", gap: 8 }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <div style={T.h1}>Clientes</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 4 }}>
+            {clientes.length > 0
+              ? <>{alDia} al día{pendientes > 0 ? <> · <span style={{ color: COLORS.yellow }}>{pendientes} pendiente{pendientes > 1 ? "s" : ""}</span></> : ""}</>
+              : "Administrá tus clientes, pagos y rutinas"
+            }
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <motion.button whileTap={{ scale: 0.95 }} onClick={copiarLink}
-            style={{ background: linkCopiado === "error" ? COLORS.red + "22" : linkCopiado ? COLORS.green + "22" : COLORS.surface, border: `0.5px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 12, padding: "8px 12px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
-            {linkCopiado === "error" ? "Error al copiar" : linkCopiado ? "¡Copiado!" : "Copiar link"}
+            style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `0.5px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 12, padding: "8px 12px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
+            {linkCopiado === "error" ? "Error" : linkCopiado ? "¡Copiado!" : "Compartir link"}
           </motion.button>
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
-            style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
-            + Agregar
+            style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: `0 2px 12px ${COLORS.accent}44`, whiteSpace: "nowrap" }}>
+            + Agregar cliente
           </motion.button>
         </div>
       </div>
+
+      {/* Form agregar */}
       <AnimatePresence>
         {mostrarForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}`, overflow: "hidden" }}>
-            <div style={{ ...T.label, marginBottom: 4 }}>Nuevo cliente</div>
-            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>El cliente carga sus datos cuando crea su cuenta.</div>
-            <input placeholder="Nombre *" value={nuevo.nombre} onChange={e => setNuevo(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
-            <input placeholder="Email (para enviar el link de invitación)" value={nuevo.email} onChange={e => setNuevo(p => ({ ...p, email: e.target.value }))} style={inputStyle} type="email" />
+            style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.accent}44`, overflow: "hidden" }}>
+            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>Nuevo cliente</div>
+            <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>El cliente completa sus datos al crear su cuenta.</div>
+            <input placeholder="Nombre *" value={nuevo.nombre} onChange={e => setNuevo(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} autoFocus />
+            <input placeholder="Email" value={nuevo.email} onChange={e => setNuevo(p => ({ ...p, email: e.target.value }))} style={inputStyle} type="email" />
             <input placeholder="Precio/mes ($)" value={nuevo.precio} onChange={e => setNuevo(p => ({ ...p, precio: e.target.value }))} style={inputStyle} type="number" />
-            <div style={{ background: COLORS.surface2, borderRadius: 12, padding: "10px 14px", marginBottom: 8, fontSize: 12, color: COLORS.textMuted, display: "flex", alignItems: "center", gap: 8 }}>
-              <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
-              Después usá el botón "Link" para enviarle el link de invitación.
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => setMostrarForm(false)} style={{ flex: 1, background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+              <motion.button whileTap={{ scale: 0.97 }} onClick={agregarCliente} disabled={cargando || !nuevo.nombre.trim()}
+                style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 12, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: cargando ? 0.5 : 1 }}>
+                {cargando ? "Guardando..." : "Agregar cliente"}
+              </motion.button>
             </div>
-            <motion.button whileTap={{ scale: 0.97 }} onClick={agregarCliente} disabled={cargando || !nuevo.nombre.trim()}
-              style={{ background: cargando ? COLORS.surface2 : COLORS.accent, border: "none", borderRadius: 12, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", opacity: cargando ? 0.5 : 1 }}>
-              {cargando ? "Guardando..." : "Agregar cliente"}
-            </motion.button>
           </motion.div>
         )}
       </AnimatePresence>
-      {clientes.length === 0 && !mostrarForm && (
-        <div style={{ background: COLORS.surface, borderRadius: 16, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-          <div style={{ fontSize: 13, color: COLORS.textMuted }}>Aún no tenés clientes — agregá el primero</div>
-        </div>
+
+      {/* Búsqueda + filtros */}
+      {clientes.length > 0 && (
+        <>
+          <div style={{ position: "relative" }}>
+            <svg style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input placeholder="Buscar cliente..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
+              style={{ ...inputStyle, paddingLeft: 34, marginBottom: 0 }} />
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            {[["todos", `Todos (${clientes.length})`], ["aldia", `Al día (${alDia})`], ["pendientes", `Pendientes (${pendientes})`]].map(([id, label]) => (
+              <button key={id} onClick={() => setFiltro(id)}
+                style={{ padding: "6px 12px", borderRadius: 20, border: `0.5px solid ${filtro === id ? COLORS.accent : COLORS.border}`, background: filtro === id ? COLORS.accentSub : COLORS.surface, color: filtro === id ? "#a5b4fc" : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </>
       )}
-      {clientes.map((c, i) => (
-        <motion.div key={i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.07 }}
-          onClick={() => onVerPerfil(c)} style={{ background: COLORS.surface, borderRadius: 16, padding: "14px 16px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-          <div style={{ width: 42, height: 42, borderRadius: 14, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: COLORS.accent, flexShrink: 0 }}>{c.ini}</div>
-          <div style={{ flex: 1 }}>
-            <div style={T.h3}>{c.nombre}</div>
-            <div style={{ ...T.body, fontSize: 12, marginTop: 2 }}>{c.objetivo || "Sin objetivo definido"}</div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6 }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: c.estadoColor || COLORS.green }}>{c.estado || "Al día"}</div>
-            <Icon name="chevronRight" size={14} color={COLORS.textMuted} />
-          </div>
+
+      {/* Empty state */}
+      {clientes.length === 0 && !mostrarForm && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+          style={{ background: COLORS.surface, borderRadius: 20, padding: "36px 24px", border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
+          <div style={{ fontSize: 36, marginBottom: 14 }}>👥</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>No tenés clientes todavía</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Agregá tu primer cliente para empezar a gestionar entrenamientos y cobros</div>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={() => setMostrarForm(true)}
+            style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 28px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
+            + Agregar primer cliente
+          </motion.button>
         </motion.div>
-      ))}
+      )}
+
+      {/* Lista */}
+      {filtrados.length === 0 && clientes.length > 0 && (
+        <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, padding: "20px 0" }}>Sin resultados para "{busqueda}"</div>
+      )}
+
+      {filtrados.map((c, i) => {
+        const ac = avatarColor(c.nombre)
+        const isMenuOpen = menuAbierto === c.id
+        return (
+          <motion.div key={c.id || i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+            whileHover={{ y: -2, boxShadow: `0 4px 20px #00000040` }}
+            style={{ background: COLORS.surface, borderRadius: 16, border: `0.5px solid ${COLORS.border}`, position: "relative", overflow: "visible", transition: "border-color 0.2s" }}>
+            <div onClick={() => { setMenuAbierto(null); onVerPerfil(c) }} style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 13, cursor: "pointer" }}>
+              {/* Avatar */}
+              <div style={{ width: 46, height: 46, borderRadius: 15, background: `linear-gradient(135deg, ${ac}cc, ${ac}66)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: `0 2px 10px ${ac}44` }}>
+                {c.ini}
+              </div>
+              {/* Info */}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap" }}>
+                  {c.objetivo && <span>{c.objetivo}</span>}
+                  {c.peso && <><span style={{ color: COLORS.textMuted + "66" }}>·</span><span>{c.peso} kg</span></>}
+                  {c.precio && <><span style={{ color: COLORS.textMuted + "66" }}>·</span><span>${(Number(c.precio)/1000).toFixed(0)}K/mes</span></>}
+                </div>
+              </div>
+              {/* Estado pill */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: c.estadoColor, background: c.estadoColor + "18", borderRadius: 20, padding: "3px 10px", border: `0.5px solid ${c.estadoColor}44` }}>
+                  {c.meses_deuda > 0 ? `⚠ ${c.estado}` : `✓ Al día`}
+                </div>
+                {/* Menú ••• */}
+                <motion.button whileTap={{ scale: 0.9 }} onClick={e => { e.stopPropagation(); setMenuAbierto(isMenuOpen ? null : c.id) }}
+                  style={{ width: 28, height: 28, borderRadius: 8, background: isMenuOpen ? COLORS.surface2 : "transparent", border: `0.5px solid ${isMenuOpen ? COLORS.border : "transparent"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+                  <span style={{ color: COLORS.textMuted, fontSize: 14, letterSpacing: 1 }}>•••</span>
+                </motion.button>
+              </div>
+            </div>
+
+            {/* Dropdown */}
+            <AnimatePresence>
+              {isMenuOpen && (
+                <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
+                  style={{ position: "absolute", right: 12, top: "calc(100% + 4px)", background: COLORS.surface, border: `0.5px solid ${COLORS.border2}`, borderRadius: 14, padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 32px #00000060" }}>
+                  {[
+                    { label: "Ver perfil", icon: "users", action: () => { setMenuAbierto(null); onVerPerfil(c) } },
+                    { label: "Enviar mensaje", icon: "chat", action: () => setMenuAbierto(null) },
+                    { label: eliminando === c.id ? "Eliminando..." : "Eliminar cliente", icon: "logout", danger: true, action: () => eliminarCliente(c) },
+                  ].map((item) => (
+                    <button key={item.label} onClick={item.action}
+                      style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", background: "none", border: "none", borderRadius: 10, color: item.danger ? COLORS.red : COLORS.text, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
+                      <Icon name={item.icon} size={14} color={item.danger ? COLORS.red : COLORS.textMuted} />
+                      {item.label}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )
+      })}
     </>
   )
 }
@@ -1086,6 +1185,7 @@ export default function App({ user, onLogout }) {
         clientes={clientes}
         onVerPerfil={setClienteSeleccionado}
         onClienteAgregado={(c) => setClientes(prev => [...prev, c])}
+        onEliminarCliente={(id) => setClientes(prev => prev.filter(c => c.id !== id))}
       />,
       rutinas: <RutinasPage clientes={clientes} user={user} onGuardar={async ({ nombre, dias, clientesAsignados }) => {
         const { error } = await supabase.from("rutinas").insert({
