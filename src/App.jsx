@@ -1258,7 +1258,7 @@ export default function App({ user, onLogout }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
         {/* Header mobile */}
         {isMobile && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 0", flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(16px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
             <img src="/logo.svg" alt="TuPersonal" style={{ height: 24, width: "auto", maxWidth: 140, objectFit: "contain" }} />
             <button onClick={onLogout}
               style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
@@ -1273,7 +1273,7 @@ export default function App({ user, onLogout }) {
 
         {/* Nav inferior — solo mobile */}
         {isMobile && !clienteSeleccionado && (
-          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", padding: "10px 0 22px", flexShrink: 0 }}>
+          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 10, paddingBottom: "calc(10px + env(safe-area-inset-bottom))", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActivePage(item.id)}
                 style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>
