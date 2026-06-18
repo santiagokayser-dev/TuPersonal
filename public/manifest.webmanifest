@@ -11,7 +11,7 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/Logotipo.png",
+      "src": "/Icono.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any maskable"
