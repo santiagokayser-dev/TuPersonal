@@ -1178,9 +1178,16 @@ export default function App({ user, onLogout }) {
       </motion.div>
     )
 
+    // Chat gets its own full-height wrapper (no padding/gap)
+    if (activePage === "chat") return (
+      <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+        style={{ flex: 1, overflow: "hidden", display: "flex" }}>
+        <Chat user={user} clientes={clientes} modo="trainer" />
+      </motion.div>
+    )
+
     const pages = {
       inicio: <Inicio clientes={clientes} nombreTrainer={nombreTrainer} onVerPerfil={setClienteSeleccionado} onNuevoCliente={() => setActivePage("clientes")} />,
-      chat: <Chat user={user} clientes={clientes} modo="trainer" />,
       clientes: <Clientes
         clientes={clientes}
         onVerPerfil={setClienteSeleccionado}
