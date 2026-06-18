@@ -1,0 +1,20 @@
+{
+  "name": "TuPersonal",
+  "short_name": "TuPersonal",
+  "description": "Gestión de entrenamiento personal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#060A10",
+  "theme_color": "#060A10",
+  "lang": "es",
+  "scope": "/",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/Logotipo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
