@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import AgendaReal from "./Agenda"
 import { EJERCICIOS } from "./ejercicios"
@@ -64,7 +64,7 @@ function normCliente(c) {
   return {
     ...c,
     ini: (c.nombre || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase(),
-    estado: deuda > 0 ? `Debe ${deuda} ${deuda === 1 ? "mes" : "meses"}` : "Al dÃ­a",
+    estado: deuda > 0 ? `Debe ${deuda} ${deuda === 1 ? "mes" : "meses"}` : "Al día",
     estadoColor: deuda > 1 ? COLORS.red : deuda === 1 ? COLORS.yellow : COLORS.green,
   }
 }
@@ -142,7 +142,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
   const cobrado = clientes.filter(c => !c.meses_deuda).reduce((s, c) => s + (Number(c.precio) || 0), 0)
   const nombre = (nombreTrainer || "Entrenador").split(" ")[0]
   const hora = new Date().getHours()
-  const saludo = hora < 12 ? "Buenos dÃ­as" : hora < 19 ? "Buenas tardes" : "Buenas noches"
+  const saludo = hora < 12 ? "Buenos días" : hora < 19 ? "Buenas tardes" : "Buenas noches"
 
   const animTotal = useAnimatedNumber(totalMensual)
   const animCobrado = useAnimatedNumber(cobrado)
@@ -158,12 +158,12 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
           <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, letterSpacing: -0.5 }}>
-            {saludo}, {nombre} ðŸ‘‹
+            {saludo}, {nombre} 👋
           </div>
           <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 5, lineHeight: 1.4 }}>
             {clientes.length > 0
-              ? <>{clientes.length} {clientes.length === 1 ? "cliente" : "clientes"} Â· <span style={{ color: pendientes > 0 ? COLORS.yellow : COLORS.green }}>{pendientes === 0 ? "todos al dÃ­a" : `${pendientes} pendiente${pendientes > 1 ? "s" : ""}`}</span>{totalMensual > 0 ? ` Â· $${(totalMensual / 1000).toFixed(0)}K proyectados` : ""}</>
-              : "EmpezÃ¡ agregando tu primer cliente"
+              ? <>{clientes.length} {clientes.length === 1 ? "cliente" : "clientes"} · <span style={{ color: pendientes > 0 ? COLORS.yellow : COLORS.green }}>{pendientes === 0 ? "todos al día" : `${pendientes} pendiente${pendientes > 1 ? "s" : ""}`}</span>{totalMensual > 0 ? ` · $${(totalMensual / 1000).toFixed(0)}K proyectados` : ""}</>
+              : "Empezá agregando tu primer cliente"
             }
           </div>
         </div>
@@ -174,14 +174,14 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
         </motion.button>
       </div>
 
-      {/* Hero card â€” FacturaciÃ³n */}
+      {/* Hero card — Facturación */}
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
         style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}cc 0%, ${COLORS.surface} 60%)`, borderRadius: 20, padding: "18px 20px 16px", border: `0.5px solid ${COLORS.accent}44`, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: "50%", background: COLORS.accent + "0d" }} />
-        <div style={{ ...T.label, color: "#93C5FD66" }}>FacturaciÃ³n mensual</div>
+        <div style={{ ...T.label, color: "#93C5FD66" }}>Facturación mensual</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6, marginBottom: 2 }}>
           <div style={{ fontSize: 36, fontWeight: 800, color: COLORS.text, letterSpacing: -1.5 }}>
-            ${animTotal > 0 ? (animTotal >= 1000 ? `${(animTotal / 1000).toFixed(0)}K` : animTotal.toLocaleString("es-AR")) : "â€”"}
+            ${animTotal > 0 ? (animTotal >= 1000 ? `${(animTotal / 1000).toFixed(0)}K` : animTotal.toLocaleString("es-AR")) : "—"}
           </div>
           {cobrado > 0 && cobrado < totalMensual && (
             <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, background: COLORS.green + "18", borderRadius: 8, padding: "2px 8px" }}>
@@ -190,15 +190,15 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
           )}
         </div>
         <div style={{ fontSize: 12, color: "#93C5FD66" }}>
-          {totalMensual > 0 ? `${alDia} de ${clientes.filter(c => Number(c.precio) > 0).length} clientes al dÃ­a` : "AsignÃ¡ precios para ver proyecciÃ³n"}
+          {totalMensual > 0 ? `${alDia} de ${clientes.filter(c => Number(c.precio) > 0).length} clientes al día` : "Asigná precios para ver proyección"}
         </div>
       </motion.div>
 
-      {/* 3 mÃ©tricas secundarias */}
+      {/* 3 métricas secundarias */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
         {[
           { label: "Clientes", value: clientes.length, icon: "users", color: COLORS.accent },
-          { label: "Al dÃ­a", value: alDia, icon: "check", color: COLORS.green },
+          { label: "Al día", value: alDia, icon: "check", color: COLORS.green },
           { label: "Pendientes", value: pendientes, icon: "trendingUp", color: pendientes > 0 ? COLORS.yellow : COLORS.textMuted },
         ].map((m, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
@@ -213,11 +213,11 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
         ))}
       </div>
 
-      {/* GrÃ¡fico */}
+      {/* Gráfico */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
         style={{ background: COLORS.surface, borderRadius: 16, padding: "14px 16px 10px", border: `0.5px solid ${COLORS.border}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={T.label}>Ingresos â€” Ãºltimos 6 meses</div>
+          <div style={T.label}>Ingresos — últimos 6 meses</div>
           <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.accent }}>
             ${barData[barData.length - 1]}K
           </div>
@@ -230,7 +230,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
         <>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div style={T.label}>Clientes recientes</div>
-            <div style={{ fontSize: 12, color: COLORS.accent, cursor: "pointer", fontWeight: 500 }} onClick={onNuevoCliente}>ver todos â†’</div>
+            <div style={{ fontSize: 12, color: COLORS.accent, cursor: "pointer", fontWeight: 500 }} onClick={onNuevoCliente}>ver todos →</div>
           </div>
           {clientes.slice(0, 4).map((c, i) => (
             <motion.div key={c.id || i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.32 + i * 0.07 }}
@@ -240,7 +240,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
                 <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {c.objetivo || "Sin objetivo"}{c.precio ? ` Â· $${(Number(c.precio) / 1000).toFixed(0)}K/mes` : ""}
+                  {c.objetivo || "Sin objetivo"}{c.precio ? ` · $${(Number(c.precio) / 1000).toFixed(0)}K/mes` : ""}
                 </div>
               </div>
               <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
@@ -255,9 +255,9 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
       {clientes.length === 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
           style={{ background: COLORS.surface, borderRadius: 16, padding: "28px 20px", border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>ðŸ‹ï¸</div>
+          <div style={{ fontSize: 32, marginBottom: 12 }}>🏋️</div>
           <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>Bienvenido a TuPersonal</div>
-          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>AgregÃ¡ tu primer cliente para empezar a gestionar tu negocio</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>Agregá tu primer cliente para empezar a gestionar tu negocio</div>
           <motion.button whileTap={{ scale: 0.97 }} onClick={onNuevoCliente}
             style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 24px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
             + Agregar primer cliente
@@ -334,13 +334,13 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 400,
-          messages: [{ role: "user", content: `Sos personal trainer experto. AnalizÃ¡ la rutina "${rutina.nombre}" de ${datos.nombre} (peso: ${datos.peso || "?"}kg, objetivo: ${datos.objetivo || "general"}). Ejercicios: ${resumen}. Cargas actuales: ${JSON.stringify(datos.cargas || {})}. Peso histÃ³rico (Ãºltimos 3): ${JSON.stringify((datos.peso_historial || []).slice(-3))}. SugerÃ­ ajustes de progresiÃ³n en mÃ¡ximo 120 palabras, usando bullet points (â€¢). En espaÃ±ol, directo.` }]
+          messages: [{ role: "user", content: `Sos personal trainer experto. Analizá la rutina "${rutina.nombre}" de ${datos.nombre} (peso: ${datos.peso || "?"}kg, objetivo: ${datos.objetivo || "general"}). Ejercicios: ${resumen}. Cargas actuales: ${JSON.stringify(datos.cargas || {})}. Peso histórico (últimos 3): ${JSON.stringify((datos.peso_historial || []).slice(-3))}. Sugerí ajustes de progresión en máximo 120 palabras, usando bullet points (•). En español, directo.` }]
         })
       })
       const d = await res.json()
       setIaResultado(prev => ({ ...prev, [rutina.id]: d.content?.[0]?.text || "Sin respuesta" }))
     } catch {
-      setIaResultado(prev => ({ ...prev, [rutina.id]: "Error al conectar con IA. IntentÃ¡ de nuevo." }))
+      setIaResultado(prev => ({ ...prev, [rutina.id]: "Error al conectar con IA. Intentá de nuevo." }))
     }
     setIaLoading(prev => ({ ...prev, [rutina.id]: false }))
   }
@@ -360,7 +360,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
       const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || [b]) || []
       doc.setFontSize(13)
       doc.setTextColor(40)
-      doc.text(dia.nombre || "DÃ­a", 14, y)
+      doc.text(dia.nombre || "Día", 14, y)
       y += 4
       autoTable(doc, {
         startY: y,
@@ -401,7 +401,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={T.h2}>{datos.nombre}</div>
             <div style={{ ...T.body, marginTop: 2 }}>{datos.objetivo}</div>
-            <div style={{ marginTop: 6, display: "inline-block", background: (datos.estadoColor || COLORS.green) + "22", borderRadius: 8, padding: "3px 10px", fontSize: 11, fontWeight: 600, color: datos.estadoColor || COLORS.green }}>{datos.estado || "Al dÃ­a"}</div>
+            <div style={{ marginTop: 6, display: "inline-block", background: (datos.estadoColor || COLORS.green) + "22", borderRadius: 8, padding: "3px 10px", fontSize: 11, fontWeight: 600, color: datos.estadoColor || COLORS.green }}>{datos.estado || "Al día"}</div>
           </div>
           {waUrl && (
             <a href={waUrl} target="_blank" rel="noopener noreferrer"
@@ -448,7 +448,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                     <input placeholder="Precio/mes" value={datos.precio} onChange={e => setDatos(p => ({ ...p, precio: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
                   </div>
                   <input placeholder="Objetivo" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
-                  <input placeholder="TelÃ©fono (ej: 1134567890)" value={datos.telefono || ""} onChange={e => setDatos(p => ({ ...p, telefono: e.target.value }))} style={inputStyle} type="tel" />
+                  <input placeholder="Teléfono (ej: 1134567890)" value={datos.telefono || ""} onChange={e => setDatos(p => ({ ...p, telefono: e.target.value }))} style={inputStyle} type="tel" />
                   <button onClick={guardarCambios} disabled={guardando}
                     style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.5 : 1 }}>
                     {guardando ? "Guardando..." : "Guardar cambios"}
@@ -457,7 +457,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
               ) : (
                 <>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    {[{ l: "Peso", v: `${datos.peso || "-"}kg` }, { l: "Altura", v: `${datos.altura || "-"}cm` }, { l: "Edad", v: `${datos.edad || "-"} aÃ±os` }, { l: "Precio", v: `$${datos.precio || "-"}/mes` }].map((m, i) => (
+                    {[{ l: "Peso", v: `${datos.peso || "-"}kg` }, { l: "Altura", v: `${datos.altura || "-"}cm` }, { l: "Edad", v: `${datos.edad || "-"} años` }, { l: "Precio", v: `$${datos.precio || "-"}/mes` }].map((m, i) => (
                       <div key={i} style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
                         <div style={T.label}>{m.l}</div>
                         <div style={{ ...T.num, fontSize: 22, marginTop: 4 }}>{m.v}</div>
@@ -477,7 +477,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
                 <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
                   <div style={T.label}>Peso actual</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{datos.peso ? `${datos.peso} kg` : "â€”"}</div>
+                  <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{datos.peso ? `${datos.peso} kg` : "—"}</div>
                 </div>
                 <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
                   <div style={T.label}>Registros</div>
@@ -508,14 +508,14 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
               )}
               {(datos.peso_historial || []).length === 0 && Object.keys(datos.cargas || {}).length === 0 && (
                 <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
-                  El cliente aÃºn no registrÃ³ progreso
+                  El cliente aún no registró progreso
                 </div>
               )}
             </>
           )}
           {tab === "pagos" && (
             <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
-              GestionÃ¡ los pagos desde la secciÃ³n Finanzas
+              Gestioná los pagos desde la sección Finanzas
             </div>
           )}
           {tab === "rutinas" && (
@@ -524,7 +524,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                 <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>Cargando...</div>
               ) : rutinas.length === 0 ? (
                 <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
-                  Sin rutinas asignadas todavÃ­a
+                  Sin rutinas asignadas todavía
                 </div>
               ) : rutinas.map((r) => {
                 const dias = typeof r.dias === "string" ? (() => { try { return JSON.parse(r.dias) } catch { return [] } })() : (r.dias || [])
@@ -533,7 +533,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                       <div>
                         <div style={T.h3}>{r.nombre}</div>
-                        <div style={{ ...T.body, marginTop: 2 }}>{dias.length} {dias.length === 1 ? "dÃ­a" : "dÃ­as"}</div>
+                        <div style={{ ...T.body, marginTop: 2 }}>{dias.length} {dias.length === 1 ? "día" : "días"}</div>
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
@@ -556,7 +556,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent }}>Sugerencia IA</div>
                               <button onClick={() => setIaResultado(prev => ({ ...prev, [r.id]: null }))}
-                                style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>âœ•</button>
+                                style={{ background: "none", border: "none", color: COLORS.textMuted, cursor: "pointer", fontSize: 14, padding: 0, lineHeight: 1 }}>✕</button>
                             </div>
                             <div style={{ fontSize: 13, color: COLORS.text, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{iaResultado[r.id]}</div>
                           </div>
@@ -628,7 +628,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
   const pendientes = clientes.filter(c => c.meses_deuda > 0).length
   const alDia = clientes.length - pendientes
 
-  // Priority sort: debt first, then al dÃ­a
+  // Priority sort: debt first, then al día
   const sorted = [...clientes].sort((a, b) => (b.meses_deuda || 0) - (a.meses_deuda || 0))
 
   const filtrados = sorted.filter(c => {
@@ -645,15 +645,15 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
           <div style={T.h1}>Clientes</div>
           <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 4 }}>
             {clientes.length > 0
-              ? <>{alDia} al dÃ­a{pendientes > 0 ? <> Â· <span style={{ color: COLORS.yellow }}>{pendientes} pendiente{pendientes > 1 ? "s" : ""}</span></> : ""}</>
-              : "AdministrÃ¡ tus clientes, pagos y rutinas"
+              ? <>{alDia} al día{pendientes > 0 ? <> · <span style={{ color: COLORS.yellow }}>{pendientes} pendiente{pendientes > 1 ? "s" : ""}</span></> : ""}</>
+              : "Administrá tus clientes, pagos y rutinas"
             }
           </div>
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <motion.button whileTap={{ scale: 0.95 }} onClick={copiarLink}
             style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `0.5px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 12, padding: "8px 12px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
-            {linkCopiado === "error" ? "Error" : linkCopiado ? "Â¡Copiado!" : "Compartir link"}
+            {linkCopiado === "error" ? "Error" : linkCopiado ? "¡Copiado!" : "Compartir link"}
           </motion.button>
           <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
             style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "8px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: `0 2px 12px ${COLORS.accent}44`, whiteSpace: "nowrap" }}>
@@ -683,7 +683,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
         )}
       </AnimatePresence>
 
-      {/* BÃºsqueda + filtros */}
+      {/* Búsqueda + filtros */}
       {clientes.length > 0 && (
         <>
           <div style={{ position: "relative" }}>
@@ -692,7 +692,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
               style={{ ...inputStyle, paddingLeft: 34, marginBottom: 0 }} />
           </div>
           <div style={{ display: "flex", gap: 6 }}>
-            {[["todos", `Todos (${clientes.length})`], ["aldia", `Al dÃ­a (${alDia})`], ["pendientes", `Pendientes (${pendientes})`]].map(([id, label]) => (
+            {[["todos", `Todos (${clientes.length})`], ["aldia", `Al día (${alDia})`], ["pendientes", `Pendientes (${pendientes})`]].map(([id, label]) => (
               <button key={id} onClick={() => setFiltro(id)}
                 style={{ padding: "6px 12px", borderRadius: 20, border: `0.5px solid ${filtro === id ? COLORS.accent : COLORS.border}`, background: filtro === id ? COLORS.accentSub : COLORS.surface, color: filtro === id ? "#93C5FD" : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
                 {label}
@@ -706,9 +706,9 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
       {clientes.length === 0 && !mostrarForm && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           style={{ background: COLORS.surface, borderRadius: 20, padding: "36px 24px", border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-          <div style={{ fontSize: 36, marginBottom: 14 }}>ðŸ‘¥</div>
-          <div style={{ fontSize: 16, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>No tenÃ©s clientes todavÃ­a</div>
-          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>AgregÃ¡ tu primer cliente para empezar a gestionar entrenamientos y cobros</div>
+          <div style={{ fontSize: 36, marginBottom: 14 }}>👥</div>
+          <div style={{ fontSize: 16, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>No tenés clientes todavía</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Agregá tu primer cliente para empezar a gestionar entrenamientos y cobros</div>
           <motion.button whileTap={{ scale: 0.97 }} onClick={() => setMostrarForm(true)}
             style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 28px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
             + Agregar primer cliente
@@ -738,19 +738,19 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                 <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
                 <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {c.objetivo && <span>{c.objetivo}</span>}
-                  {c.peso && <><span style={{ color: COLORS.textMuted + "66" }}>Â·</span><span>{c.peso} kg</span></>}
-                  {c.precio && <><span style={{ color: COLORS.textMuted + "66" }}>Â·</span><span>${(Number(c.precio)/1000).toFixed(0)}K/mes</span></>}
+                  {c.peso && <><span style={{ color: COLORS.textMuted + "66" }}>·</span><span>{c.peso} kg</span></>}
+                  {c.precio && <><span style={{ color: COLORS.textMuted + "66" }}>·</span><span>${(Number(c.precio)/1000).toFixed(0)}K/mes</span></>}
                 </div>
               </div>
               {/* Estado pill */}
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: c.estadoColor, background: c.estadoColor + "18", borderRadius: 20, padding: "3px 10px", border: `0.5px solid ${c.estadoColor}44` }}>
-                  {c.meses_deuda > 0 ? `âš  ${c.estado}` : `âœ“ Al dÃ­a`}
+                  {c.meses_deuda > 0 ? `⚠ ${c.estado}` : `✓ Al día`}
                 </div>
-                {/* MenÃº â€¢â€¢â€¢ */}
+                {/* Menú ••• */}
                 <motion.button whileTap={{ scale: 0.9 }} onClick={e => { e.stopPropagation(); setMenuAbierto(isMenuOpen ? null : c.id) }}
                   style={{ width: 28, height: 28, borderRadius: 8, background: isMenuOpen ? COLORS.surface2 : "transparent", border: `0.5px solid ${isMenuOpen ? COLORS.border : "transparent"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-                  <span style={{ color: COLORS.textMuted, fontSize: 14, letterSpacing: 1 }}>â€¢â€¢â€¢</span>
+                  <span style={{ color: COLORS.textMuted, fontSize: 14, letterSpacing: 1 }}>•••</span>
                 </motion.button>
               </div>
             </div>
@@ -837,7 +837,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
     setActualizando(null)
   }
 
-  // MÃ©tricas reales
+  // Métricas reales
   const conPrecio = clientesLocal.filter(c => Number(c.precio) > 0)
   const alDia = conPrecio.filter(c => !c.meses_deuda || c.meses_deuda === 0)
   const conDeuda = conPrecio.filter(c => c.meses_deuda > 0)
@@ -869,10 +869,10 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {[
-          { label: "Cobrado este mes", value: cobrado > 0 ? `$${(cobrado / 1000).toFixed(0)}K` : "$0", sub: `${alDia.length} clientes al dÃ­a`, color: COLORS.green },
+          { label: "Cobrado este mes", value: cobrado > 0 ? `$${(cobrado / 1000).toFixed(0)}K` : "$0", sub: `${alDia.length} clientes al día`, color: COLORS.green },
           { label: "Pendiente", value: pendiente > 0 ? `$${(pendiente / 1000).toFixed(0)}K` : "$0", sub: `${conDeuda.length} con deuda`, color: pendiente > 0 ? COLORS.red : COLORS.textMuted },
-          { label: "Ingreso mensual", value: ingresoMensual > 0 ? `$${(ingresoMensual / 1000).toFixed(0)}K` : "â€”", sub: "si todos pagan", color: COLORS.text },
-          { label: "Ticket promedio", value: ticketPromedio > 0 ? `$${(ticketPromedio / 1000).toFixed(0)}K` : "â€”", sub: "por cliente/mes", color: COLORS.accent },
+          { label: "Ingreso mensual", value: ingresoMensual > 0 ? `$${(ingresoMensual / 1000).toFixed(0)}K` : "—", sub: "si todos pagan", color: COLORS.text },
+          { label: "Ticket promedio", value: ticketPromedio > 0 ? `$${(ticketPromedio / 1000).toFixed(0)}K` : "—", sub: "por cliente/mes", color: COLORS.accent },
         ].map((m, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
             style={{ background: COLORS.surface, borderRadius: 16, padding: "14px 14px 12px", border: `0.5px solid ${COLORS.border}` }}>
@@ -912,7 +912,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
           style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {clientesLocal.length === 0 && (
             <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
-              AgregÃ¡ clientes con precio/mes para ver el seguimiento de cobros.
+              Agregá clientes con precio/mes para ver el seguimiento de cobros.
             </div>
           )}
           {clientesLocal.filter(c => Number(c.precio) > 0).map((c, i) => (
@@ -938,15 +938,15 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
         </motion.div>
       )}
 
-      {/* Tab: ConfiguraciÃ³n cobros */}
+      {/* Tab: Configuración cobros */}
       {tab === "cobros" && (
         <motion.div key="cobros" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
             <div style={{ ...T.label, marginBottom: 4 }}>Usuario de Mercado Pago</div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
-              IngresÃ¡ tu usuario de MP (lo encontrÃ¡s en tu perfil de la app). Tus clientes podrÃ¡n hacerte click para pagarte.{" "}
-              <span style={{ color: COLORS.accent }}>Ej: si tu link es mercadopago.com.ar/juantrainer â†’ ponÃ©s "juantrainer".</span>
+              Ingresá tu usuario de MP (lo encontrás en tu perfil de la app). Tus clientes podrán hacerte click para pagarte.{" "}
+              <span style={{ color: COLORS.accent }}>Ej: si tu link es mercadopago.com.ar/juantrainer → ponés "juantrainer".</span>
             </div>
             <input placeholder="Ej: juantrainer" value={mpSettings.alias} onChange={e => setMpSettings(p => ({ ...p, alias: e.target.value.trim() }))} style={inputS} />
             {mpSettings.alias && (
@@ -959,25 +959,25 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
           <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
             <div style={{ ...T.label, marginBottom: 4 }}>Access Token (API avanzada)</div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
-              Opcional. Con esto se genera un link de pago automÃ¡tico con el monto exacto. Encontralo en{" "}
+              Opcional. Con esto se genera un link de pago automático con el monto exacto. Encontralo en{" "}
               <a href="https://www.mercadopago.com.ar/developers/panel/app" target="_blank" rel="noopener noreferrer" style={{ color: COLORS.accent }}>mercadopago.com.ar/developers</a>.
             </div>
             <input placeholder="APP_USR-..." value={mpSettings.access_token} onChange={e => setMpSettings(p => ({ ...p, access_token: e.target.value }))} style={{ ...inputS, fontFamily: "monospace", fontSize: 12 }} />
             <div style={{ fontSize: 11, color: COLORS.yellow, background: COLORS.yellow + "11", borderRadius: 8, padding: "8px 12px" }}>
-              âš  No compartas este token. Si lo perdÃ©s podÃ©s revocarlo desde el panel de MP.
+              ⚠ No compartas este token. Si lo perdés podés revocarlo desde el panel de MP.
             </div>
           </div>
 
           <motion.button whileTap={{ scale: 0.97 }} onClick={guardarSettings} disabled={guardandoSettings}
             style={{ background: settingsOk ? COLORS.green : COLORS.accent, border: "none", borderRadius: 14, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardandoSettings ? 0.6 : 1, transition: "background 0.3s" }}>
-            {guardandoSettings ? "Guardando..." : settingsOk ? "âœ“ Guardado" : "Guardar configuraciÃ³n"}
+            {guardandoSettings ? "Guardando..." : settingsOk ? "✓ Guardado" : "Guardar configuración"}
           </motion.button>
 
           {(mpSettings.alias || mpSettings.access_token) && (
             <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.green}33` }}>
-              <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, marginBottom: 4 }}>âœ“ Cobros configurados</div>
+              <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, marginBottom: 4 }}>✓ Cobros configurados</div>
               <div style={{ fontSize: 12, color: COLORS.textMuted }}>
-                {mpSettings.access_token ? "Tus clientes podrÃ¡n pagar con un link automÃ¡tico de MP." : `Tus clientes verÃ¡n un botÃ³n para pagar a "${mpSettings.alias}".`}
+                {mpSettings.access_token ? "Tus clientes podrán pagar con un link automático de MP." : `Tus clientes verán un botón para pagar a "${mpSettings.alias}".`}
               </div>
             </div>
           )}
@@ -1042,7 +1042,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
           {cargando && <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, padding: 20 }}>Cargando...</div>}
           {!cargando && rutinas.length === 0 && (
             <div style={{ background: COLORS.surface, borderRadius: 16, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 8 }}>No creaste rutinas todavÃ­a</div>
+              <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 8 }}>No creaste rutinas todavía</div>
               <button onClick={() => setTab("crear")}
                 style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "9px 20px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                 Crear primera rutina
@@ -1064,7 +1064,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{r.nombre}</div>
                     <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>
-                      {dias.length} {dias.length === 1 ? "dÃ­a" : "dÃ­as"} Â· {getNombreClientes(asignadosArr)}
+                      {dias.length} {dias.length === 1 ? "día" : "días"} · {getNombreClientes(asignadosArr)}
                     </div>
                   </div>
                   <motion.div animate={{ rotate: abierta ? 90 : 0 }} transition={{ duration: 0.2 }}>
@@ -1081,14 +1081,14 @@ function RutinasPage({ clientes, user, onGuardar }) {
                           const ejercicios = d.bloques?.flatMap(b => b.ejercicios || [b]) || []
                           return (
                             <div key={i} style={{ background: COLORS.surface2, borderRadius: 12, padding: "10px 12px" }}>
-                              <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.accent, marginBottom: 6 }}>{d.nombre || `DÃ­a ${i + 1}`}</div>
+                              <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.accent, marginBottom: 6 }}>{d.nombre || `Día ${i + 1}`}</div>
                               {ejercicios.slice(0, 4).map((e, j) => (
                                 <div key={j} style={{ fontSize: 12, color: COLORS.textSub, padding: "2px 0" }}>
-                                  {e.nombre || e} {e.series && e.reps ? `Â· ${e.series}Ã—${e.reps}` : ""}
+                                  {e.nombre || e} {e.series && e.reps ? `· ${e.series}×${e.reps}` : ""}
                                 </div>
                               ))}
                               {ejercicios.length > 4 && (
-                                <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>+{ejercicios.length - 4} mÃ¡s</div>
+                                <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>+{ejercicios.length - 4} más</div>
                               )}
                             </div>
                           )
@@ -1218,12 +1218,12 @@ export default function App({ user, onLogout }) {
 
   return (
     <div style={{ background: COLORS.bg, height: "100dvh", display: "flex", fontFamily }}>
-      {/* Sidebar â€” solo desktop */}
+      {/* Sidebar — solo desktop */}
       {!isMobile && (
         <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100dvh", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "20px 16px 16px" }}>
-            <div style={{ marginBottom: 14 }}>
-              <img src="/logo.svg" alt="TuPersonal" style={{ height: 26, width: "auto", maxWidth: 170, objectFit: "contain", display: "block" }} />
+            <div style={{ marginBottom: 14, padding: "0 4px" }}>
+              <img src="/logo.svg" alt="TuPersonal" style={{ height: 36, width: "auto", maxWidth: 180, objectFit: "contain", display: "block" }} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 26, height: 26, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#fff" }}>
@@ -1238,7 +1238,7 @@ export default function App({ user, onLogout }) {
               return (
                 <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null) }}
                   style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: activo ? `${COLORS.accent}22` : "none", border: "none", borderRadius: 10, color: activo ? "#fff" : COLORS.textSub, fontSize: 14, fontWeight: activo ? 600 : 400, cursor: "pointer", textAlign: "left", fontFamily }}>
-                  <Icon name={item.icon} size={18} color={activo ? COLORS.accent : COLORS.textMuted} />
+                  <Icon name={item.icon} size={18} color={activo ? COLORS.accentLight : COLORS.textMuted} />
                   {item.label}
                 </button>
               )
@@ -1248,7 +1248,7 @@ export default function App({ user, onLogout }) {
             <button onClick={onLogout}
               style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily, padding: 0 }}>
               <Icon name="logout" size={16} color={COLORS.textMuted} />
-              Cerrar sesiÃ³n
+              Cerrar sesión
             </button>
           </div>
         </div>
@@ -1259,7 +1259,7 @@ export default function App({ user, onLogout }) {
         {/* Header mobile */}
         {isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 20px 0", flexShrink: 0 }}>
-            <img src="/logo.svg" alt="TuPersonal" style={{ height: 22, width: "auto", maxWidth: 140, objectFit: "contain" }} />
+            <img src="/logo.svg" alt="TuPersonal" style={{ height: 24, width: "auto", maxWidth: 140, objectFit: "contain" }} />
             <button onClick={onLogout}
               style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
               Salir
@@ -1271,7 +1271,7 @@ export default function App({ user, onLogout }) {
           <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
         </div>
 
-        {/* Nav inferior â€” solo mobile */}
+        {/* Nav inferior — solo mobile */}
         {isMobile && !clienteSeleccionado && (
           <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", padding: "10px 0 22px", flexShrink: 0 }}>
             {navItems.map(item => (

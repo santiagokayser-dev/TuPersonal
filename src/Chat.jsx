@@ -1,4 +1,4 @@
-﻿// SQL necesario â€” ejecutar en Supabase SQL editor:
+// SQL necesario — ejecutar en Supabase SQL editor:
 // CREATE TABLE mensajes (id uuid DEFAULT gen_random_uuid() PRIMARY KEY, trainer_id uuid REFERENCES auth.users(id) NOT NULL, cliente_id uuid REFERENCES clientes(id) NOT NULL, sender text NOT NULL CHECK (sender IN ('trainer','cliente')), texto text NOT NULL, leido boolean DEFAULT false, created_at timestamptz DEFAULT now());
 // ALTER TABLE mensajes ENABLE ROW LEVEL SECURITY;
 // CREATE POLICY "trainer_mensajes" ON mensajes FOR ALL USING (auth.uid() = trainer_id);
@@ -75,7 +75,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente }) {
   }
 
   const estadoColor = cliente?.meses_deuda > 0 ? C.yellow : C.green
-  const estadoLabel = cliente?.meses_deuda > 0 ? "Pago pendiente" : "Al dÃ­a"
+  const estadoLabel = cliente?.meses_deuda > 0 ? "Pago pendiente" : "Al día"
 
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}>
@@ -86,7 +86,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente }) {
           <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{nombreOtro}</div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 1 }}>
             {cliente?.objetivo && <span style={{ fontSize: 11, color: C.textMuted }}>{cliente.objetivo}</span>}
-            {cliente?.objetivo && <span style={{ fontSize: 10, color: C.textMuted + "44" }}>Â·</span>}
+            {cliente?.objetivo && <span style={{ fontSize: 10, color: C.textMuted + "44" }}>·</span>}
             <span style={{ fontSize: 11, fontWeight: 600, color: estadoColor }}>{estadoLabel}</span>
           </div>
         </div>
@@ -96,7 +96,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente }) {
       <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 6, scrollbarWidth: "none", minHeight: 0, background: C.bg }}>
         {mensajes.length === 0 && (
           <div style={{ margin: "auto", textAlign: "center", color: C.textMuted, fontSize: 13, padding: 20 }}>
-            EmpezÃ¡ la conversaciÃ³n con {nombreOtro}
+            Empezá la conversación con {nombreOtro}
           </div>
         )}
         {mensajes.map((m, i) => {
@@ -113,7 +113,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente }) {
                 boxShadow: esMio ? `0 2px 12px ${C.accent}33` : "none",
               }}>
                 <div style={{ fontSize: 14, color: C.text, lineHeight: 1.45 }}>{m.texto}</div>
-                <div style={{ fontSize: 10, color: esMio ? "#93C5FD88" : C.textMuted, marginTop: 3, textAlign: "right" }}>
+                <div style={{ fontSize: 10, color: esMio ? "#a5b4fc99" : C.textMuted, marginTop: 3, textAlign: "right" }}>
                   {formatHora(m.created_at)}
                 </div>
               </div>
@@ -127,7 +127,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente }) {
       <div style={{ padding: "12px 16px", borderTop: `0.5px solid ${C.border2}`, flexShrink: 0, display: "flex", gap: 10, alignItems: "flex-end", background: C.surface }}>
         <textarea value={texto} onChange={e => setTexto(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar() } }}
-          placeholder="EscribÃ­ un mensaje..." rows={1}
+          placeholder="Escribí un mensaje..." rows={1}
           style={{ flex: 1, background: C.surface3, border: `0.5px solid ${C.border2}`, borderRadius: 14, padding: "11px 15px", color: C.text, fontSize: 14, outline: "none", resize: "none", fontFamily: "-apple-system,sans-serif", maxHeight: 120, lineHeight: 1.45 }}
         />
         <motion.button whileTap={{ scale: 0.9 }} onClick={enviar} disabled={!texto.trim() || enviando}
@@ -167,8 +167,8 @@ function ConversacionItem({ c, noLeidos, lastMsg, seleccionado, onClick }) {
         </div>
         <div style={{ fontSize: 12, color: unread > 0 ? "#aaa" : C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
           {lastMsg
-            ? <>{lastMsg.sender === "trainer" && <span style={{ color: C.textMuted }}>TÃº: </span>}{lastMsg.texto}</>
-            : <span style={{ fontStyle: "italic" }}>Sin mensajes aÃºn</span>
+            ? <>{lastMsg.sender === "trainer" && <span style={{ color: C.textMuted }}>Tú: </span>}{lastMsg.texto}</>
+            : <span style={{ fontStyle: "italic" }}>Sin mensajes aún</span>
           }
         </div>
       </div>
@@ -239,7 +239,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
           )}
         </div>
         <div style={{ fontSize: 12, color: C.textMuted, marginTop: 3 }}>
-          {clientes.length} conversaci{clientes.length === 1 ? "Ã³n" : "ones"}
+          {clientes.length} conversaci{clientes.length === 1 ? "ón" : "ones"}
         </div>
       </div>
 
@@ -256,7 +256,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
       <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none", minHeight: 0 }}>
         {clientes.length === 0 && (
           <div style={{ padding: "40px 20px", textAlign: "center", color: C.textMuted, fontSize: 13 }}>
-            AgregÃ¡ clientes para chatear
+            Agregá clientes para chatear
           </div>
         )}
         {filtrados.map(c => (
@@ -292,7 +292,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
     )
   }
 
-  // Desktop â€” 2 paneles
+  // Desktop — 2 paneles
   return (
     <div style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}>
       {/* Lista */}
@@ -308,12 +308,11 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
             <div style={{ width: 52, height: 52, borderRadius: 16, background: C.surface, border: `0.5px solid ${C.border2}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.5" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             </div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: C.textSub }}>SeleccionÃ¡ una conversaciÃ³n</div>
-            <div style={{ fontSize: 12, color: C.textMuted }}>ElegÃ­ un cliente de la lista</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: C.textSub }}>Seleccioná una conversación</div>
+            <div style={{ fontSize: 12, color: C.textMuted }}>Elegí un cliente de la lista</div>
           </div>
         )}
       </div>
     </div>
   )
 }
-
