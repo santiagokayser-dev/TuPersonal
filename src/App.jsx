@@ -1269,7 +1269,7 @@ export default function App({ user, onLogout }) {
           </div>
         )}
 
-        <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
           <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
         </div>
 
