@@ -95,7 +95,7 @@ function MiniBar({ data, labels }) {
   )
 }
 
-function Inicio({ clientes = [], nombreTrainer = "" }) {
+function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil }) {
   const pendientes = clientes.filter(c => c.estadoColor === COLORS.red || c.estadoColor === COLORS.yellow).length
   const totalMensual = clientes.reduce((s, c) => s + (Number(c.precio) || 0), 0)
   const hoy = new Date().toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
@@ -134,7 +134,8 @@ function Inicio({ clientes = [], nombreTrainer = "" }) {
           <div style={T.label}>Clientes recientes</div>
           {clientes.slice(0, 3).map((c, i) => (
             <motion.div key={c.id || i} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-              style={{ background: COLORS.surface, borderRadius: 16, padding: "12px 14px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+              onClick={() => onVerPerfil?.(c)}
+              style={{ background: COLORS.surface, borderRadius: 16, padding: "12px 14px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12, cursor: onVerPerfil ? "pointer" : "default" }}>
               <div style={{ width: 38, height: 38, borderRadius: 12, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: COLORS.accent, flexShrink: 0 }}>{c.ini}</div>
               <div style={{ flex: 1 }}>
                 <div style={T.h3}>{c.nombre}</div>
@@ -192,8 +193,20 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
   const cargarRutinas = async () => {
     if (!cliente.id) return
     setCargandoRutinas(true)
-    const { data } = await supabase.from("rutinas").select("*").contains("clientes_asignados", [cliente.id])
-    if (data) setRutinas(data)
+    const { data: { user: u } } = await supabase.auth.getUser()
+    const { data, error } = await supabase.from("rutinas").select("*").eq("trainer_id", u.id)
+    if (error) console.error("Error cargando rutinas:", error)
+    console.log("DEBUG rutinas raw:", data, "buscando cliente.id:", cliente.id)
+    const filtradas = (data || []).filter(r => {
+      let asignados = r.clientes_asignados
+      if (typeof asignados === "string") {
+        try { asignados = JSON.parse(asignados) } catch { asignados = [] }
+      }
+      if (!Array.isArray(asignados)) asignados = []
+      console.log("  rutina:", r.nombre, "asignados:", asignados)
+      return asignados.some(id => String(id) === String(cliente.id))
+    })
+    setRutinas(filtradas)
     setCargandoRutinas(false)
   }
 
@@ -580,7 +593,7 @@ function SparkLine({ data }) {
   )
 }
 
-function Finanzas({ clientes = [], user }) {
+function Finanzas({ clientes = [], user, onVerPerfil }) {
   const [tab, setTab] = useState("resumen")
   const [clientesLocal, setClientesLocal] = useState(clientes)
   const [mpSettings, setMpSettings] = useState({ alias: "", access_token: "" })
@@ -694,8 +707,8 @@ function Finanzas({ clientes = [], user }) {
           {clientesLocal.filter(c => Number(c.precio) > 0).map((c, i) => (
             <motion.div key={c.id || i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
               style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 14px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 36, height: 36, borderRadius: 11, background: c.estadoColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: c.estadoColor, flexShrink: 0 }}>{c.ini}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div onClick={() => onVerPerfil?.(c)} style={{ width: 36, height: 36, borderRadius: 11, background: c.estadoColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: c.estadoColor, flexShrink: 0, cursor: onVerPerfil ? "pointer" : "default" }}>{c.ini}</div>
+              <div onClick={() => onVerPerfil?.(c)} style={{ flex: 1, minWidth: 0, cursor: onVerPerfil ? "pointer" : "default" }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</div>
                 <div style={{ fontSize: 11, color: c.estadoColor, marginTop: 2 }}>{c.estado}</div>
               </div>
@@ -813,7 +826,7 @@ export default function App({ user, onLogout }) {
     )
 
     const pages = {
-      inicio: <Inicio clientes={clientes} nombreTrainer={nombreTrainer} />,
+      inicio: <Inicio clientes={clientes} nombreTrainer={nombreTrainer} onVerPerfil={setClienteSeleccionado} />,
       chat: <Chat user={user} clientes={clientes} modo="trainer" />,
       clientes: <Clientes
         clientes={clientes}
@@ -821,17 +834,16 @@ export default function App({ user, onLogout }) {
         onClienteAgregado={(c) => setClientes(prev => [...prev, c])}
       />,
       rutinas: <CreadorRutinasNuevo clientes={clientes} onGuardar={async ({ nombre, dias, clientesAsignados }) => {
-        try {
-          await supabase.from("rutinas").insert({
-            trainer_id: user?.id,
-            nombre,
-            dias: JSON.stringify(dias),
-            clientes_asignados: clientesAsignados,
-          })
-        } catch (e) { console.error("Error guardando rutina", e) }
+        const { error } = await supabase.from("rutinas").insert({
+          trainer_id: user?.id,
+          nombre,
+          dias: JSON.stringify(dias),
+          clientes_asignados: clientesAsignados,
+        })
+        if (error) console.error("Error guardando rutina:", error)
       }} />,
       agenda: <AgendaReal clientes={clientes} />,
-      pagos: <Finanzas clientes={clientes} user={user} />,
+      pagos: <Finanzas clientes={clientes} user={user} onVerPerfil={setClienteSeleccionado} />,
     }
     return (
       <motion.div key={activePage} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={screenStyle}>

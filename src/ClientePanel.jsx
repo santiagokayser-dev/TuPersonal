@@ -239,10 +239,19 @@ function Rutina({ perfil }) {
 
   useEffect(() => {
     if (!perfil?.id) { setCargando(false); return }
+    const trainerId = perfil.trainer_id
+    if (!trainerId) { setCargando(false); return }
     supabase.from("rutinas").select("*")
-      .contains("clientes_asignados", [perfil.id])
-      .then(({ data }) => {
-        if (data) setRutinas(data)
+      .eq("trainer_id", trainerId)
+      .then(({ data, error }) => {
+        if (error) console.error("Error cargando rutinas cliente:", error)
+        const filtradas = (data || []).filter(r => {
+          const asignados = Array.isArray(r.clientes_asignados)
+            ? r.clientes_asignados
+            : (() => { try { return JSON.parse(r.clientes_asignados || "[]") } catch { return [] } })()
+          return asignados.includes(perfil.id)
+        })
+        setRutinas(filtradas)
         setCargando(false)
       })
   }, [perfil?.id])
