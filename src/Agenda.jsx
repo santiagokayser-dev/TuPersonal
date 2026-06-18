@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 
 const C = {
-  bg: "#080808", surface: "#111111", surface2: "#161616", surface3: "#1a1a1a",
-  border: "#1e1e1e", border2: "#282828",
-  text: "#ffffff", textSub: "#888888", textMuted: "#444444",
-  accent: "#6366f1", accentSub: "#312e81",
+  bg: "#060A10", surface: "#0C1220", surface2: "#111927", surface3: "#151F30",
+  border: "#1A2540", border2: "#1E2D4A",
+  text: "#FFFFFF", textSub: "#94A3B8", textMuted: "#475569",
+  accent: "#2563EB", accentSub: "#1E3A8A", accentLight: "#93C5FD",
   green: "#22c55e", yellow: "#f59e0b",
 }
 

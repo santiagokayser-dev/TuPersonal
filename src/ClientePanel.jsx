@@ -1,11 +1,11 @@
-import { useState, useEffect } from "react"
+﻿import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 import Chat from "./Chat"
 
 const COLORS = {
-  bg: "#080808", surface: "#111111", surface2: "#1a1a1a", border: "#222222", border2: "#2a2a2a",
-  text: "#ffffff", textSub: "#888888", textMuted: "#444444", accent: "#6366f1", accentSub: "#312e81",
+  bg: "#060A10", surface: "#0C1220", surface2: "#111927", border: "#1A2540", border2: "#1E2D4A",
+  text: "#FFFFFF", textSub: "#94A3B8", textMuted: "#475569", accent: "#2563EB", accentSub: "#1E3A8A",
   green: "#22c55e", red: "#ef4444", yellow: "#f59e0b",
 }
 
@@ -80,7 +80,7 @@ function Onboarding({ user, onComplete }) {
   }
 
   const guardar = async () => {
-    if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
+    if (!datos.nombre.trim()) return setError("IngresÃ¡ tu nombre")
     setGuardando(true)
     setError("")
 
@@ -119,7 +119,7 @@ function Onboarding({ user, onComplete }) {
     }
 
     if (result) onComplete(result)
-    else setError("No se pudo guardar. Intentá de nuevo.")
+    else setError("No se pudo guardar. IntentÃ¡ de nuevo.")
     setGuardando(false)
   }
 
@@ -128,7 +128,7 @@ function Onboarding({ user, onComplete }) {
       <div>
         <div style={{ ...T.label, marginBottom: 6 }}>Bienvenido</div>
         <div style={T.h1}>Tu perfil</div>
-        <div style={{ ...T.body, marginTop: 8 }}>Completá tus datos para empezar. Tu entrenador los podrá ver.</div>
+        <div style={{ ...T.body, marginTop: 8 }}>CompletÃ¡ tus datos para empezar. Tu entrenador los podrÃ¡ ver.</div>
       </div>
 
       <AvatarPicker preview={avatarPreview} onChange={handleAvatarChange} />
@@ -145,7 +145,7 @@ function Onboarding({ user, onComplete }) {
 
       <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
         style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
-        {guardando ? "Guardando..." : "Empezar →"}
+        {guardando ? "Guardando..." : "Empezar â†’"}
       </motion.button>
     </div>
   )
@@ -195,7 +195,7 @@ function Inicio({ perfil, onLogout, onActualizar }) {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
           <div style={T.label}>Peso actual</div>
-          <div style={{ ...T.num, fontSize: 26, marginTop: 6 }}>{perfil?.peso ? `${perfil.peso}kg` : "—"}</div>
+          <div style={{ ...T.num, fontSize: 26, marginTop: 6 }}>{perfil?.peso ? `${perfil.peso}kg` : "â€”"}</div>
           <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Actualizalo en Progreso</div>
         </div>
         <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
@@ -206,9 +206,9 @@ function Inicio({ perfil, onLogout, onActualizar }) {
 
       {perfil?.objetivo && (
         <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.accent}33` }}>
-          <div style={{ ...T.label, color: "#6366f1", marginBottom: 6 }}>Tu meta</div>
+          <div style={{ ...T.label, color: COLORS.accent, marginBottom: 6 }}>Tu meta</div>
           <div style={T.h3}>{perfil.objetivo}</div>
-          <div style={{ ...T.body, color: "#818cf8", marginTop: 6, fontSize: 13 }}>Seguí avanzando — vas por buen camino.</div>
+          <div style={{ ...T.body, color: "#818cf8", marginTop: 6, fontSize: 13 }}>SeguÃ­ avanzando â€” vas por buen camino.</div>
         </div>
       )}
 
@@ -216,9 +216,9 @@ function Inicio({ perfil, onLogout, onActualizar }) {
         <div style={{ ...T.label, marginBottom: 8 }}>Tus datos</div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
           {[
-            { l: "Peso", v: perfil?.peso ? `${perfil.peso}kg` : "—" },
-            { l: "Altura", v: perfil?.altura ? `${perfil.altura}cm` : "—" },
-            { l: "Edad", v: perfil?.edad ? `${perfil.edad}a` : "—" },
+            { l: "Peso", v: perfil?.peso ? `${perfil.peso}kg` : "â€”" },
+            { l: "Altura", v: perfil?.altura ? `${perfil.altura}cm` : "â€”" },
+            { l: "Edad", v: perfil?.edad ? `${perfil.edad}a` : "â€”" },
           ].map((m, i) => (
             <div key={i} style={{ textAlign: "center" }}>
               <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.text }}>{m.v}</div>
@@ -261,7 +261,7 @@ function Rutina({ perfil }) {
     <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={T.h1}>Mi rutina</div>
       <div style={{ background: COLORS.surface, borderRadius: 16, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
-        Tu entrenador todavía no te asignó una rutina.
+        Tu entrenador todavÃ­a no te asignÃ³ una rutina.
       </div>
     </div>
   )
@@ -277,9 +277,9 @@ function Rutina({ perfil }) {
       </div>
 
       <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 16, border: `0.5px solid ${COLORS.accent}33` }}>
-        <div style={{ ...T.label, color: "#6366f1", marginBottom: 6 }}>Rutina asignada</div>
+        <div style={{ ...T.label, color: COLORS.accent, marginBottom: 6 }}>Rutina asignada</div>
         <div style={T.h3}>{rutina.nombre}</div>
-        <div style={{ ...T.body, color: "#818cf8", marginTop: 4, fontSize: 13 }}>{dias.length} días de entrenamiento</div>
+        <div style={{ ...T.body, color: "#818cf8", marginTop: 4, fontSize: 13 }}>{dias.length} dÃ­as de entrenamiento</div>
       </div>
 
       {dias.map((dia, i) => {
@@ -293,7 +293,7 @@ function Rutina({ perfil }) {
                 {String.fromCharCode(65 + i)}
               </div>
               <div style={{ flex: 1 }}>
-                <div style={T.h3}>{dia.nombre || `Día ${i + 1}`}</div>
+                <div style={T.h3}>{dia.nombre || `DÃ­a ${i + 1}`}</div>
                 <div style={{ ...T.body, fontSize: 12, marginTop: 2 }}>{ejercicios.length} ejercicios</div>
               </div>
               <motion.div animate={{ rotate: abierto ? 90 : 0 }} transition={{ duration: 0.2 }}>
@@ -307,7 +307,7 @@ function Rutina({ perfil }) {
                   style={{ overflow: "hidden", borderTop: `0.5px solid ${COLORS.border}` }}>
                   {ejercicios.map((ej, j) => {
                     const activo = ejercicioActivo === `${i}-${j}`
-                    const ytUrl = ej.video || `https://www.youtube.com/results?search_query=${encodeURIComponent((ej.nombre || "") + " técnica correcta")}`
+                    const ytUrl = ej.video || `https://www.youtube.com/results?search_query=${encodeURIComponent((ej.nombre || "") + " tÃ©cnica correcta")}`
                     return (
                       <div key={j}>
                         <div onClick={() => setEjercicioActivo(activo ? null : `${i}-${j}`)}
@@ -335,8 +335,8 @@ function Rutina({ perfil }) {
                                     <Icon name="play" size={13} color={COLORS.red} />
                                   </div>
                                   <div>
-                                    <div style={{ fontSize: 13, fontWeight: 500, color: "#fca5a5" }}>Ver técnica</div>
-                                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 1 }}>YouTube · {ej.nombre}</div>
+                                    <div style={{ fontSize: 13, fontWeight: 500, color: "#fca5a5" }}>Ver tÃ©cnica</div>
+                                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 1 }}>YouTube Â· {ej.nombre}</div>
                                   </div>
                                 </a>
                               </div>
@@ -448,10 +448,10 @@ function Progreso({ perfil, onActualizar }) {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={T.label}>Peso corporal</div>
-            <div style={{ ...T.num, fontSize: 28, marginTop: 6 }}>{pesoActual ? `${pesoActual} kg` : "—"}</div>
+            <div style={{ ...T.num, fontSize: 28, marginTop: 6 }}>{pesoActual ? `${pesoActual} kg` : "â€”"}</div>
             {pesoHistorial.length > 0 && (
               <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>
-                Última actualización: {pesoHistorial[pesoHistorial.length - 1].fecha}
+                Ãšltima actualizaciÃ³n: {pesoHistorial[pesoHistorial.length - 1].fecha}
               </div>
             )}
           </div>
@@ -475,7 +475,7 @@ function Progreso({ perfil, onActualizar }) {
             </button>
             <button onClick={() => setEditandoPeso(false)}
               style={{ background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "0 12px", color: COLORS.textSub, fontSize: 14, cursor: "pointer", flexShrink: 0 }}>
-              ✕
+              âœ•
             </button>
           </div>
         ) : (
@@ -514,7 +514,7 @@ function Progreso({ perfil, onActualizar }) {
 
         {Object.keys(cargas).length === 0 && !agregando && (
           <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
-            Agregá tus ejercicios y la carga que usás en cada uno.
+            AgregÃ¡ tus ejercicios y la carga que usÃ¡s en cada uno.
           </div>
         )}
 
@@ -526,7 +526,7 @@ function Progreso({ perfil, onActualizar }) {
                 <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text }}>{nombre}</div>
                 {editandoCarga === nombre ? (
                   <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                    <input placeholder="ej: 80kg, 3×10" value={valorCarga} onChange={e => setValorCarga(e.target.value)} onKeyDown={e => e.key === "Enter" && guardarCarga(nombre, valorCarga)}
+                    <input placeholder="ej: 80kg, 3Ã—10" value={valorCarga} onChange={e => setValorCarga(e.target.value)} onKeyDown={e => e.key === "Enter" && guardarCarga(nombre, valorCarga)}
                       style={{ ...inputStyle, flex: 1, marginBottom: 0, fontSize: 13, padding: "8px 12px" }} autoFocus />
                     <button onClick={() => guardarCarga(nombre, valorCarga)} disabled={guardandoCarga}
                       style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "0 12px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0, opacity: guardandoCarga ? 0.5 : 1 }}>
@@ -534,11 +534,11 @@ function Progreso({ perfil, onActualizar }) {
                     </button>
                     <button onClick={() => setEditandoCarga(null)}
                       style={{ background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "0 10px", color: COLORS.textSub, fontSize: 13, cursor: "pointer" }}>
-                      ✕
+                      âœ•
                     </button>
                   </div>
                 ) : (
-                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.accent, marginTop: 4 }}>{carga || "—"}</div>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.accent, marginTop: 4 }}>{carga || "â€”"}</div>
                 )}
               </div>
               {editandoCarga !== nombre && (
@@ -583,7 +583,7 @@ function Progreso({ perfil, onActualizar }) {
         </div>
         {fotos.length === 0 ? (
           <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, padding: "12px 0" }}>
-            Subí tu primera foto para ver tu evolución
+            SubÃ­ tu primera foto para ver tu evoluciÃ³n
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
@@ -653,7 +653,7 @@ function Pagos({ perfil }) {
       })
       const data = await res.json()
       if (data.init_point) window.open(data.init_point, "_blank")
-      else setError("No se pudo generar el link. Verificá el Access Token con tu entrenador.")
+      else setError("No se pudo generar el link. VerificÃ¡ el Access Token con tu entrenador.")
     } catch { setError("Error al conectar con Mercado Pago.") }
     setGenerando(false)
   }
@@ -672,9 +672,9 @@ function Pagos({ perfil }) {
       <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
         <div style={T.label}>Plan mensual</div>
         <div style={{ ...T.num, fontSize: 32, marginTop: 8, color: COLORS.text }}>
-          {perfil?.precio ? `$${Number(perfil.precio).toLocaleString("es-AR")}` : "—"}
+          {perfil?.precio ? `$${Number(perfil.precio).toLocaleString("es-AR")}` : "â€”"}
         </div>
-        <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>por mes · entrenamiento personal</div>
+        <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4 }}>por mes Â· entrenamiento personal</div>
 
         {error && <div style={{ fontSize: 12, color: COLORS.red, marginTop: 12 }}>{error}</div>}
 
@@ -689,7 +689,7 @@ function Pagos({ perfil }) {
           <AliasCard alias={mpSettings.mp_alias} monto={perfil?.precio} />
         ) : (
           <div style={{ marginTop: 16, fontSize: 13, color: COLORS.textMuted, background: COLORS.surface2, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
-            Coordiná el pago con tu entrenador
+            CoordinÃ¡ el pago con tu entrenador
           </div>
         )}
       </div>
@@ -761,8 +761,8 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     <div style={{ background: COLORS.bg, height: "100%", display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
       {previewMode && (
         <div style={{ background: COLORS.accent + "22", borderBottom: `0.5px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>Vista previa — como lo ve el cliente</div>
-          <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>✕</button>
+          <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>Vista previa â€” como lo ve el cliente</div>
+          <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>âœ•</button>
         </div>
       )}
       <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
@@ -788,3 +788,4 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     </div>
   )
 }
+
