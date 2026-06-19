@@ -67,7 +67,7 @@ function AvatarPicker({ preview, onChange }) {
   )
 }
 
-function Onboarding({ user, onComplete }) {
+function Onboarding({ user, perfilExistente, onComplete }) {
   const [datos, setDatos] = useState({ nombre: "", peso: "", altura: "", edad: "", objetivo: "" })
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
@@ -95,9 +95,6 @@ function Onboarding({ user, onComplete }) {
       }
     }
 
-    const { data: existente } = await supabase.from("clientes")
-      .select("id").eq("email", user.email).maybeSingle()
-
     const campos = {
       nombre: datos.nombre,
       peso: Number(datos.peso) || null,
@@ -109,13 +106,31 @@ function Onboarding({ user, onComplete }) {
     }
 
     let result
-    if (existente) {
-      const { data } = await supabase.from("clientes").update(campos).eq("id", existente.id).select().single()
-      result = data
-    } else {
-      const trainerId = user.user_metadata?.trainer_id
-      const { data } = await supabase.from("clientes").insert({ ...campos, email: user.email, trainer_id: trainerId }).select().single()
-      result = data
+
+    // Try updating the record already linked to this user_id
+    const { data: byUserId } = await supabase.from("clientes")
+      .update(campos).eq("user_id", user.id).select().single()
+    result = byUserId
+
+    // Fall back to updating by known id from parent lookup
+    if (!result && perfilExistente?.id) {
+      const { data: byId } = await supabase.from("clientes")
+        .update(campos).eq("id", perfilExistente.id).select().single()
+      result = byId
+    }
+
+    // Fall back to email-based lookup then update/insert
+    if (!result) {
+      const { data: existente } = await supabase.from("clientes")
+        .select("id").eq("email", user.email).maybeSingle()
+      if (existente) {
+        const { data } = await supabase.from("clientes").update(campos).eq("id", existente.id).select().single()
+        result = data
+      } else {
+        const trainerId = user.user_metadata?.trainer_id
+        const { data } = await supabase.from("clientes").insert({ ...campos, email: user.email, trainer_id: trainerId }).select().single()
+        result = data
+      }
     }
 
     if (result) onComplete(result)
@@ -736,7 +751,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
 
   if (!previewMode && (!perfil || !perfil.nombre)) return (
     <div style={{ background: COLORS.bg, minHeight: "100vh", overflowY: "auto", scrollbarWidth: "none", fontFamily: "-apple-system, sans-serif" }}>
-      <Onboarding user={user} onComplete={(data) => setPerfil(data)} />
+      <Onboarding user={user} perfilExistente={perfil} onComplete={(data) => setPerfil(data)} />
     </div>
   )
 
