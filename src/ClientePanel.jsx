@@ -784,12 +784,16 @@ function PerfilClienteEditar({ perfil, user, onActualizar }) {
       result = data; if (error) lastErr = error
     }
     if (!result) {
-      const { data, error } = await supabase.from("clientes").update(campos).eq("user_id", user.id).select().single()
+      const { data, error } = await supabase.from("clientes").update(campos).eq("user_id", user.id).select().maybeSingle()
       result = data; if (error) lastErr = error
     }
     if (!result) {
-      const { data, error } = await supabase.from("clientes").update(campos).eq("email", user.email).select().single()
-      result = data; if (error) lastErr = error
+      // Find by email first, then update by id to avoid multi-row errors
+      const { data: found } = await supabase.from("clientes").select("id").eq("email", user.email).limit(1).maybeSingle()
+      if (found?.id) {
+        const { data, error } = await supabase.from("clientes").update(campos).eq("id", found.id).select().single()
+        result = data; if (error) lastErr = error
+      }
     }
 
     if (result) { onActualizar(result); setMensaje("¡Perfil actualizado!") }
