@@ -1150,7 +1150,7 @@ export default function App({ user, onLogout }) {
     cargar()
   }, [])
 
-  const screenStyle = { flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }
+  const screenStyle = { flex: 1, overflowY: "scroll", overflowX: "hidden", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }
 
   const renderPage = () => {
     if (clienteSeleccionado) return (
@@ -1255,7 +1255,7 @@ export default function App({ user, onLogout }) {
       )}
 
       {/* Contenido principal */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", overscrollBehavior: "none" }}>
         {/* Header mobile */}
         {isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(16px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
@@ -1267,7 +1267,7 @@ export default function App({ user, onLogout }) {
           </div>
         )}
 
-        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", overscrollBehavior: "none" }}>
           <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
         </div>
 

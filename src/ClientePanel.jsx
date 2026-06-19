@@ -725,7 +725,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     cargar()
   }, [user?.id, user?.email, initialPerfil])
 
-  const screenStyle = { flex: 1, overflowY: "auto", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }
+  const screenStyle = { flex: 1, overflowY: "scroll", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }
 
   if (cargando) return (
     <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, sans-serif" }}>
