@@ -178,18 +178,16 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
       <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
         style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}cc 0%, ${COLORS.surface} 60%)`, borderRadius: 20, padding: "18px 20px 16px", border: `0.5px solid ${COLORS.accent}44`, position: "relative", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: "50%", background: COLORS.accent + "0d" }} />
-        <div style={{ ...T.label, color: "#93C5FD66" }}>Facturación mensual</div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6, marginBottom: 2 }}>
-          <div style={{ fontSize: 36, fontWeight: 800, color: COLORS.text, letterSpacing: -1.5 }}>
-            {totalMensual > 0 ? (totalMensual >= 1000 ? `$${(totalMensual / 1000).toFixed(0)}K` : `$${totalMensual.toLocaleString("es-AR")}`) : "—"}
-          </div>
-          {cobrado > 0 && cobrado < totalMensual && (
-            <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, background: COLORS.green + "18", borderRadius: 8, padding: "2px 8px" }}>
-              ${(cobrado / 1000).toFixed(0)}K cobrado
-            </div>
-          )}
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, color: "#93C5FD99" }}>Facturación mensual</div>
+        <div style={{ fontSize: 36, fontWeight: 800, color: "#FFFFFF", letterSpacing: -1.5, marginTop: 6, marginBottom: 2 }}>
+          {totalMensual > 0 ? `$${totalMensual >= 1000 ? (totalMensual / 1000).toFixed(0) + "K" : totalMensual.toLocaleString("es-AR")}` : "—"}
         </div>
-        <div style={{ fontSize: 12, color: "#93C5FD66" }}>
+        {cobrado > 0 && cobrado < totalMensual && (
+          <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, background: COLORS.green + "18", borderRadius: 8, padding: "2px 8px", display: "inline-block", marginBottom: 4 }}>
+            {"$" + (cobrado / 1000).toFixed(0) + "K cobrado"}
+          </div>
+        )}
+        <div style={{ fontSize: 12, color: "#93C5FD99" }}>
           {totalMensual > 0 ? `${alDia} de ${clientes.filter(c => Number(c.precio) > 0).length} clientes al día` : "Asigná precios para ver proyección"}
         </div>
       </motion.div>
