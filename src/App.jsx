@@ -541,7 +541,8 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
             <>
               {cargandoRutinas ? (
                 <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>Cargando...</div>
-              ) : <>
+              ) : (
+                <>
                 {rutinas.length === 0 && (
                   <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
                     Sin rutinas asignadas todavía
@@ -616,7 +617,9 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                     </>
                   )
                 })()}
-              </>}
+              </>
+              )}
+            </>
           )}
         </motion.div>
       </AnimatePresence>
