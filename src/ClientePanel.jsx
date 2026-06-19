@@ -23,6 +23,7 @@ const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.
 const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
   const icons = {
     home: <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" strokeLinecap="round" strokeLinejoin="round"/>,
+    user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
     dumbbell: <><path d="M6.5 6.5h11M6.5 17.5h11M3 9.5h2v5H3zM19 9.5h2v5h-2zM5 7.5h2v9H5zM17 7.5h2v9h-2z"/></>,
     trendingUp: <><path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></>,
     wallet: <><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 13a1 1 0 100-2 1 1 0 000 2z"/></>,
@@ -44,6 +45,7 @@ const navItems = [
   { id: "progreso", icon: "trendingUp", label: "Progreso" },
   { id: "chat", icon: "chat", label: "Chat" },
   { id: "pagos", icon: "wallet", label: "Pagos" },
+  { id: "perfil", icon: "user", label: "Perfil" },
 ]
 
 function AvatarPicker({ preview, onChange }) {
@@ -734,6 +736,115 @@ function Pagos({ perfil }) {
   )
 }
 
+function PerfilClienteEditar({ perfil, user, onActualizar }) {
+  const [datos, setDatos] = useState({
+    nombre: perfil?.nombre || "",
+    username: perfil?.username || user?.user_metadata?.username || "",
+    peso: perfil?.peso?.toString() || "",
+    altura: perfil?.altura?.toString() || "",
+    edad: perfil?.edad?.toString() || "",
+    objetivo: perfil?.objetivo || "",
+  })
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(perfil?.avatar_url || null)
+  const [guardando, setGuardando] = useState(false)
+  const [mensaje, setMensaje] = useState("")
+  const [error, setError] = useState("")
+
+  const guardar = async () => {
+    if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
+    setGuardando(true); setError(""); setMensaje("")
+
+    let avatar_url = perfil?.avatar_url || null
+    if (avatarFile) {
+      const ext = avatarFile.name.split(".").pop()
+      const path = `${user.id}.${ext}`
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true })
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+        avatar_url = urlData.publicUrl
+      }
+    }
+
+    const campos = {
+      nombre: datos.nombre,
+      username: datos.username.toLowerCase() || null,
+      peso: Number(datos.peso) || null,
+      altura: Number(datos.altura) || null,
+      edad: Number(datos.edad) || null,
+      objetivo: datos.objetivo || null,
+      ...(avatar_url ? { avatar_url } : {}),
+    }
+
+    let result = null
+    if (perfil?.id) {
+      const { data } = await supabase.from("clientes").update(campos).eq("id", perfil.id).select().single()
+      result = data
+    } else {
+      const { data } = await supabase.from("clientes").update(campos).eq("user_id", user.id).select().single()
+      result = data
+    }
+
+    if (result) { onActualizar(result); setMensaje("¡Perfil actualizado!") }
+    else setError("No se pudo guardar")
+    setGuardando(false)
+  }
+
+  const ini = (datos.nombre || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+
+  return (
+    <>
+      <div style={T.h1}>Mi perfil</div>
+
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "8px 0" }}>
+        <label style={{ cursor: "pointer" }}>
+          <div style={{ width: 96, height: 96, borderRadius: 30, background: COLORS.surface2, border: `2px dashed ${COLORS.border2}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+            {avatarPreview
+              ? <img src={avatarPreview} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ fontSize: 32, fontWeight: 700, color: COLORS.accent }}>{ini}</span>
+            }
+            <div style={{ position: "absolute", bottom: 5, right: 5, width: 24, height: 24, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+          </div>
+          <input type="file" accept="image/*" style={{ display: "none" }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)) } }} />
+        </label>
+        <span style={{ fontSize: 12, color: COLORS.textMuted }}>Foto de perfil</span>
+      </div>
+
+      {error && <div style={{ fontSize: 13, color: COLORS.red, background: COLORS.red + "11", borderRadius: 10, padding: "10px 14px" }}>{error}</div>}
+      {mensaje && <div style={{ fontSize: 13, color: COLORS.green, background: COLORS.green + "11", borderRadius: 10, padding: "10px 14px" }}>{mensaje}</div>}
+
+      <div style={{ background: COLORS.surface2, borderRadius: 14, padding: "12px 14px", border: `0.5px solid ${COLORS.border2}` }}>
+        <div style={{ ...T.label, marginBottom: 4 }}>Email</div>
+        <div style={{ fontSize: 14, color: COLORS.textSub }}>{user.email}</div>
+      </div>
+
+      <input placeholder="Tu nombre completo *" value={datos.nombre}
+        onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
+      <input placeholder="Nombre de usuario" value={datos.username}
+        onChange={e => setDatos(p => ({ ...p, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase() }))} style={inputStyle} />
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+        <input placeholder="Peso (kg)" value={datos.peso}
+          onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />
+        <input placeholder="Altura (cm)" value={datos.altura}
+          onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />
+      </div>
+      <input placeholder="Edad" value={datos.edad}
+        onChange={e => setDatos(p => ({ ...p, edad: e.target.value }))} style={inputStyle} type="number" />
+      <input placeholder="Objetivo" value={datos.objetivo}
+        onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
+
+      <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
+        style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
+        {guardando ? "Guardando..." : "Guardar cambios"}
+      </motion.button>
+    </>
+  )
+}
+
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => window.innerWidth < 768)
   useEffect(() => {
@@ -802,6 +913,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
       progreso: <Progreso perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} />,
       chat: <Chat user={user} clienteId={perfilMock?.id} trainerId={perfilMock?.trainer_id} modo="cliente" />,
       pagos: <Pagos perfil={perfilMock} />,
+      perfil: <PerfilClienteEditar perfil={perfilMock} user={user} onActualizar={previewMode ? () => {} : setPerfil} />,
     }
     return (
       <motion.div key={activePage} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={screenStyle}>

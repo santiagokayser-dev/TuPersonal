@@ -30,6 +30,7 @@ const T = {
 const Icon = ({ name, size = 20, color = "#888888" }) => {
   const icons = {
     home: <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" strokeLinecap="round" strokeLinejoin="round"/>,
+    user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
     users: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></>,
     dumbbell: <><path d="M6.5 6.5h11M6.5 17.5h11M3 9.5h2v5H3zM19 9.5h2v5h-2zM5 7.5h2v9H5zM17 7.5h2v9h-2z"/></>,
     calendar: <><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>,
@@ -76,6 +77,7 @@ const navItems = [
   { id: "rutinas", icon: "dumbbell", label: "Rutinas" },
   { id: "agenda", icon: "calendar", label: "Agenda" },
   { id: "pagos", icon: "wallet", label: "Finanzas" },
+  { id: "perfil", icon: "user", label: "Perfil" },
 ]
 
 function useAnimatedNumber(target, duration = 900) {
@@ -1219,6 +1221,92 @@ function RutinasPage({ clientes, user, onGuardar }) {
   )
 }
 
+function PerfilTrainer({ user, onLogout }) {
+  const [datos, setDatos] = useState({
+    nombre: user?.user_metadata?.nombre || "",
+    username: user?.user_metadata?.username || "",
+  })
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(user?.user_metadata?.avatar_url || null)
+  const [guardando, setGuardando] = useState(false)
+  const [mensaje, setMensaje] = useState("")
+  const [error, setError] = useState("")
+
+  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+
+  const guardar = async () => {
+    if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
+    setGuardando(true); setError(""); setMensaje("")
+
+    let avatar_url = user?.user_metadata?.avatar_url || null
+    if (avatarFile) {
+      const ext = avatarFile.name.split(".").pop()
+      const path = `trainer-${user.id}.${ext}`
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true })
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+        avatar_url = urlData.publicUrl
+      }
+    }
+
+    const { error: updateErr } = await supabase.auth.updateUser({
+      data: { nombre: datos.nombre, username: datos.username.toLowerCase(), avatar_url }
+    })
+
+    if (!updateErr) setMensaje("¡Perfil actualizado!")
+    else setError("No se pudo guardar")
+    setGuardando(false)
+  }
+
+  const ini = (datos.nombre || user?.email || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+
+  return (
+    <>
+      <div style={T.h1}>Mi perfil</div>
+
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "8px 0" }}>
+        <label style={{ cursor: "pointer" }}>
+          <div style={{ width: 96, height: 96, borderRadius: 30, background: COLORS.surface2, border: `2px dashed ${COLORS.border2}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+            {avatarPreview
+              ? <img src={avatarPreview} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              : <span style={{ fontSize: 32, fontWeight: 700, color: COLORS.accent }}>{ini}</span>
+            }
+            <div style={{ position: "absolute", bottom: 5, right: 5, width: 24, height: 24, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="plus" size={12} color="#fff" />
+            </div>
+          </div>
+          <input type="file" accept="image/*" style={{ display: "none" }}
+            onChange={e => { const f = e.target.files?.[0]; if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)) } }} />
+        </label>
+        <span style={{ fontSize: 12, color: COLORS.textMuted }}>Foto de perfil</span>
+      </div>
+
+      {error && <div style={{ fontSize: 13, color: COLORS.red, background: COLORS.red + "11", borderRadius: 10, padding: "10px 14px" }}>{error}</div>}
+      {mensaje && <div style={{ fontSize: 13, color: COLORS.green, background: COLORS.green + "11", borderRadius: 10, padding: "10px 14px" }}>{mensaje}</div>}
+
+      <div style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 14px", border: `0.5px solid ${COLORS.border}` }}>
+        <div style={{ fontSize: 11, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Email</div>
+        <div style={{ fontSize: 14, color: COLORS.textSub }}>{user.email}</div>
+      </div>
+
+      <input placeholder="Tu nombre completo" value={datos.nombre}
+        onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
+      <input placeholder="Nombre de usuario" value={datos.username}
+        onChange={e => setDatos(p => ({ ...p, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase() }))} style={inputStyle} />
+
+      <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
+        style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1, width: "100%" }}>
+        {guardando ? "Guardando..." : "Guardar cambios"}
+      </motion.button>
+
+      <button onClick={onLogout}
+        style={{ background: "none", border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 0", color: COLORS.textMuted, fontSize: 14, cursor: "pointer", width: "100%" }}>
+        Cerrar sesión
+      </button>
+    </>
+  )
+}
+
 export default function App({ user, onLogout }) {
   const [activePage, setActivePage] = useState("inicio")
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
@@ -1295,6 +1383,7 @@ export default function App({ user, onLogout }) {
       }} />,
       agenda: <AgendaReal clientes={clientes} />,
       pagos: <Finanzas clientes={clientes} user={user} onVerPerfil={setClienteSeleccionado} />,
+      perfil: <PerfilTrainer user={user} onLogout={onLogout} />,
     }
     return (
       <motion.div key={activePage} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={screenStyle}>
