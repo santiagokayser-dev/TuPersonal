@@ -734,10 +734,21 @@ function Pagos({ perfil }) {
   )
 }
 
+function useIsMobile() {
+  const [mobile, setMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const handle = () => setMobile(window.innerWidth < 768)
+    window.addEventListener("resize", handle)
+    return () => window.removeEventListener("resize", handle)
+  }, [])
+  return mobile
+}
+
 export default function ClientePanel({ user, onLogout, initialPerfil = null, previewMode = false }) {
   const [perfil, setPerfil] = useState(initialPerfil)
   const [cargando, setCargando] = useState(!initialPerfil)
   const [activePage, setActivePage] = useState("inicio")
+  const isMobile = useIsMobile()
 
   useEffect(() => {
     if (initialPerfil) return
@@ -752,7 +763,6 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
           data.user_id = user.id
         }
       }
-      // Fallback: load profile from auth user metadata if DB is inaccessible due to RLS
       if (!data || !data.nombre) {
         const metaPerfil = user.user_metadata?.perfil_cliente
         if (metaPerfil?.nombre) {
@@ -765,22 +775,25 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     cargar()
   }, [user?.id, user?.email, initialPerfil])
 
-  const screenStyle = { flex: 1, overflowY: "scroll", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }
+  const screenStyle = { flex: 1, overflowY: "scroll", overflowX: "hidden", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }
+  const fontFamily = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
 
   if (cargando) return (
-    <div style={{ background: COLORS.bg, minHeight: "100vh", display: "flex", justifyContent: "center", alignItems: "center", fontFamily: "-apple-system, sans-serif" }}>
+    <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", justifyContent: "center", alignItems: "center", fontFamily }}>
       <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.4 }}
         style={{ fontSize: 13, color: COLORS.textMuted }}>Cargando...</motion.div>
     </div>
   )
 
   if (!previewMode && (!perfil || !perfil.nombre)) return (
-    <div style={{ background: COLORS.bg, minHeight: "100vh", overflowY: "auto", scrollbarWidth: "none", fontFamily: "-apple-system, sans-serif" }}>
+    <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", overflowY: "auto", scrollbarWidth: "none", fontFamily }}>
       <Onboarding user={user} perfilExistente={perfil} onComplete={(data) => setPerfil(data)} />
     </div>
   )
 
   const perfilMock = perfil || { nombre: "Cliente", objetivo: "Sin definir", peso: null, altura: null, edad: null, precio: null }
+  const nombre = perfilMock.nombre || "Cliente"
+  const username = perfilMock.username || user?.user_metadata?.username || ""
 
   const renderPage = () => {
     const pages = {
@@ -797,34 +810,92 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     )
   }
 
-  const inner = (
-    <div style={{ background: COLORS.bg, height: "100%", display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
-      {previewMode && (
-        <div style={{ background: COLORS.accent + "22", borderBottom: `0.5px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>Vista previa — como lo ve el cliente</div>
-          <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>✕</button>
-        </div>
-      )}
-      <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
+  const bottomNav = (
+    <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", flexShrink: 0 }}>
+      {navItems.map(item => (
+        <button key={item.id} onClick={() => setActivePage(item.id)}
+          style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px 0" }}>
+          <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
+          <span style={{ fontSize: 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
+        </button>
+      ))}
+    </nav>
+  )
+
+  // Preview mode: always mobile layout
+  if (previewMode) return (
+    <div style={{ background: COLORS.bg, height: "100%", display: "flex", flexDirection: "column", fontFamily }}>
+      <div style={{ background: COLORS.accent + "22", borderBottom: `0.5px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>Vista previa — como lo ve el cliente</div>
+        <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>✕</button>
+      </div>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column" }}>
         <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
       </div>
-      <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
-        {navItems.map(item => (
-          <button key={item.id} onClick={() => setActivePage(item.id)}
-            style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>
-            <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
-            <span style={{ fontSize: 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
-          </button>
-        ))}
-      </nav>
+      {bottomNav}
     </div>
   )
 
-  if (previewMode) return inner
-
   return (
-    <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", flexDirection: "column" }}>
-      {inner}
+    <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", fontFamily }}>
+      {/* Sidebar — solo desktop */}
+      {!isMobile && (
+        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0 }}>
+          <div style={{ padding: "20px 16px 16px" }}>
+            <div style={{ marginBottom: 14, padding: "0 4px" }}>
+              <img src="/logo-white.png" alt="TuPersonal" style={{ height: 90, width: "auto", display: "block" }} />
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: perfilMock.avatar_url ? "none" : COLORS.accent, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                {perfilMock.avatar_url
+                  ? <img src={perfilMock.avatar_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : nombre.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+                }
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 600, lineHeight: 1.2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{nombre}</div>
+                {username && <div style={{ fontSize: 11, color: COLORS.textMuted }}>@{username}</div>}
+              </div>
+            </div>
+          </div>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
+            {navItems.map(item => {
+              const activo = activePage === item.id
+              return (
+                <button key={item.id} onClick={() => setActivePage(item.id)}
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: activo ? `${COLORS.accent}22` : "none", border: "none", borderRadius: 10, color: activo ? "#fff" : COLORS.textSub, fontSize: 14, fontWeight: activo ? 600 : 400, cursor: "pointer", textAlign: "left", fontFamily }}>
+                  <Icon name={item.icon} size={18} color={activo ? COLORS.accentLight : COLORS.textMuted} />
+                  {item.label}
+                </button>
+              )
+            })}
+          </div>
+          <div style={{ padding: "16px 20px" }}>
+            <button onClick={onLogout}
+              style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily, padding: 0 }}>
+              <Icon name="logout" size={16} color={COLORS.textMuted} />
+              Cerrar sesión
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Contenido principal */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", overflow: "hidden", overscrollBehavior: "none" }}>
+        {isMobile && (
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(6px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
+            <img src="/logo-white.png" alt="TuPersonal" style={{ height: 32, width: "auto" }} />
+            <button onClick={onLogout}
+              style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+              Salir
+            </button>
+          </div>
+        )}
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", overscrollBehavior: "none" }}>
+          <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
+        </div>
+        {isMobile && bottomNav}
+      </div>
     </div>
   )
 }
