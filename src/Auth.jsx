@@ -9,7 +9,7 @@ const COLORS = {
 }
 
 const S = {
-  container: { background: COLORS.bg, minHeight: "100dvh", display: "flex", justifyContent: "center", alignItems: "flex-start", fontFamily: "-apple-system, sans-serif", padding: "0 16px" },
+  container: { background: COLORS.bg, minHeight: "var(--app-height, 100dvh)", display: "flex", justifyContent: "center", alignItems: "flex-start", fontFamily: "-apple-system, sans-serif", padding: "0 16px" },
   phone: { width: "100%", maxWidth: 420, background: COLORS.bg, display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 16px 32px" },
   input: { background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 16px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", marginBottom: 12, boxSizing: "border-box" },
   btn: (bg) => ({ background: bg || COLORS.accent, border: "none", borderRadius: 12, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", marginBottom: 12 }),

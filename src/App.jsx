@@ -1217,10 +1217,10 @@ export default function App({ user, onLogout }) {
   const fontFamily = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
 
   return (
-    <div style={{ background: COLORS.bg, height: "100dvh", display: "flex", fontFamily }}>
+    <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", fontFamily }}>
       {/* Sidebar — solo desktop */}
       {!isMobile && (
-        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100dvh", position: "sticky", top: 0, flexShrink: 0 }}>
+        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "20px 16px 16px" }}>
             <div style={{ marginBottom: 14, padding: "0 4px" }}>
               <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 90, width: "auto", display: "block", cursor: "pointer" }} />
@@ -1255,7 +1255,7 @@ export default function App({ user, onLogout }) {
       )}
 
       {/* Contenido principal */}
-      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", overscrollBehavior: "none" }}>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", overflow: "hidden", overscrollBehavior: "none" }}>
         {/* Header mobile */}
         {isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(6px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
