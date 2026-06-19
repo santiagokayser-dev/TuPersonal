@@ -181,7 +181,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
         <div style={{ ...T.label, color: "#93C5FD66" }}>Facturación mensual</div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginTop: 6, marginBottom: 2 }}>
           <div style={{ fontSize: 36, fontWeight: 800, color: COLORS.text, letterSpacing: -1.5 }}>
-            ${totalMensual > 0 ? (totalMensual >= 1000 ? `$${(totalMensual / 1000).toFixed(0)}K` : `$${totalMensual.toLocaleString("es-AR")}`) : "—"}
+            {totalMensual > 0 ? (totalMensual >= 1000 ? `$${(totalMensual / 1000).toFixed(0)}K` : `$${totalMensual.toLocaleString("es-AR")}`) : "—"}
           </div>
           {cobrado > 0 && cobrado < totalMensual && (
             <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, background: COLORS.green + "18", borderRadius: 8, padding: "2px 8px" }}>
