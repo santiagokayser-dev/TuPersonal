@@ -43,6 +43,7 @@ const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
     plus: <><path d="M12 5v14M5 12h14"/></>,
     edit: <><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
     trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></>,
+    download: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
     user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
@@ -313,17 +314,70 @@ function Rutina({ perfil }) {
   const rutina = rutinas[0]
   const dias = (() => { try { return JSON.parse(rutina.dias || "[]") } catch { return [] } })()
 
+  const descargarPDF = () => {
+    const ejerciciosHTML = dias.map((dia, i) => {
+      const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || []) || dia.ejercicios || []
+      return `<div style="margin-bottom:20px;">
+        <h2 style="color:#E8714A;font-size:16px;margin:0 0 10px;border-bottom:1px solid #444;padding-bottom:6px;">
+          ${String.fromCharCode(65 + i)} — ${dia.nombre || "Día " + (i + 1)}
+        </h2>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <tr style="background:#2F2F2F;color:#A0A0A0;text-align:left;">
+            <th style="padding:6px 8px;">#</th>
+            <th style="padding:6px 8px;">Ejercicio</th>
+            <th style="padding:6px 8px;">Series</th>
+            <th style="padding:6px 8px;">Reps</th>
+            <th style="padding:6px 8px;">RIR</th>
+            <th style="padding:6px 8px;">Descanso</th>
+            <th style="padding:6px 8px;">Notas</th>
+          </tr>
+          ${ejercicios.map((ej, j) => `<tr style="border-bottom:1px solid #333;">
+            <td style="padding:6px 8px;color:#6B6B6B;">${j + 1}</td>
+            <td style="padding:6px 8px;color:#F5F5F5;font-weight:500;">${ej.nombre || ""}</td>
+            <td style="padding:6px 8px;color:#A0A0A0;">${ej.series || "-"}</td>
+            <td style="padding:6px 8px;color:#A0A0A0;">${ej.reps || "-"}</td>
+            <td style="padding:6px 8px;color:#A0A0A0;">${ej.rir !== undefined && ej.rir !== "" ? ej.rir : "-"}</td>
+            <td style="padding:6px 8px;color:#A0A0A0;">${ej.descanso ? ej.descanso + "s" : "-"}</td>
+            <td style="padding:6px 8px;color:#6B6B6B;font-style:italic;">${ej.notas || ""}</td>
+          </tr>`).join("")}
+        </table>
+      </div>`
+    }).join("")
+
+    const html = `<!DOCTYPE html><html><head><title>${rutina.nombre}</title>
+      <style>@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
+    </head><body style="background:#1A1A1A;color:#F5F5F5;font-family:-apple-system,sans-serif;padding:30px;margin:0;">
+      <h1 style="font-size:22px;margin:0 0 4px;">${rutina.nombre}</h1>
+      <p style="color:#A0A0A0;font-size:13px;margin:0 0 24px;">${dias.length} días de entrenamiento</p>
+      ${ejerciciosHTML}
+      <p style="color:#6B6B6B;font-size:11px;margin-top:30px;text-align:center;">Generado desde TuPersonal</p>
+    </body></html>`
+
+    const blob = new Blob([html], { type: "text/html" })
+    const url = URL.createObjectURL(blob)
+    const w = window.open(url, "_blank")
+    if (w) setTimeout(() => { w.print(); URL.revokeObjectURL(url) }, 600)
+    else { URL.revokeObjectURL(url); alert("Permití las ventanas emergentes para descargar el PDF") }
+  }
+
   return (
     <>
-      <div>
-        <div style={{ ...T.label, marginBottom: 6 }}>Programa actual</div>
-        <div style={T.h1}>Mi rutina</div>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ ...T.label, marginBottom: 6 }}>Programa actual</div>
+          <div style={T.h1}>Mi rutina</div>
+        </div>
+        <motion.button whileTap={{ scale: 0.95 }} onClick={descargarPDF}
+          style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "9px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 7, color: COLORS.textSub, fontSize: 13, fontWeight: 500 }}>
+          <Icon name="download" size={15} color={COLORS.textSub} />
+          PDF
+        </motion.button>
       </div>
 
       <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 16, border: `0.5px solid ${COLORS.accent}33` }}>
         <div style={{ ...T.label, color: COLORS.accentLight, marginBottom: 6 }}>Rutina asignada</div>
         <div style={T.h3}>{rutina.nombre}</div>
-        <div style={{ ...T.body, color: "#818cf8", marginTop: 4, fontSize: 13 }}>{dias.length} días de entrenamiento</div>
+        <div style={{ ...T.body, color: COLORS.accentLight, marginTop: 4, fontSize: 13 }}>{dias.length} días de entrenamiento</div>
       </div>
 
       {dias.map((dia, i) => {
