@@ -12,19 +12,30 @@ function Root() {
   const [rol, setRol] = useState(null)
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const handleInviteLink = async (user) => {
+      const params = new URLSearchParams(window.location.search)
+      const inviteTrainerId = params.get("invite")
+      if (inviteTrainerId && user) {
+        await supabase.from("clientes").update({ user_id: user.id }).eq("email", user.email).eq("trainer_id", inviteTrainerId)
+        await supabase.auth.updateUser({ data: { rol: "cliente", trainer_id: inviteTrainerId } })
+        window.history.replaceState({}, "", window.location.pathname)
+        return "cliente"
+      }
+      return params.get("rol") || user?.user_metadata?.rol || "trainer"
+    }
+
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
       if (session) {
-        const params = new URLSearchParams(window.location.search)
-const r = params.get("rol") || session.user.user_metadata?.rol || "trainer"
+        const r = await handleInviteLink(session.user)
         setRol(r)
       }
       setLoading(false)
     })
-    supabase.auth.onAuthStateChange((_event, session) => {
+    supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session)
       if (session) {
-        const r = session.user.user_metadata?.rol || "trainer"
+        const r = await handleInviteLink(session.user)
         setRol(r)
       }
     })

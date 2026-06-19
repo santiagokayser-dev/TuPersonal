@@ -184,11 +184,9 @@ export default function Auth() {
                   {cargando ? "Creando cuenta..." : `Crear cuenta${!inviteTrainerId ? ` como ${rol === "trainer" ? "entrenador" : "atleta"}` : ""}`}
                 </motion.button>
 
-                {!inviteTrainerId && (
-                  <button onClick={handleGoogle} style={S.btnGoogle}>
-                    <span style={{ fontSize: 16 }}>G</span> Continuar con Google
-                  </button>
-                )}
+                <button onClick={handleGoogle} style={S.btnGoogle}>
+                  <span style={{ fontSize: 16 }}>G</span> Continuar con Google
+                </button>
 
                 <div style={S.link} onClick={irALogin}>¿Ya tenés cuenta? Iniciá sesión</div>
               </>
