@@ -777,16 +777,23 @@ function PerfilClienteEditar({ perfil, user, onActualizar }) {
     }
 
     let result = null
+    let lastErr = null
+
     if (perfil?.id) {
-      const { data } = await supabase.from("clientes").update(campos).eq("id", perfil.id).select().single()
-      result = data
-    } else {
-      const { data } = await supabase.from("clientes").update(campos).eq("user_id", user.id).select().single()
-      result = data
+      const { data, error } = await supabase.from("clientes").update(campos).eq("id", perfil.id).select().single()
+      result = data; if (error) lastErr = error
+    }
+    if (!result) {
+      const { data, error } = await supabase.from("clientes").update(campos).eq("user_id", user.id).select().single()
+      result = data; if (error) lastErr = error
+    }
+    if (!result) {
+      const { data, error } = await supabase.from("clientes").update(campos).eq("email", user.email).select().single()
+      result = data; if (error) lastErr = error
     }
 
     if (result) { onActualizar(result); setMensaje("¡Perfil actualizado!") }
-    else setError("No se pudo guardar")
+    else setError(lastErr?.message || "No se pudo guardar")
     setGuardando(false)
   }
 
