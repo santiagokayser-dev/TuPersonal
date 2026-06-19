@@ -782,23 +782,26 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
     let result = null
     let lastErr = null
 
-    if (perfil?.id) {
-      const { data, error } = await supabase.from("clientes").update(campos).eq("id", perfil.id).select().maybeSingle()
+    const up = async (col, val) => {
+      const { data, error } = await supabase.from("clientes").update(campos).eq(col, val).select().maybeSingle()
       if (data) result = data
       else if (error) lastErr = error
     }
 
+    if (perfil?.id) await up("id", perfil.id)
+    if (!result) await up("user_id", user.id)
     if (!result) {
-      const { data, error } = await supabase.from("clientes").update(campos).eq("user_id", user.id).select().maybeSingle()
-      if (data) result = data
-      else if (error) lastErr = error
+      const { data: found, error: findErr } = await supabase.from("clientes").select("id").eq("email", user.email).limit(1).maybeSingle()
+      if (found?.id) await up("id", found.id)
+      else if (findErr) lastErr = findErr
     }
 
-    if (!result) {
-      const { data: found } = await supabase.from("clientes").select("id").eq("email", user.email).limit(1).maybeSingle()
-      if (found?.id) {
-        const { data, error } = await supabase.from("clientes").update(campos).eq("id", found.id).select().maybeSingle()
-        if (data) result = data
+    // Si falla por columna username inexistente, reintentar sin ella
+    if (!result && lastErr?.message?.toLowerCase().includes("username")) {
+      const { username: _u, ...camposSinUser } = campos
+      if (perfil?.id) {
+        const { data, error } = await supabase.from("clientes").update(camposSinUser).eq("id", perfil.id).select().maybeSingle()
+        if (data) { result = data; lastErr = null }
         else if (error) lastErr = error
       }
     }
@@ -807,7 +810,10 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
       onActualizar(result)
       setMensaje("¡Perfil actualizado!")
     } else {
-      setError(lastErr?.message || "No se pudo guardar. Aplicá las políticas RLS en Supabase para que funcione.")
+      // Fallback: guardar en metadata de auth (sin RLS, siempre funciona)
+      await supabase.auth.updateUser({ data: { perfil_cliente: { ...campos, email: user.email } } })
+      const detail = lastErr ? `${lastErr.message} [${lastErr.code}]` : "0 filas afectadas — posiblemente RLS bloqueando"
+      setError(`No se guardó en DB: ${detail}`)
     }
     setGuardando(false)
   }
