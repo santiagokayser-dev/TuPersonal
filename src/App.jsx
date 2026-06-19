@@ -1223,7 +1223,7 @@ export default function App({ user, onLogout }) {
         <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "100dvh", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "20px 16px 16px" }}>
             <div style={{ marginBottom: 14, padding: "0 4px" }}>
-              <img src="/logo-white.png" alt="TuPersonal" style={{ height: 48, width: "auto", display: "block", }} />
+              <img src="/logo-white.png" alt="TuPersonal" style={{ height: 64, width: "auto", display: "block" }} />
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <div style={{ width: 26, height: 26, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#fff" }}>
