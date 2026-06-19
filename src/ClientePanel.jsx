@@ -20,6 +20,14 @@ const T = {
 
 const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
+function autoUsername(email, nombre) {
+  const emailPart = (email || "").split("@")[0].replace(/[^a-zA-Z0-9_]/g, "").toLowerCase()
+  if (emailPart.length >= 3) return emailPart.slice(0, 20)
+  const nombrePart = (nombre || "").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9_]/g, "")
+  if (nombrePart.length >= 3) return nombrePart.slice(0, 20)
+  return "user" + Math.floor(Math.random() * 9000 + 1000)
+}
+
 const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
   const icons = {
     home: <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z" strokeLinecap="round" strokeLinejoin="round"/>,
@@ -740,7 +748,7 @@ function Pagos({ perfil }) {
 function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
   const [datos, setDatos] = useState({
     nombre: perfil?.nombre || "",
-    username: perfil?.username || user?.user_metadata?.username || "",
+    username: perfil?.username || user?.user_metadata?.username || autoUsername(user?.email, perfil?.nombre),
     peso: perfil?.peso || "",
     altura: perfil?.altura || "",
     edad: perfil?.edad || "",
@@ -913,6 +921,12 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
         if (metaPerfil?.nombre) {
           data = data ? { ...data, ...metaPerfil } : { ...metaPerfil }
         }
+      }
+      // Auto-generar username si no tiene uno
+      if (data?.id && !data.username) {
+        const auto = autoUsername(user.email, data.nombre)
+        const { error: usrErr } = await supabase.from("clientes").update({ username: auto }).eq("id", data.id)
+        if (!usrErr) data = { ...data, username: auto }
       }
       setPerfil(data)
       setCargando(false)

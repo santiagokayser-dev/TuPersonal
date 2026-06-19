@@ -50,6 +50,14 @@ const Icon = ({ name, size = 20, color = "#888888" }) => {
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
 }
 
+function autoUsername(email, nombre) {
+  const emailPart = (email || "").split("@")[0].replace(/[^a-zA-Z0-9_]/g, "").toLowerCase()
+  if (emailPart.length >= 3) return emailPart.slice(0, 20)
+  const nombrePart = (nombre || "").toLowerCase().replace(/\s+/g, "").replace(/[^a-zA-Z0-9_]/g, "")
+  if (nombrePart.length >= 3) return nombrePart.slice(0, 20)
+  return "user" + Math.floor(Math.random() * 9000 + 1000)
+}
+
 function useIsMobile() {
   const [mobile, setMobile] = useState(() => window.innerWidth < 768)
   useEffect(() => {
@@ -1222,10 +1230,17 @@ function RutinasPage({ clientes, user, onGuardar }) {
 }
 
 function PerfilTrainer({ user, onLogout }) {
+  const generatedUsername = user?.user_metadata?.username || autoUsername(user?.email, user?.user_metadata?.nombre)
   const [datos, setDatos] = useState({
     nombre: user?.user_metadata?.nombre || "",
-    username: user?.user_metadata?.username || "",
+    username: generatedUsername,
   })
+
+  useEffect(() => {
+    if (!user?.user_metadata?.username && generatedUsername) {
+      supabase.auth.updateUser({ data: { username: generatedUsername } })
+    }
+  }, [])
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(user?.user_metadata?.avatar_url || null)
   const [guardando, setGuardando] = useState(false)
