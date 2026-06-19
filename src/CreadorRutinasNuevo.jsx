@@ -556,7 +556,7 @@ function Biblioteca({ onAgregar, onCerrar, ejerciciosCustom, onAgregarCustom }) 
 
 // ── AI Generator ─────────────────────────────────────────────────────────────
 
-const API_KEY = "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"
+const API_KEY = import.meta.env.VITE_ANTHROPIC_KEY
 
 function GeneradorAI({ onRutinaGenerada, clientes }) {
   const [prompt, setPrompt] = useState("")

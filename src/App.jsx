@@ -9,7 +9,7 @@ import Chat from "./Chat"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
-const API_KEY = "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"
+const API_KEY = import.meta.env.VITE_ANTHROPIC_KEY
 
 const COLORS = {
   bg: "#060A10", surface: "#0C1220", surface2: "#111927", border: "#1A2540", border2: "#1E2D4A",
