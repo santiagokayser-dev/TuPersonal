@@ -1389,7 +1389,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
   )
 }
 
-function PerfilTrainer({ user, onLogout }) {
+function PerfilTrainer({ user, onLogout, onUserUpdated }) {
   const generatedUsername = user?.user_metadata?.username || autoUsername(user?.email, user?.user_metadata?.nombre)
   const [datos, setDatos] = useState({
     nombre: user?.user_metadata?.nombre || "",
@@ -1428,8 +1428,11 @@ function PerfilTrainer({ user, onLogout }) {
       data: { nombre: datos.nombre, username: datos.username.toLowerCase(), avatar_url }
     })
 
-    if (!updateErr) setMensaje("¡Perfil actualizado!")
-    else setError("No se pudo guardar")
+    if (!updateErr) {
+      setMensaje("¡Perfil actualizado!")
+      const { data: { user: refreshed } } = await supabase.auth.getUser()
+      if (refreshed) onUserUpdated?.(refreshed)
+    } else setError("No se pudo guardar")
     setGuardando(false)
   }
 
@@ -1482,12 +1485,13 @@ function PerfilTrainer({ user, onLogout }) {
   )
 }
 
-export default function App({ user, onLogout }) {
+export default function App({ user: initialUser, onLogout }) {
   const [activePage, setActivePage] = useState("inicio")
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
   const [clientes, setClientes] = useState([])
   const [cargando, setCargando] = useState(true)
   const [previewCliente, setPreviewCliente] = useState(null)
+  const [user, setUser] = useState(initialUser)
   const isMobile = useIsMobile()
 
   const nombreTrainer = user?.user_metadata?.nombre || user?.email?.split("@")[0] || "Entrenador"
@@ -1558,7 +1562,7 @@ export default function App({ user, onLogout }) {
       }} />,
       agenda: <AgendaReal clientes={clientes} />,
       pagos: <Finanzas clientes={clientes} user={user} onVerPerfil={setClienteSeleccionado} />,
-      perfil: <PerfilTrainer user={user} onLogout={onLogout} />,
+      perfil: <PerfilTrainer user={user} onLogout={onLogout} onUserUpdated={setUser} />,
     }
     return (
       <motion.div key={activePage} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={screenStyle}>
