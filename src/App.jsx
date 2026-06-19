@@ -1273,10 +1273,10 @@ export default function App({ user, onLogout }) {
 
         {/* Nav inferior — solo mobile */}
         {isMobile && !clienteSeleccionado && (
-          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 10, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
+          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 6, paddingBottom: "max(4px, env(safe-area-inset-bottom))", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActivePage(item.id)}
-                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "4px 0" }}>
+                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px 0" }}>
                 <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
                 <span style={{ fontSize: 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
               </button>
