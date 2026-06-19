@@ -1258,7 +1258,7 @@ export default function App({ user, onLogout }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "100dvh", overflow: "hidden", overscrollBehavior: "none" }}>
         {/* Header mobile */}
         {isMobile && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(16px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(6px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
             <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 32, width: "auto", cursor: "pointer" }} />
             <button onClick={onLogout}
               style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
