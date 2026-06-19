@@ -68,7 +68,11 @@ function AvatarPicker({ preview, onChange }) {
 }
 
 function Onboarding({ user, perfilExistente, onComplete }) {
-  const [datos, setDatos] = useState({ nombre: "", peso: "", altura: "", edad: "", objetivo: "" })
+  const [datos, setDatos] = useState({
+    nombre: "",
+    username: user.user_metadata?.username || "",
+    peso: "", altura: "", edad: "", objetivo: ""
+  })
   const [avatarFile, setAvatarFile] = useState(null)
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [guardando, setGuardando] = useState(false)
@@ -81,6 +85,8 @@ function Onboarding({ user, perfilExistente, onComplete }) {
 
   const guardar = async () => {
     if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
+    if (!datos.username.trim()) return setError("Elegí un nombre de usuario")
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(datos.username)) return setError("El usuario solo puede tener letras, números y _ (3–20 caracteres)")
     setGuardando(true)
     setError("")
 
@@ -97,6 +103,7 @@ function Onboarding({ user, perfilExistente, onComplete }) {
 
     const campos = {
       nombre: datos.nombre,
+      username: datos.username.toLowerCase(),
       peso: Number(datos.peso) || null,
       altura: Number(datos.altura) || null,
       edad: Number(datos.edad) || null,
@@ -160,6 +167,8 @@ function Onboarding({ user, perfilExistente, onComplete }) {
       {error && <div style={{ fontSize: 13, color: COLORS.red, background: COLORS.red + "11", borderRadius: 10, padding: "10px 14px" }}>{error}</div>}
 
       <input placeholder="Tu nombre completo *" value={datos.nombre} onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
+      <input placeholder="Nombre de usuario (ej: dantemie) *" value={datos.username}
+        onChange={e => setDatos(p => ({ ...p, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase() }))} style={inputStyle} />
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
         <input placeholder="Peso (kg)" value={datos.peso} onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />
         <input placeholder="Altura (cm)" value={datos.altura} onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />

@@ -69,6 +69,7 @@ export default function Auth() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [nombre, setNombre] = useState("")
+  const [username, setUsername] = useState("")
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState("")
   const [mensaje, setMensaje] = useState("")
@@ -85,12 +86,15 @@ export default function Auth() {
   const handleRegistro = async () => {
     if (!email || !password) return setError("Completá email y contraseña")
     if (password.length < 6) return setError("La contraseña debe tener al menos 6 caracteres")
+    if (!username.trim()) return setError("Elegí un nombre de usuario")
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return setError("El usuario solo puede tener letras, números y _ (3–20 caracteres)")
     setCargando(true)
     setError("")
 
     const rolFinal = inviteTrainerId ? "cliente" : rol
     const metadata = {
       nombre,
+      username: username.toLowerCase(),
       rol: rolFinal,
       ...(inviteTrainerId ? { trainer_id: inviteTrainerId } : {}),
     }
@@ -175,8 +179,12 @@ export default function Auth() {
                 {!inviteTrainerId && <RolSelector rol={rol} onChange={setRol} />}
 
                 {(!inviteTrainerId && rol === "trainer") && (
-                  <input style={S.input} type="text" placeholder="Tu nombre" value={nombre} onChange={e => setNombre(e.target.value)} />
+                  <input style={S.input} type="text" placeholder="Tu nombre completo" value={nombre} onChange={e => setNombre(e.target.value)} />
                 )}
+
+                <input style={S.input} type="text" placeholder="Nombre de usuario (ej: dantemie)"
+                  value={username}
+                  onChange={e => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase())} />
 
                 <input style={S.input} type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} />
                 <input style={S.input} type="password" placeholder="Contraseña (mínimo 6 caracteres)" value={password} onChange={e => setPassword(e.target.value)}
