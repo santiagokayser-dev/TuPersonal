@@ -312,24 +312,33 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
     onBack()
   }
 
+  const [todasRutinas, setTodasRutinas] = useState([])
+
   const cargarRutinas = async () => {
     if (!cliente.id) return
     setCargandoRutinas(true)
     const { data: { user: u } } = await supabase.auth.getUser()
-    const { data, error } = await supabase.from("rutinas").select("*").eq("trainer_id", u.id)
-    if (error) console.error("Error cargando rutinas:", error)
-    console.log("DEBUG rutinas raw:", data, "buscando cliente.id:", cliente.id)
-    const filtradas = (data || []).filter(r => {
+    const { data } = await supabase.from("rutinas").select("*").eq("trainer_id", u.id)
+    const todas = data || []
+    setTodasRutinas(todas)
+    const filtradas = todas.filter(r => {
       let asignados = r.clientes_asignados
-      if (typeof asignados === "string") {
-        try { asignados = JSON.parse(asignados) } catch { asignados = [] }
-      }
+      if (typeof asignados === "string") { try { asignados = JSON.parse(asignados) } catch { asignados = [] } }
       if (!Array.isArray(asignados)) asignados = []
-      console.log("  rutina:", r.nombre, "asignados:", asignados)
       return asignados.some(id => String(id) === String(cliente.id))
     })
     setRutinas(filtradas)
     setCargandoRutinas(false)
+  }
+
+  const toggleAsignarRutina = async (rutina) => {
+    let asignados = rutina.clientes_asignados
+    if (typeof asignados === "string") { try { asignados = JSON.parse(asignados) } catch { asignados = [] } }
+    if (!Array.isArray(asignados)) asignados = []
+    const yaAsignado = asignados.some(id => String(id) === String(cliente.id))
+    const nuevos = yaAsignado ? asignados.filter(id => String(id) !== String(cliente.id)) : [...asignados, cliente.id]
+    await supabase.from("rutinas").update({ clientes_asignados: nuevos }).eq("id", rutina.id)
+    cargarRutinas()
   }
 
   const ajustarConIA = async (rutina) => {
@@ -532,11 +541,13 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
             <>
               {cargandoRutinas ? (
                 <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>Cargando...</div>
-              ) : rutinas.length === 0 ? (
-                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
-                  Sin rutinas asignadas todavía
-                </div>
-              ) : rutinas.map((r) => {
+              ) : <>
+                {rutinas.length === 0 && (
+                  <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
+                    Sin rutinas asignadas todavía
+                  </div>
+                )}
+                {rutinas.map((r) => {
                 const dias = typeof r.dias === "string" ? (() => { try { return JSON.parse(r.dias) } catch { return [] } })() : (r.dias || [])
                 return (
                   <div key={r.id} style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -576,7 +587,36 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                   </div>
                 )
               })}
-            </>
+                {/* Rutinas no asignadas */}
+                {(() => {
+                  const noAsignadas = todasRutinas.filter(r => {
+                    let asignados = r.clientes_asignados
+                    if (typeof asignados === "string") { try { asignados = JSON.parse(asignados) } catch { asignados = [] } }
+                    if (!Array.isArray(asignados)) asignados = []
+                    return !asignados.some(id => String(id) === String(cliente.id))
+                  })
+                  if (noAsignadas.length === 0) return null
+                  return (
+                    <>
+                      <div style={{ fontSize: 11, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: 8 }}>Asignar rutina</div>
+                      {noAsignadas.map(r => (
+                        <div key={r.id} style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 14px", border: `0.5px dashed ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.textSub }}>{r.nombre}</div>
+                            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>
+                              {(() => { try { const d = typeof r.dias === "string" ? JSON.parse(r.dias) : (r.dias || []); return `${d.length} ${d.length === 1 ? "día" : "días"}` } catch { return "" } })()}
+                            </div>
+                          </div>
+                          <motion.button whileTap={{ scale: 0.95 }} onClick={() => toggleAsignarRutina(r)}
+                            style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "7px 14px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                            Asignar
+                          </motion.button>
+                        </div>
+                      ))}
+                    </>
+                  )
+                })()}
+              </>}
           )}
         </motion.div>
       </AnimatePresence>
@@ -1252,6 +1292,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
   const [cargando, setCargando] = useState(true)
   const [expandida, setExpandida] = useState(null)
   const [eliminando, setEliminando] = useState(null)
+  const [asignando, setAsignando] = useState(null)
 
   const cargar = async () => {
     setCargando(true)
@@ -1267,6 +1308,13 @@ function RutinasPage({ clientes, user, onGuardar }) {
     await supabase.from("rutinas").delete().eq("id", id)
     setRutinas(prev => prev.filter(r => r.id !== id))
     setEliminando(null)
+  }
+
+  const toggleAsignar = async (rutinaId, clienteId, asignadosArr) => {
+    const yaAsignado = asignadosArr.includes(clienteId)
+    const nuevos = yaAsignado ? asignadosArr.filter(id => id !== clienteId) : [...asignadosArr, clienteId]
+    await supabase.from("rutinas").update({ clientes_asignados: nuevos }).eq("id", rutinaId)
+    setRutinas(prev => prev.map(r => r.id === rutinaId ? { ...r, clientes_asignados: nuevos } : r))
   }
 
   const getNombreClientes = (asignados) => {
@@ -1352,7 +1400,35 @@ function RutinasPage({ clientes, user, onGuardar }) {
                             </div>
                           )
                         })}
-                        {asignadosArr.length > 0 && (
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button onClick={() => setAsignando(asignando === r.id ? null : r.id)}
+                            style={{ flex: 1, background: COLORS.accentSub, border: `0.5px solid ${COLORS.accent}44`, borderRadius: 10, padding: "8px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                            <Icon name="users" size={13} color={COLORS.accent} /> Asignar
+                          </button>
+                          <button onClick={() => eliminar(r.id)} disabled={eliminando === r.id}
+                            style={{ flex: 1, background: "#3a1a1a", border: "0.5px solid #ef444433", borderRadius: 10, padding: "8px 0", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                            {eliminando === r.id ? "Eliminando..." : "Eliminar"}
+                          </button>
+                        </div>
+                        {asignando === r.id && (
+                          <div style={{ background: COLORS.surface2, borderRadius: 12, padding: 10, display: "flex", flexDirection: "column", gap: 4 }}>
+                            <div style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Seleccionar clientes</div>
+                            {clientes.length === 0 && <div style={{ fontSize: 12, color: COLORS.textMuted }}>No tenés clientes</div>}
+                            {clientes.map(c => {
+                              const sel = asignadosArr.includes(c.id)
+                              return (
+                                <button key={c.id} onClick={() => toggleAsignar(r.id, c.id, asignadosArr)}
+                                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: sel ? COLORS.accent + "22" : "transparent", border: `0.5px solid ${sel ? COLORS.accent + "44" : COLORS.border}`, borderRadius: 10, cursor: "pointer", width: "100%" }}>
+                                  <div style={{ width: 20, height: 20, borderRadius: 6, background: sel ? COLORS.accent : COLORS.surface, border: `1.5px solid ${sel ? COLORS.accent : COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                    {sel && <Icon name="check" size={12} color="#fff" />}
+                                  </div>
+                                  <span style={{ fontSize: 13, color: COLORS.text, fontWeight: 500 }}>{c.nombre}</span>
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                        {asignando !== r.id && asignadosArr.length > 0 && (
                           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                             {asignadosArr.map(id => {
                               const c = clientes.find(c => c.id === id)
@@ -1362,10 +1438,6 @@ function RutinasPage({ clientes, user, onGuardar }) {
                             })}
                           </div>
                         )}
-                        <button onClick={() => eliminar(r.id)} disabled={eliminando === r.id}
-                          style={{ background: "#3a1a1a", border: "0.5px solid #ef444433", borderRadius: 10, padding: "8px 0", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer", width: "100%" }}>
-                          {eliminando === r.id ? "Eliminando..." : "Eliminar rutina"}
-                        </button>
                       </div>
                     </motion.div>
                   )}
