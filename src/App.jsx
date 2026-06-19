@@ -1150,7 +1150,7 @@ export default function App({ user, onLogout }) {
     cargar()
   }, [])
 
-  const screenStyle = { flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none" }
+  const screenStyle = { flex: 1, overflowY: "auto", overflowX: "hidden", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "none" }
 
   const renderPage = () => {
     if (clienteSeleccionado) return (
