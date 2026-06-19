@@ -106,35 +106,41 @@ function Onboarding({ user, perfilExistente, onComplete }) {
     }
 
     let result
+    let lastError = null
 
     // Try updating the record already linked to this user_id
-    const { data: byUserId } = await supabase.from("clientes")
+    const { data: byUserId, error: e1 } = await supabase.from("clientes")
       .update(campos).eq("user_id", user.id).select().single()
     result = byUserId
+    if (e1) lastError = e1
 
     // Fall back to updating by known id from parent lookup
     if (!result && perfilExistente?.id) {
-      const { data: byId } = await supabase.from("clientes")
+      const { data: byId, error: e2 } = await supabase.from("clientes")
         .update(campos).eq("id", perfilExistente.id).select().single()
       result = byId
+      if (e2) lastError = e2
     }
 
     // Fall back to email-based lookup then update/insert
     if (!result) {
-      const { data: existente } = await supabase.from("clientes")
+      const { data: existente, error: e3 } = await supabase.from("clientes")
         .select("id").eq("email", user.email).maybeSingle()
+      if (e3) lastError = e3
       if (existente) {
-        const { data } = await supabase.from("clientes").update(campos).eq("id", existente.id).select().single()
+        const { data, error: e4 } = await supabase.from("clientes").update(campos).eq("id", existente.id).select().single()
         result = data
+        if (e4) lastError = e4
       } else {
         const trainerId = user.user_metadata?.trainer_id
-        const { data } = await supabase.from("clientes").insert({ ...campos, email: user.email, trainer_id: trainerId }).select().single()
+        const { data, error: e5 } = await supabase.from("clientes").insert({ ...campos, email: user.email, trainer_id: trainerId }).select().single()
         result = data
+        if (e5) lastError = e5
       }
     }
 
     if (result) onComplete(result)
-    else setError("No se pudo guardar. Intentá de nuevo.")
+    else setError(lastError?.message || "No se pudo guardar. Intentá de nuevo.")
     setGuardando(false)
   }
 
