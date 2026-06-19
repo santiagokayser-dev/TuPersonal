@@ -34,6 +34,7 @@ const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
     plus: <><path d="M12 5v14M5 12h14"/></>,
     edit: <><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></>,
     trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></>,
+    user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
 }
@@ -44,6 +45,7 @@ const navItems = [
   { id: "progreso", icon: "trendingUp", label: "Progreso" },
   { id: "chat", icon: "chat", label: "Chat" },
   { id: "pagos", icon: "wallet", label: "Pagos" },
+  { id: "perfil", icon: "user", label: "Perfil" },
 ]
 
 function AvatarPicker({ preview, onChange }) {
@@ -716,6 +718,143 @@ function Pagos({ perfil }) {
   )
 }
 
+function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
+  const [datos, setDatos] = useState({
+    nombre: perfil?.nombre || "",
+    username: perfil?.username || user?.user_metadata?.username || "",
+    peso: perfil?.peso || "",
+    altura: perfil?.altura || "",
+    edad: perfil?.edad || "",
+    objetivo: perfil?.objetivo || "",
+  })
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(perfil?.avatar_url || null)
+  const [guardando, setGuardando] = useState(false)
+  const [mensaje, setMensaje] = useState("")
+  const [error, setError] = useState("")
+
+  const guardar = async () => {
+    if (!datos.nombre.trim()) return setError("El nombre es obligatorio")
+    setGuardando(true)
+    setError("")
+    setMensaje("")
+
+    let avatar_url = null
+    if (avatarFile) {
+      const ext = avatarFile.name.split(".").pop()
+      const path = `${user.id}.${ext}`
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true })
+      if (!upErr) {
+        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+        avatar_url = urlData.publicUrl
+      }
+    }
+
+    const campos = {
+      nombre: datos.nombre,
+      peso: Number(datos.peso) || null,
+      altura: Number(datos.altura) || null,
+      edad: Number(datos.edad) || null,
+      objetivo: datos.objetivo || null,
+      ...(avatar_url ? { avatar_url } : {}),
+    }
+
+    if (datos.username?.trim()) campos.username = datos.username.trim().toLowerCase()
+
+    let result = null
+    let lastErr = null
+
+    if (perfil?.id) {
+      const { data, error } = await supabase.from("clientes").update(campos).eq("id", perfil.id).select().maybeSingle()
+      if (data) result = data
+      else if (error) lastErr = error
+    }
+
+    if (!result) {
+      const { data, error } = await supabase.from("clientes").update(campos).eq("user_id", user.id).select().maybeSingle()
+      if (data) result = data
+      else if (error) lastErr = error
+    }
+
+    if (!result) {
+      const { data: found } = await supabase.from("clientes").select("id").eq("email", user.email).limit(1).maybeSingle()
+      if (found?.id) {
+        const { data, error } = await supabase.from("clientes").update(campos).eq("id", found.id).select().maybeSingle()
+        if (data) result = data
+        else if (error) lastErr = error
+      }
+    }
+
+    if (result) {
+      onActualizar(result)
+      setMensaje("¡Perfil actualizado!")
+    } else {
+      setError(lastErr?.message || "No se pudo guardar. Consultá con el administrador para configurar los permisos.")
+    }
+    setGuardando(false)
+  }
+
+  const ini = (datos.nombre || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+
+  return (
+    <>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div>
+          <div style={{ ...T.label, marginBottom: 4 }}>Tu cuenta</div>
+          <div style={T.h1}>Perfil</div>
+        </div>
+        <button onClick={onLogout} style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: 8, cursor: "pointer", display: "flex" }}>
+          <Icon name="logout" size={16} color={COLORS.textSub} />
+        </button>
+      </div>
+
+      <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, cursor: "pointer" }}>
+        <div style={{ width: 88, height: 88, borderRadius: 28, background: COLORS.accent + "22", border: `2px dashed ${COLORS.border2}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 700, color: COLORS.accent, position: "relative", flexShrink: 0 }}>
+          {avatarPreview
+            ? <img src={avatarPreview} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            : ini}
+          <div style={{ position: "absolute", bottom: 4, right: 4, width: 22, height: 22, borderRadius: 7, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <svg width={11} height={11} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          </div>
+        </div>
+        <span style={{ fontSize: 12, color: COLORS.textMuted }}>Cambiar foto</span>
+        <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) { setAvatarFile(f); setAvatarPreview(URL.createObjectURL(f)) } }} />
+      </label>
+
+      {mensaje && <div style={{ fontSize: 13, color: COLORS.green, background: COLORS.green + "11", borderRadius: 10, padding: "10px 14px", textAlign: "center" }}>{mensaje}</div>}
+      {error && <div style={{ fontSize: 13, color: COLORS.red, background: COLORS.red + "11", borderRadius: 10, padding: "10px 14px" }}>{error}</div>}
+
+      <div>
+        <div style={{ ...T.label, marginBottom: 6 }}>Datos personales</div>
+        <input placeholder="Nombre completo *" value={datos.nombre} onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
+        <input placeholder="Nombre de usuario (ej: dantemie)" value={datos.username}
+          onChange={e => setDatos(p => ({ ...p, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase() }))}
+          style={inputStyle} />
+        <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: -4, marginBottom: 10 }}>
+          El email no se puede cambiar: {user?.email}
+        </div>
+      </div>
+
+      <div>
+        <div style={{ ...T.label, marginBottom: 6 }}>Métricas</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+          <input placeholder="Peso (kg)" value={datos.peso} onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />
+          <input placeholder="Altura (cm)" value={datos.altura} onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} type="number" />
+        </div>
+        <div style={{ marginTop: 8 }}>
+          <input placeholder="Edad" value={datos.edad} onChange={e => setDatos(p => ({ ...p, edad: e.target.value }))} style={inputStyle} type="number" />
+        </div>
+        <input placeholder="Objetivo (ej: bajar 5kg, ganar masa)" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
+      </div>
+
+      <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
+        style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
+        {guardando ? "Guardando..." : "Guardar cambios"}
+      </motion.button>
+    </>
+  )
+}
+
 export default function ClientePanel({ user, onLogout, initialPerfil = null, previewMode = false }) {
   const [perfil, setPerfil] = useState(initialPerfil)
   const [cargando, setCargando] = useState(!initialPerfil)
@@ -764,6 +903,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
       progreso: <Progreso perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} />,
       chat: <Chat user={user} clienteId={perfilMock?.id} trainerId={perfilMock?.trainer_id} modo="cliente" />,
       pagos: <Pagos perfil={perfilMock} />,
+      perfil: <PerfilClienteEditar user={user} perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} onLogout={onLogout} />,
     }
     return (
       <motion.div key={activePage} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} style={screenStyle}>
