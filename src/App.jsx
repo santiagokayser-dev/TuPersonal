@@ -640,25 +640,25 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
   return (
     <>
       {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
           <div style={T.h1}>Clientes</div>
-          <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 4 }}>
-            {clientes.length > 0
-              ? <>{alDia} al día{pendientes > 0 ? <> · <span style={{ color: COLORS.yellow }}>{pendientes} pendiente{pendientes > 1 ? "s" : ""}</span></> : ""}</>
-              : "Administrá tus clientes, pagos y rutinas"
-            }
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={copiarLink}
+              style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `0.5px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 10, padding: "5px 9px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
+              {linkCopiado === "error" ? "Error" : linkCopiado ? "¡Copiado!" : "Compartir link"}
+            </motion.button>
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
+              style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: `0 2px 12px ${COLORS.accent}44`, whiteSpace: "nowrap" }}>
+              + Agregar cliente
+            </motion.button>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={copiarLink}
-            style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `0.5px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 10, padding: "5px 9px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
-            {linkCopiado === "error" ? "Error" : linkCopiado ? "¡Copiado!" : "Compartir link"}
-          </motion.button>
-          <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
-            style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: `0 2px 12px ${COLORS.accent}44`, whiteSpace: "nowrap" }}>
-            + Agregar cliente
-          </motion.button>
+        <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 4 }}>
+          {clientes.length > 0
+            ? <>{alDia} al día{pendientes > 0 ? <> · <span style={{ color: COLORS.yellow }}>{pendientes} pendiente{pendientes > 1 ? "s" : ""}</span></> : ""}</>
+            : "Administrá tus clientes, pagos y rutinas"
+          }
         </div>
       </div>
 
