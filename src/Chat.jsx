@@ -10,14 +10,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 
 const C = {
-  bg: "#060A10", surface: "#0C1220", surface2: "#111927", surface3: "#151F30",
-  border: "#1A2540", border2: "#1E2D4A",
-  text: "#FFFFFF", textSub: "#94A3B8", textMuted: "#475569",
-  accent: "#2563EB", accentSub: "#1E3A8A", accentLight: "#93C5FD",
-  green: "#22c55e", red: "#ef4444", yellow: "#f59e0b",
+  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", surface3: "#353535",
+  border: "#3A3A3A", border2: "#444444",
+  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B",
+  accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
+  green: "#22c55e", red: "#ef4444", yellow: "#f5a623",
 }
 
-const AVATAR_COLORS = ["#1D4ED8","#0369A1","#0E7490","#1E40AF","#2563EB","#0284C7","#155E75","#1D4ED8","#0369A1","#1E3A8A"]
+const AVATAR_COLORS = ["#E8714A","#D4603E","#C75535","#B84A2C","#A93F23","#9A341A","#E07040","#CF6538","#BF5A30","#AF4F28"]
 const avatarColor = (name) => AVATAR_COLORS[(name || "?").charCodeAt(0) % AVATAR_COLORS.length]
 
 function formatHora(ts) {

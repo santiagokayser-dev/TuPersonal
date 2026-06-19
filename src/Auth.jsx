@@ -3,15 +3,15 @@ import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 
 const COLORS = {
-  bg: "#060A10", surface: "#0C1220", border: "#1E2D4A",
-  accent: "#2563EB", accentSub: "#1E3A8A", text: "#fff",
-  textMuted: "#94A3B8", green: "#4ade80", red: "#f87171",
+  bg: "#1A1A1A", surface: "#262626", border: "#3A3A3A",
+  accent: "#E8714A", accentSub: "#3D2418", text: "#F5F5F5",
+  textMuted: "#A0A0A0", green: "#4ade80", red: "#ef4444",
 }
 
 const S = {
-  container: { background: COLORS.bg, minHeight: "var(--app-height, 100dvh)", display: "flex", justifyContent: "center", alignItems: "flex-start", fontFamily: "-apple-system, sans-serif", padding: "0 16px" },
+  container: { background: COLORS.bg, minHeight: "var(--app-height, 100dvh)", display: "flex", justifyContent: "center", alignItems: "flex-start", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", padding: "0 16px" },
   phone: { width: "100%", maxWidth: 420, background: COLORS.bg, display: "flex", flexDirection: "column", justifyContent: "center", padding: "48px 16px 32px" },
-  input: { background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 16px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", marginBottom: 12, boxSizing: "border-box" },
+  input: { background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 16px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", marginBottom: 12, boxSizing: "border-box" },
   btn: (bg) => ({ background: bg || COLORS.accent, border: "none", borderRadius: 12, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", marginBottom: 12 }),
   btnGoogle: { background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "13px 0", color: COLORS.text, fontSize: 14, fontWeight: 500, cursor: "pointer", width: "100%", marginBottom: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 8 },
   link: { color: COLORS.accent, fontSize: 13, cursor: "pointer", textAlign: "center", marginTop: 8 },
@@ -52,7 +52,7 @@ function RolSelector({ rol, onChange }) {
             style={{ background: activo ? COLORS.accentSub : COLORS.surface, border: `1.5px solid ${activo ? COLORS.accent : COLORS.border}`, borderRadius: 14, padding: "14px 12px", cursor: "pointer", textAlign: "left", transition: "all 0.2s" }}>
             <div style={{ color: activo ? COLORS.accent : COLORS.textMuted, marginBottom: 8 }}>{o.icon}</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: activo ? "#fff" : COLORS.textMuted, marginBottom: 4 }}>{o.label}</div>
-            <div style={{ fontSize: 11, color: activo ? "#93C5FD" : "#64748B", lineHeight: 1.4 }}>{o.desc}</div>
+            <div style={{ fontSize: 11, color: activo ? COLORS.accent : "#64748B", lineHeight: 1.4 }}>{o.desc}</div>
           </motion.button>
         )
       })}
@@ -133,7 +133,7 @@ export default function Auth() {
         </div>
 
         {inviteTrainerId && (
-          <div style={{ background: "#1E3A8A33", border: `0.5px solid ${COLORS.accent}33`, borderRadius: 12, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: "#93C5FD" }}>
+          <div style={{ background: COLORS.accentSub + "33", border: `0.5px solid ${COLORS.accent}33`, borderRadius: 12, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: COLORS.accent }}>
             Fuiste invitado por tu entrenador. Creá tu cuenta para continuar.
           </div>
         )}

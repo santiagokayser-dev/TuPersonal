@@ -12,19 +12,19 @@ import autoTable from "jspdf-autotable"
 const API_KEY = import.meta.env.VITE_ANTHROPIC_KEY
 
 const COLORS = {
-  bg: "#060A10", surface: "#0C1220", surface2: "#111927", border: "#1A2540", border2: "#1E2D4A",
-  text: "#FFFFFF", textSub: "#94A3B8", textMuted: "#475569",
-  accent: "#2563EB", accentSub: "#1E3A8A", accentLight: "#93C5FD",
-  green: "#22c55e", red: "#ef4444", yellow: "#f59e0b",
+  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", border: "#3A3A3A", border2: "#444444",
+  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B",
+  accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
+  green: "#4ade80", red: "#ef4444", yellow: "#f5a623",
 }
 
 const T = {
-  h1: { fontSize: 28, fontWeight: 700, color: "#ffffff", letterSpacing: -0.8, lineHeight: 1.1 },
-  h2: { fontSize: 20, fontWeight: 600, color: "#ffffff", letterSpacing: -0.4 },
-  h3: { fontSize: 15, fontWeight: 600, color: "#ffffff", letterSpacing: -0.2 },
-  body: { fontSize: 14, fontWeight: 400, color: "#94A3B8", lineHeight: 1.5 },
-  label: { fontSize: 11, fontWeight: 500, color: "#64748B", textTransform: "uppercase", letterSpacing: 1.2 },
-  num: { fontSize: 32, fontWeight: 700, color: "#ffffff", letterSpacing: -1 },
+  h1: { fontSize: 28, fontWeight: 700, color: "#F5F5F5", letterSpacing: -0.8, lineHeight: 1.1 },
+  h2: { fontSize: 20, fontWeight: 600, color: "#F5F5F5", letterSpacing: -0.4 },
+  h3: { fontSize: 15, fontWeight: 600, color: "#F5F5F5", letterSpacing: -0.2 },
+  body: { fontSize: 14, fontWeight: 400, color: "#A0A0A0", lineHeight: 1.5 },
+  label: { fontSize: 11, fontWeight: 500, color: "#6B6B6B", textTransform: "uppercase", letterSpacing: 1.2 },
+  num: { fontSize: 32, fontWeight: 700, color: "#F5F5F5", letterSpacing: -1 },
 }
 
 const Icon = ({ name, size = 20, color = "#888888" }) => {
@@ -189,7 +189,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
         style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}cc 0%, ${COLORS.surface} 60%)`, borderRadius: 20, padding: "18px 20px 16px", border: `0.5px solid ${COLORS.accent}44`, position: "relative" }}>
         <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: "50%", background: COLORS.accent + "0d", zIndex: 0 }} />
         <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, color: "#93C5FD99" }}>Facturación mensual</div>
+          <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, color: COLORS.accentLight + "99" }}>Facturación mensual</div>
           <div style={{ fontSize: 36, fontWeight: 800, color: "#FFFFFF", letterSpacing: -1.5, marginTop: 6, marginBottom: 2 }}>
             {totalMensual > 0 ? `$${totalMensual >= 1000 ? (totalMensual / 1000).toFixed(0) + "K" : totalMensual.toLocaleString("es-AR")}` : "—"}
           </div>
@@ -198,7 +198,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
               {"$" + (cobrado / 1000).toFixed(0) + "K cobrado"}
             </div>
           )}
-          <div style={{ fontSize: 12, color: "#93C5FD99" }}>
+          <div style={{ fontSize: 12, color: COLORS.accentLight + "99" }}>
             {totalMensual > 0 ? `${alDia} de ${clientes.filter(c => Number(c.precio) > 0).length} clientes al día` : "Asigná precios para ver proyección"}
           </div>
         </div>
@@ -289,7 +289,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
   const [iaResultado, setIaResultado] = useState({})
   const [iaLoading, setIaLoading] = useState({})
 
-  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
   const waUrl = datos.telefono
     ? `https://wa.me/${datos.telefono.replace(/\D/g, "").replace(/^0/, "54").replace(/^(?!54)/, "549")}`
@@ -628,7 +628,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
 }
 
 const AVATAR_COLORS = [
-  "#1D4ED8","#0369A1","#0E7490","#1E40AF","#2563EB","#0284C7","#155E75","#1D4ED8","#0369A1","#1E3A8A"
+  "#E8714A","#D4603E","#C75535","#B84A2C","#A93F23","#9A341A","#E07040","#CF6538","#BF5A30","#AF4F28"
 ]
 function avatarColor(name) {
   return AVATAR_COLORS[(name || "?").charCodeAt(0) % AVATAR_COLORS.length]
@@ -696,7 +696,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
     } catch {}
   }
 
-  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
   const agregarCliente = async () => {
     if (!nuevo.nombre.trim()) return
@@ -812,7 +812,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
         <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
           {[["clientes", "Mis clientes"], ["grupos", "Grupos"]].map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ padding: "6px 14px", borderRadius: 20, border: `0.5px solid ${tab === t ? COLORS.accent : COLORS.border}`, background: tab === t ? COLORS.accentSub : "transparent", color: tab === t ? "#93C5FD" : COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              style={{ padding: "6px 14px", borderRadius: 20, border: `0.5px solid ${tab === t ? COLORS.accent : COLORS.border}`, background: tab === t ? COLORS.accentSub : "transparent", color: tab === t ? COLORS.accentLight : COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
               {label}
             </button>
           ))}
@@ -994,7 +994,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
               <div style={{ display: "flex", gap: 6 }}>
                 {[["todos", `Todos (${clientes.length})`], ["aldia", `Al día (${alDia})`], ["pendientes", `Pendientes (${pendientes})`]].map(([id, label]) => (
                   <button key={id} onClick={() => setFiltro(id)}
-                    style={{ padding: "6px 12px", borderRadius: 20, border: `0.5px solid ${filtro === id ? COLORS.accent : COLORS.border}`, background: filtro === id ? COLORS.accentSub : COLORS.surface, color: filtro === id ? "#93C5FD" : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    style={{ padding: "6px 12px", borderRadius: 20, border: `0.5px solid ${filtro === id ? COLORS.accent : COLORS.border}`, background: filtro === id ? COLORS.accentSub : COLORS.surface, color: filtro === id ? COLORS.accentLight : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
                     {label}
                   </button>
                 ))}
@@ -1152,7 +1152,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
 
   const mesActual = new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })
 
-  const inputS = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 10 }
+  const inputS = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 10 }
 
   return (
     <>
@@ -1436,7 +1436,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
                             {asignadosArr.map(id => {
                               const c = clientes.find(c => c.id === id)
                               return c ? (
-                                <div key={id} style={{ background: COLORS.accentSub, borderRadius: 20, padding: "4px 10px", fontSize: 11, color: "#93C5FD", fontWeight: 500 }}>{c.nombre}</div>
+                                <div key={id} style={{ background: COLORS.accentSub, borderRadius: 20, padding: "4px 10px", fontSize: 11, color: COLORS.accentLight, fontWeight: 500 }}>{c.nombre}</div>
                               ) : null
                             })}
                           </div>
@@ -1482,7 +1482,7 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
   const [mensaje, setMensaje] = useState("")
   const [error, setError] = useState("")
 
-  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
   const guardar = async () => {
     if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
@@ -1646,7 +1646,7 @@ export default function App({ user: initialUser, onLogout }) {
     )
   }
 
-  const fontFamily = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
+  const fontFamily = "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif"
 
   return (
     <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", fontFamily }}>

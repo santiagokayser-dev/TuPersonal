@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 
 const C = {
-  bg: "#060A10", surface: "#0C1220", surface2: "#111927", surface3: "#151F30",
-  border: "#1A2540", border2: "#1E2D4A",
-  text: "#FFFFFF", textSub: "#94A3B8", textMuted: "#475569",
-  accent: "#2563EB", accentSub: "#1E3A8A", accentLight: "#93C5FD",
-  green: "#22c55e", yellow: "#f59e0b",
+  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", surface3: "#353535",
+  border: "#3A3A3A", border2: "#444444",
+  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B",
+  accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
+  green: "#22c55e", yellow: "#f5a623",
 }
 
 const TIPO_COLORS = {
@@ -27,7 +27,7 @@ const MESES_CORTO = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct"
 const TIPOS = ["Fuerza","Cardio","Movilidad","Full body","Powerlifting","Funcional","Otro"]
 
 const S = {
-  input: { background: C.surface2, border: `0.5px solid ${C.border2}`, borderRadius: 10, padding: "10px 13px", color: C.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system,sans-serif", boxSizing: "border-box" },
+  input: { background: C.surface2, border: `0.5px solid ${C.border2}`, borderRadius: 10, padding: "10px 13px", color: C.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", boxSizing: "border-box" },
 }
 
 function toYMD(date) {

@@ -4,9 +4,9 @@ import { supabase } from "./supabase"
 import Chat from "./Chat"
 
 const COLORS = {
-  bg: "#060A10", surface: "#0C1220", surface2: "#111927", border: "#1A2540", border2: "#1E2D4A",
-  text: "#FFFFFF", textSub: "#94A3B8", textMuted: "#475569", accent: "#2563EB", accentSub: "#1E3A8A", accentLight: "#93C5FD",
-  green: "#22c55e", red: "#ef4444", yellow: "#f59e0b",
+  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", border: "#3A3A3A", border2: "#444444",
+  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B", accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
+  green: "#22c55e", red: "#ef4444", yellow: "#f5a623",
 }
 
 const T = {
@@ -18,7 +18,7 @@ const T = {
   num: { fontSize: 32, fontWeight: 700, color: COLORS.text, letterSpacing: -1 },
 }
 
-const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "-apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
 function autoUsername(email, nombre) {
   const emailPart = (email || "").split("@")[0].replace(/[^a-zA-Z0-9_]/g, "").toLowerCase()
