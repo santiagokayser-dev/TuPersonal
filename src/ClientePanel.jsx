@@ -810,12 +810,22 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
       }
     }
 
+    if (!result) {
+      const insertCampos = { ...campos, user_id: user.id, email: user.email, trainer_id: user.user_metadata?.trainer_id || perfil?.trainer_id || null }
+      const { username: _u2, ...insertSinUsername } = insertCampos
+      for (const c of [insertCampos, insertSinUsername]) {
+        const { data, error } = await supabase.from("clientes").insert(c).select().maybeSingle()
+        if (data) { result = data; break }
+        if (error) lastErr = error
+      }
+    }
+
     if (result) {
       onActualizar(result)
       setMensaje("¡Perfil actualizado!")
     } else {
       await supabase.auth.updateUser({ data: { perfil_cliente: { ...campos, email: user.email } } })
-      const detail = lastErr ? `${lastErr.message} [${lastErr.code}]` : "0 filas afectadas — posiblemente RLS bloqueando"
+      const detail = lastErr ? `${lastErr.message} [${lastErr.code}]` : "No se pudo guardar"
       setError(`No se guardó en DB: ${detail}`)
     }
     setGuardando(false)
