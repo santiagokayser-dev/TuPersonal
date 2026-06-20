@@ -669,12 +669,18 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
       .eq("username", usernameBusq.toLowerCase().trim())
       .maybeSingle()
     if (error) {
-      setBusqError(error.code === "42703"
-        ? "La columna username no existe. Ejecutá el SQL de migraciones en Supabase."
-        : `Error: ${error.message}`)
+      if (error.code === "42703") {
+        setBusqError("La columna username no existe en la tabla clientes. Ejecutá el SQL de migraciones en Supabase.")
+      } else if (error.code === "42501" || error.message?.toLowerCase().includes("permission") || error.message?.toLowerCase().includes("rls")) {
+        setBusqError("Sin permiso para buscar. Aplicá las políticas RLS en Supabase (SQL Editor).")
+      } else {
+        setBusqError(`Error ${error.code}: ${error.message}`)
+      }
+      setClienteEncontrado(false)
+    } else if (!data) {
       setClienteEncontrado(false)
     } else {
-      setClienteEncontrado(data ?? false)
+      setClienteEncontrado(data)
     }
     setBuscando(false)
   }
@@ -686,12 +692,14 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
     const { data, error } = await supabase.from("clientes")
       .update({ trainer_id: currentUser.id })
       .eq("id", clienteEncontrado.id)
-      .select().single()
-    if (!error && data) {
+      .select().maybeSingle()
+    if (data) {
       onClienteAgregado?.(normCliente(data))
       setUsernameBusq(""); setClienteEncontrado(null); setBusqError(""); setMostrarForm(false); setModoAgregar("buscar")
     } else if (error) {
-      setBusqError(`No se pudo vincular: ${error.message}`)
+      setBusqError(`No se pudo vincular: ${error.message} [${error.code}]`)
+    } else {
+      setBusqError("No se pudo vincular: sin permiso para actualizar este registro. Aplicá las políticas RLS en Supabase.")
     }
     setCargando(false)
   }
@@ -882,8 +890,9 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                       <div style={{ fontSize: 12, color: COLORS.red, background: COLORS.red + "11", borderRadius: 8, padding: "8px 12px", marginBottom: 8 }}>{busqError}</div>
                     )}
                     {clienteEncontrado === false && !busqError && (
-                      <div style={{ fontSize: 13, color: COLORS.textMuted, textAlign: "center", padding: "4px 0" }}>
-                        No se encontró ese usuario. Pedile que se registre primero.
+                      <div style={{ fontSize: 13, color: COLORS.textMuted, textAlign: "center", padding: "4px 0", lineHeight: 1.5 }}>
+                        No se encontró @{usernameBusq}.<br/>
+                        <span style={{ fontSize: 12 }}>Si el usuario existe, puede ser un problema de permisos — aplicá el SQL de políticas RLS en Supabase.</span>
                       </div>
                     )}
                     {clienteEncontrado && clienteEncontrado.trainer_id !== null && (
