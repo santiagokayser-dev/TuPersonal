@@ -1567,6 +1567,7 @@ export default function App({ user: initialUser, onLogout }) {
   const [cargando, setCargando] = useState(true)
   const [previewCliente, setPreviewCliente] = useState(null)
   const [user, setUser] = useState(initialUser)
+  const [chatNoLeidos, setChatNoLeidos] = useState(0)
   const isMobile = useIsMobile()
 
   const nombreTrainer = user?.user_metadata?.nombre || user?.email?.split("@")[0] || "Entrenador"
@@ -1580,6 +1581,21 @@ export default function App({ user: initialUser, onLogout }) {
     }
     cargar()
   }, [])
+
+  useEffect(() => {
+    if (!user?.id) return
+    const fetchUnread = () => {
+      supabase.from("mensajes").select("id", { count: "exact", head: true })
+        .eq("trainer_id", user.id).eq("sender", "cliente").eq("leido", false)
+        .then(({ count }) => setChatNoLeidos(count || 0))
+    }
+    fetchUnread()
+    const channel = supabase.channel("unread-badge")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "mensajes", filter: `trainer_id=eq.${user.id}` }, fetchUnread)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "mensajes", filter: `trainer_id=eq.${user.id}` }, fetchUnread)
+      .subscribe()
+    return () => supabase.removeChannel(channel)
+  }, [user?.id])
 
   const screenStyle = { flex: 1, overflowY: "scroll", overflowX: "hidden", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }
 
@@ -1669,9 +1685,14 @@ export default function App({ user: initialUser, onLogout }) {
               const activo = activePage === item.id && !clienteSeleccionado
               return (
                 <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null) }}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: activo ? `${COLORS.accent}22` : "none", border: "none", borderRadius: 10, color: activo ? "#fff" : COLORS.textSub, fontSize: 14, fontWeight: activo ? 600 : 400, cursor: "pointer", textAlign: "left", fontFamily }}>
+                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: activo ? `${COLORS.accent}22` : "none", border: "none", borderRadius: 10, color: activo ? "#fff" : COLORS.textSub, fontSize: 14, fontWeight: activo ? 600 : 400, cursor: "pointer", textAlign: "left", fontFamily, position: "relative" }}>
                   <Icon name={item.icon} size={18} color={activo ? COLORS.accentLight : COLORS.textMuted} />
                   {item.label}
+                  {item.id === "chat" && chatNoLeidos > 0 && (
+                    <span style={{ marginLeft: "auto", minWidth: 18, height: 18, borderRadius: 9, background: COLORS.accent, fontSize: 10, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>
+                      {chatNoLeidos > 99 ? "99+" : chatNoLeidos}
+                    </span>
+                  )}
                 </button>
               )
             })}
@@ -1708,8 +1729,15 @@ export default function App({ user: initialUser, onLogout }) {
           <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActivePage(item.id)}
-                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px 0" }}>
-                <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
+                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px 0", position: "relative" }}>
+                <div style={{ position: "relative" }}>
+                  <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
+                  {item.id === "chat" && chatNoLeidos > 0 && (
+                    <span style={{ position: "absolute", top: -4, right: -8, minWidth: 16, height: 16, borderRadius: 8, background: COLORS.accent, border: `2px solid ${COLORS.bg}`, fontSize: 8, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
+                      {chatNoLeidos > 9 ? "9+" : chatNoLeidos}
+                    </span>
+                  )}
+                </div>
                 <span style={{ fontSize: 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
               </button>
             ))}
