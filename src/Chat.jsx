@@ -10,11 +10,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 
 const C = {
-  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", surface3: "#353535",
-  border: "#3A3A3A", border2: "#444444",
-  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B",
-  accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
-  green: "#22c55e", red: "#ef4444", yellow: "#f5a623",
+  bg: "#111111", surface: "#191919", surface2: "#222222", surface3: "#2a2a2a",
+  border: "#2a2a2a", border2: "#333333",
+  text: "#ececec", textSub: "#888888", textMuted: "#555555",
+  accent: "#E8714A", accentSub: "#2a1a12", accentLight: "#F0A07A",
+  green: "#3ecf6e", red: "#e5484d", yellow: "#e5a60c",
 }
 
 const AVATAR_COLORS = ["#E8714A","#D4603E","#C75535","#B84A2C","#A93F23","#9A341A","#E07040","#CF6538","#BF5A30","#AF4F28"]
@@ -80,7 +80,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfi
   return (
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}>
       {/* Header del hilo */}
-      <div style={{ padding: "14px 20px", borderBottom: `0.5px solid ${C.border2}`, flexShrink: 0, display: "flex", alignItems: "center", gap: 12, background: C.surface }}>
+      <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border2}`, flexShrink: 0, display: "flex", alignItems: "center", gap: 12, background: C.surface }}>
         <div onClick={onProfileClick} style={{ cursor: onProfileClick ? "pointer" : "default" }}>
           <Avatar nombre={nombreOtro} size={38} radius={12} />
         </div>
@@ -111,7 +111,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfi
                 maxWidth: "68%", padding: "9px 14px",
                 borderRadius: esMio ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                 background: esMio ? C.accent : C.surface3,
-                border: esMio ? "none" : `0.5px solid ${C.border2}`,
+                border: esMio ? "none" : `1px solid ${C.border2}`,
                 boxShadow: esMio ? `0 2px 12px ${C.accent}33` : "none",
               }}>
                 <div style={{ fontSize: 14, color: C.text, lineHeight: 1.45 }}>{m.texto}</div>
@@ -126,14 +126,14 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfi
       </div>
 
       {/* Input */}
-      <div style={{ padding: "12px 16px", borderTop: `0.5px solid ${C.border2}`, flexShrink: 0, display: "flex", gap: 10, alignItems: "flex-end", background: C.surface }}>
+      <div style={{ padding: "12px 16px", borderTop: `1px solid ${C.border2}`, flexShrink: 0, display: "flex", gap: 10, alignItems: "flex-end", background: C.surface }}>
         <textarea value={texto} onChange={e => setTexto(e.target.value)}
           onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); enviar() } }}
           placeholder="Escribí un mensaje..." rows={1}
-          style={{ flex: 1, background: C.surface3, border: `0.5px solid ${C.border2}`, borderRadius: 14, padding: "11px 15px", color: C.text, fontSize: 14, outline: "none", resize: "none", fontFamily: "-apple-system,sans-serif", maxHeight: 120, lineHeight: 1.45 }}
+          style={{ flex: 1, background: C.surface3, border: `1px solid ${C.border2}`, borderRadius: 8, padding: "11px 15px", color: C.text, fontSize: 14, outline: "none", resize: "none", fontFamily: "-apple-system,sans-serif", maxHeight: 120, lineHeight: 1.45 }}
         />
         <motion.button whileTap={{ scale: 0.9 }} onClick={enviar} disabled={!texto.trim() || enviando}
-          style={{ width: 42, height: 42, borderRadius: 13, background: texto.trim() ? C.accent : C.surface3, border: `0.5px solid ${texto.trim() ? "transparent" : C.border2}`, cursor: texto.trim() ? "pointer" : "default", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, box-shadow 0.2s", boxShadow: texto.trim() ? `0 2px 12px ${C.accent}55` : "none" }}>
+          style={{ width: 42, height: 42, borderRadius: 13, background: texto.trim() ? C.accent : C.surface3, border: `1px solid ${texto.trim() ? "transparent" : C.border2}`, cursor: texto.trim() ? "pointer" : "default", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", transition: "background 0.2s, box-shadow 0.2s", boxShadow: texto.trim() ? `0 2px 12px ${C.accent}55` : "none" }}>
           <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round">
             <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
           </svg>
@@ -235,7 +235,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
           <div style={{ fontSize: 18, fontWeight: 700, color: C.text, letterSpacing: -0.4 }}>Mensajes</div>
           {totalNoLeidos > 0 && (
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-              style={{ background: C.accent, borderRadius: 20, padding: "2px 9px", fontSize: 11, fontWeight: 700, color: "#fff" }}>
+              style={{ background: C.accent, borderRadius: 8, padding: "2px 9px", fontSize: 11, fontWeight: 700, color: "#fff" }}>
               {totalNoLeidos}
             </motion.div>
           )}
@@ -250,7 +250,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
           <div style={{ position: "relative" }}>
             <svg style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} width={12} height={12} viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="2.5" strokeLinecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input placeholder="Buscar..." value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              style={{ width: "100%", background: C.surface3, border: `0.5px solid ${C.border2}`, borderRadius: 10, padding: "8px 12px 8px 28px", color: C.text, fontSize: 12, outline: "none", fontFamily: "-apple-system,sans-serif", boxSizing: "border-box" }} />
+              style={{ width: "100%", background: C.surface3, border: `1px solid ${C.border2}`, borderRadius: 10, padding: "8px 12px 8px 28px", color: C.text, fontSize: 12, outline: "none", fontFamily: "-apple-system,sans-serif", boxSizing: "border-box" }} />
           </div>
         </div>
       )}
@@ -279,8 +279,8 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
             </motion.div>
           ) : (
             <motion.div key="hilo" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0 }} style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-              <div style={{ padding: "12px 14px", borderBottom: `0.5px solid ${C.border2}`, flexShrink: 0, display: "flex", alignItems: "center", gap: 10, background: C.surface }}>
-                <button onClick={() => setSeleccionado(null)} style={{ background: C.surface3, border: `0.5px solid ${C.border2}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer" }}>
+              <div style={{ padding: "12px 14px", borderBottom: `1px solid ${C.border2}`, flexShrink: 0, display: "flex", alignItems: "center", gap: 10, background: C.surface }}>
+                <button onClick={() => setSeleccionado(null)} style={{ background: C.surface3, border: `1px solid ${C.border2}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer" }}>
                   <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 </button>
                 <div onClick={() => onProfileClick?.(seleccionado)} style={{ cursor: onProfileClick ? "pointer" : "default" }}>
@@ -300,7 +300,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
   return (
     <div style={{ flex: 1, display: "flex", minHeight: 0, overflow: "hidden" }}>
       {/* Lista */}
-      <div style={{ width: 260, flexShrink: 0, borderRight: `0.5px solid ${C.border2}`, display: "flex", flexDirection: "column", background: C.surface, minHeight: 0 }}>
+      <div style={{ width: 260, flexShrink: 0, borderRight: `1px solid ${C.border2}`, display: "flex", flexDirection: "column", background: C.surface, minHeight: 0 }}>
         {Lista}
       </div>
       {/* Chat */}
@@ -309,7 +309,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
           <HiloChat trainerId={user?.id} clienteId={seleccionado.id} miSender="trainer" nombreOtro={seleccionado.nombre} cliente={seleccionado} onProfileClick={() => onProfileClick?.(seleccionado)} />
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: C.surface, border: `0.5px solid ${C.border2}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 52, height: 52, borderRadius: 8, background: C.surface, border: `1px solid ${C.border2}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
               <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={C.textMuted} strokeWidth="1.5" strokeLinecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             </div>
             <div style={{ fontSize: 14, fontWeight: 600, color: C.textSub }}>Seleccioná una conversación</div>

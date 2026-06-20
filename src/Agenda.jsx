@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 
 const C = {
-  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", surface3: "#353535",
-  border: "#3A3A3A", border2: "#444444",
-  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B",
-  accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
-  green: "#22c55e", yellow: "#f5a623",
+  bg: "#111111", surface: "#191919", surface2: "#222222", surface3: "#2a2a2a",
+  border: "#2a2a2a", border2: "#333333",
+  text: "#ececec", textSub: "#888888", textMuted: "#555555",
+  accent: "#E8714A", accentSub: "#2a1a12", accentLight: "#F0A07A",
+  green: "#3ecf6e", yellow: "#e5a60c",
 }
 
 const TIPO_COLORS = {
@@ -27,7 +27,7 @@ const MESES_CORTO = ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct"
 const TIPOS = ["Fuerza","Cardio","Movilidad","Full body","Powerlifting","Funcional","Otro"]
 
 const S = {
-  input: { background: C.surface2, border: `0.5px solid ${C.border2}`, borderRadius: 10, padding: "10px 13px", color: C.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", boxSizing: "border-box" },
+  input: { background: C.surface2, border: `1px solid ${C.border2}`, borderRadius: 10, padding: "10px 13px", color: C.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", boxSizing: "border-box" },
 }
 
 function toYMD(date) {
@@ -134,17 +134,17 @@ export default function Agenda({ clientes = [] }) {
           </div>
         </div>
         <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={() => setMostrarForm(!mostrarForm)}
-          style={{ background: mostrarForm ? C.surface3 : C.accent, border: `0.5px solid ${mostrarForm ? C.border2 : "transparent"}`, borderRadius: 14, padding: "9px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: mostrarForm ? "none" : `0 4px 16px ${C.accent}44`, flexShrink: 0 }}>
+          style={{ background: mostrarForm ? C.surface3 : C.accent, border: `1px solid ${mostrarForm ? C.border2 : "transparent"}`, borderRadius: 8, padding: "9px 18px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", boxShadow: mostrarForm ? "none" : `0 4px 16px ${C.accent}44`, flexShrink: 0 }}>
           {mostrarForm ? "Cancelar" : "+ Nueva sesión"}
         </motion.button>
       </div>
 
       {/* Tira semanal */}
-      <div style={{ background: C.surface, borderRadius: 18, padding: "14px 12px 12px", border: `0.5px solid ${C.border2}` }}>
+      <div style={{ background: C.surface, borderRadius: 18, padding: "14px 12px 12px", border: `1px solid ${C.border2}` }}>
         {/* Nav semana */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => setSemanaOffset(o => o - 1)}
-            style={{ width: 30, height: 30, borderRadius: 9, background: C.surface3, border: `0.5px solid ${C.border2}`, color: C.textSub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>‹</motion.button>
+            style={{ width: 30, height: 30, borderRadius: 9, background: C.surface3, border: `1px solid ${C.border2}`, color: C.textSub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>‹</motion.button>
 
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 13, fontWeight: 700, color: C.text, letterSpacing: -0.2 }}>{semanaLabel}</div>
@@ -155,7 +155,7 @@ export default function Agenda({ clientes = [] }) {
           </div>
 
           <motion.button whileTap={{ scale: 0.9 }} onClick={() => setSemanaOffset(o => o + 1)}
-            style={{ width: 30, height: 30, borderRadius: 9, background: C.surface3, border: `0.5px solid ${C.border2}`, color: C.textSub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>›</motion.button>
+            style={{ width: 30, height: 30, borderRadius: 9, background: C.surface3, border: `1px solid ${C.border2}`, color: C.textSub, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>›</motion.button>
         </div>
 
         {/* 7 días */}
@@ -169,9 +169,9 @@ export default function Agenda({ clientes = [] }) {
 
             return (
               <motion.div key={ymd} whileTap={{ scale: 0.88 }} onClick={() => setDiaSeleccionado(ymd)}
-                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 4px 6px", borderRadius: 12, cursor: "pointer",
+                style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4, padding: "8px 4px 6px", borderRadius: 6, cursor: "pointer",
                   background: esSel ? C.accent : esHoyDia ? C.accentSub : "transparent",
-                  border: `0.5px solid ${esSel ? C.accent : esHoyDia ? C.accent+"55" : "transparent"}`,
+                  border: `1px solid ${esSel ? C.accent : esHoyDia ? C.accent+"55" : "transparent"}`,
                   transition: "background 0.15s" }}>
                 <div style={{ fontSize: 10, fontWeight: 600, color: esSel ? "#fff9" : C.textMuted, letterSpacing: 0.5 }}>
                   {DIAS_LETRA[(dia.getDay())]}
@@ -195,7 +195,7 @@ export default function Agenda({ clientes = [] }) {
       <AnimatePresence>
         {mostrarForm && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-            style={{ background: C.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${C.accent}44`, overflow: "hidden", display: "flex", flexDirection: "column", gap: 10 }}>
+            style={{ background: C.surface, borderRadius: 8, padding: 16, border: `1px solid ${C.accent}44`, overflow: "hidden", display: "flex", flexDirection: "column", gap: 10 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: C.text }}>
               Nueva sesión — {labelDia}
             </div>
@@ -218,9 +218,9 @@ export default function Agenda({ clientes = [] }) {
             </select>
             <input placeholder="Notas (opcional)" value={nueva.notas} onChange={e => setNueva(p => ({ ...p, notas: e.target.value }))} style={S.input} />
             <div style={{ display: "flex", gap: 8 }}>
-              <button onClick={() => setMostrarForm(false)} style={{ flex: 1, background: C.surface3, border: `0.5px solid ${C.border2}`, borderRadius: 12, padding: "12px 0", color: C.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+              <button onClick={() => setMostrarForm(false)} style={{ flex: 1, background: C.surface3, border: `1px solid ${C.border2}`, borderRadius: 6, padding: "12px 0", color: C.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
               <motion.button whileTap={{ scale: 0.97 }} onClick={agregarSesion} disabled={guardando}
-                style={{ flex: 2, background: guardando ? C.surface3 : C.accent, border: "none", borderRadius: 12, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
+                style={{ flex: 2, background: guardando ? C.surface3 : C.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
                 {guardando ? "Guardando..." : "Agendar sesión"}
               </motion.button>
             </div>
@@ -258,11 +258,11 @@ export default function Agenda({ clientes = [] }) {
             const clienteObj = clientes.find(c => c.id === s.cliente_id)
             return (
               <motion.div key={s.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ delay: i * 0.05 }}
-                style={{ background: C.surface, borderRadius: 16, border: `0.5px solid ${C.border2}`, overflow: "hidden", display: "flex" }}>
+                style={{ background: C.surface, borderRadius: 8, border: `1px solid ${C.border2}`, overflow: "hidden", display: "flex" }}>
                 <div style={{ width: 3, background: tc.dot, flexShrink: 0 }} />
                 <div style={{ flex: 1, padding: "14px 16px", display: "flex", gap: 14, alignItems: "flex-start" }}>
                   {/* Hora */}
-                  <div style={{ background: C.surface3, borderRadius: 10, padding: "8px 10px", textAlign: "center", minWidth: 48, flexShrink: 0, border: `0.5px solid ${C.border2}` }}>
+                  <div style={{ background: C.surface3, borderRadius: 10, padding: "8px 10px", textAlign: "center", minWidth: 48, flexShrink: 0, border: `1px solid ${C.border2}` }}>
                     <div style={{ fontSize: 15, fontWeight: 800, color: C.text, letterSpacing: -0.5 }}>{s.hora?.slice(0,5)}</div>
                     <div style={{ fontSize: 10, color: C.textMuted, marginTop: 2 }}>{s.duracion}m</div>
                   </div>

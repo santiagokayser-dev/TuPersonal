@@ -12,19 +12,19 @@ import autoTable from "jspdf-autotable"
 // API key moved to server-side (api/anthropic.js)
 
 const COLORS = {
-  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", border: "#3A3A3A", border2: "#444444",
-  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B",
-  accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
-  green: "#4ade80", red: "#ef4444", yellow: "#f5a623",
+  bg: "#111111", surface: "#191919", surface2: "#222222", border: "#2a2a2a", border2: "#333333",
+  text: "#ececec", textSub: "#888888", textMuted: "#555555",
+  accent: "#E8714A", accentSub: "#2a1a12", accentLight: "#F0A07A",
+  green: "#3ecf6e", red: "#e5484d", yellow: "#e5a60c",
 }
 
 const T = {
-  h1: { fontSize: 28, fontWeight: 700, color: "#F5F5F5", letterSpacing: -0.8, lineHeight: 1.1 },
-  h2: { fontSize: 20, fontWeight: 600, color: "#F5F5F5", letterSpacing: -0.4 },
-  h3: { fontSize: 15, fontWeight: 600, color: "#F5F5F5", letterSpacing: -0.2 },
-  body: { fontSize: 14, fontWeight: 400, color: "#A0A0A0", lineHeight: 1.5 },
-  label: { fontSize: 11, fontWeight: 500, color: "#6B6B6B", textTransform: "uppercase", letterSpacing: 1.2 },
-  num: { fontSize: 32, fontWeight: 700, color: "#F5F5F5", letterSpacing: -1 },
+  h1: { fontSize: 24, fontWeight: 600, color: COLORS.text, letterSpacing: "-0.025em", lineHeight: 1.2 },
+  h2: { fontSize: 18, fontWeight: 600, color: COLORS.text, letterSpacing: "-0.015em", lineHeight: 1.3 },
+  h3: { fontSize: 14, fontWeight: 500, color: COLORS.text, letterSpacing: "-0.01em", lineHeight: 1.4 },
+  body: { fontSize: 14, fontWeight: 400, color: COLORS.textSub, lineHeight: 1.5 },
+  label: { fontSize: 12, fontWeight: 500, color: COLORS.textMuted, letterSpacing: "0.02em" },
+  num: { fontSize: 30, fontWeight: 700, color: COLORS.text, letterSpacing: "-0.03em", lineHeight: 1.1 },
 }
 
 const Icon = ({ name, size = 20, color = "#888888" }) => {
@@ -154,125 +154,89 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
   const hora = new Date().getHours()
   const saludo = hora < 12 ? "Buenos días" : hora < 19 ? "Buenas tardes" : "Buenas noches"
 
-  const animTotal = useAnimatedNumber(totalMensual)
-  const animCobrado = useAnimatedNumber(cobrado)
-
   const barData = [40, 55, 62, 70, 80, Math.max(95, Math.round(totalMensual / 1000) || 95)]
   const barLabels = ["E", "F", "M", "A", "M", "J"]
 
-  const [hovCard, setHovCard] = useState(null)
-
   return (
     <>
-      {/* Header */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div>
-          <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, letterSpacing: -0.5 }}>
-            {saludo}, {nombre} 👋
-          </div>
-          <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 5, lineHeight: 1.4 }}>
+          <div style={T.h1}>{saludo}, {nombre}</div>
+          <div style={{ ...T.body, fontSize: 13, marginTop: 4 }}>
             {clientes.length > 0
-              ? <>{clientes.length} {clientes.length === 1 ? "cliente" : "clientes"} · <span style={{ color: pendientes > 0 ? COLORS.yellow : COLORS.green }}>{pendientes === 0 ? "todos al día" : `${pendientes} pendiente${pendientes > 1 ? "s" : ""}`}</span>{totalMensual > 0 ? ` · $${(totalMensual / 1000).toFixed(0)}K proyectados` : ""}</>
-              : "Empezá agregando tu primer cliente"
+              ? `${clientes.length} cliente${clientes.length !== 1 ? "s" : ""} activo${clientes.length !== 1 ? "s" : ""}`
+              : "Sin clientes todavía"
             }
           </div>
         </div>
-        <motion.button whileTap={{ scale: 0.95 }} whileHover={{ scale: 1.02 }} onClick={onNuevoCliente}
-          style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "9px 14px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", gap: 6, boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
+        <button onClick={onNuevoCliente}
+          style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "8px 14px", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
           <Icon name="plus" size={14} color="#fff" />
-          Nuevo
-        </motion.button>
+          Nuevo cliente
+        </button>
       </div>
 
-      {/* Hero card — Facturación */}
-      <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-        style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}cc 0%, ${COLORS.surface} 60%)`, borderRadius: 20, padding: "18px 20px 16px", border: `0.5px solid ${COLORS.accent}44`, position: "relative" }}>
-        <div style={{ position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: "50%", background: COLORS.accent + "0d", zIndex: 0 }} />
-        <div style={{ position: "relative", zIndex: 1 }}>
-          <div style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: 1, color: COLORS.accentLight + "99" }}>Facturación mensual</div>
-          <div style={{ fontSize: 36, fontWeight: 800, color: "#FFFFFF", letterSpacing: -1.5, marginTop: 6, marginBottom: 2 }}>
+      {/* Métricas inline */}
+      <div style={{ display: "flex", gap: 32, marginTop: 24, paddingBottom: 20, borderBottom: `1px solid ${COLORS.border}` }}>
+        <div>
+          <div style={T.label}>Facturación</div>
+          <div style={{ ...T.num, marginTop: 4 }}>
             {totalMensual > 0 ? `$${totalMensual >= 1000 ? (totalMensual / 1000).toFixed(0) + "K" : totalMensual.toLocaleString("es-AR")}` : "—"}
           </div>
           {cobrado > 0 && cobrado < totalMensual && (
-            <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, background: COLORS.green + "18", borderRadius: 8, padding: "2px 8px", display: "inline-block", marginBottom: 4 }}>
-              {"$" + (cobrado / 1000).toFixed(0) + "K cobrado"}
-            </div>
+            <div style={{ fontSize: 12, color: COLORS.green, marginTop: 2 }}>${(cobrado / 1000).toFixed(0)}K cobrado</div>
           )}
-          <div style={{ fontSize: 12, color: COLORS.accentLight + "99" }}>
-            {totalMensual > 0 ? `${alDia} de ${clientes.filter(c => Number(c.precio) > 0).length} clientes al día` : "Asigná precios para ver proyección"}
-          </div>
         </div>
-      </motion.div>
-
-      {/* 3 métricas secundarias */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        {[
-          { label: "Clientes", value: clientes.length, icon: "users", color: COLORS.accent },
-          { label: "Al día", value: alDia, icon: "check", color: COLORS.green },
-          { label: "Pendientes", value: pendientes, icon: "trendingUp", color: pendientes > 0 ? COLORS.yellow : COLORS.textMuted },
-        ].map((m, i) => (
-          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.06 }}
-            onMouseEnter={() => setHovCard(i)} onMouseLeave={() => setHovCard(null)}
-            style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 12px 10px", border: `0.5px solid ${hovCard === i ? COLORS.border2 : COLORS.border}`, transition: "border-color 0.2s, transform 0.15s", transform: hovCard === i ? "translateY(-1px)" : "none" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-              <div style={{ ...T.label, fontSize: 10 }}>{m.label}</div>
-              <Icon name={m.icon} size={13} color={m.color} />
-            </div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: m.color, letterSpacing: -1 }}>{m.value}</div>
-          </motion.div>
-        ))}
+        <div>
+          <div style={T.label}>Al día</div>
+          <div style={{ ...T.num, marginTop: 4 }}>{alDia}<span style={{ fontSize: 14, fontWeight: 400, color: COLORS.textMuted, marginLeft: 4 }}>/ {clientes.length}</span></div>
+        </div>
+        <div>
+          <div style={T.label}>Pendientes</div>
+          <div style={{ ...T.num, marginTop: 4, color: pendientes > 0 ? COLORS.yellow : COLORS.textMuted }}>{pendientes}</div>
+        </div>
       </div>
 
       {/* Gráfico */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}
-        style={{ background: COLORS.surface, borderRadius: 16, padding: "14px 16px 10px", border: `0.5px solid ${COLORS.border}` }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <div style={T.label}>Ingresos — últimos 6 meses</div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.accent }}>
-            ${barData[barData.length - 1]}K
-          </div>
+      <div style={{ paddingBottom: 20, borderBottom: `1px solid ${COLORS.border}`, marginTop: 20 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div style={T.label}>Ingresos — 6 meses</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>${barData[barData.length - 1]}K</div>
         </div>
         <LineChart data={barData} labels={barLabels} />
-      </motion.div>
+      </div>
 
-      {/* Clientes recientes */}
+      {/* Clientes */}
       {clientes.length > 0 && (
-        <>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={{ marginTop: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <div style={T.label}>Clientes recientes</div>
-            <div style={{ fontSize: 12, color: COLORS.accent, cursor: "pointer", fontWeight: 500 }} onClick={onNuevoCliente}>ver todos →</div>
+            <button onClick={onNuevoCliente} style={{ background: "none", border: "none", color: COLORS.textSub, fontSize: 12, cursor: "pointer", padding: 0 }}>Ver todos</button>
           </div>
-          {clientes.slice(0, 4).map((c, i) => (
-            <motion.div key={c.id || i} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.32 + i * 0.07 }}
-              whileHover={{ y: -1 }} onClick={() => onVerPerfil?.(c)}
-              style={{ background: COLORS.surface, borderRadius: 14, padding: "11px 14px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 13, background: c.estadoColor + "18", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: c.estadoColor, flexShrink: 0 }}>{c.ini}</div>
+          {clientes.slice(0, 5).map((c, i) => (
+            <div key={c.id || i} onClick={() => onVerPerfil?.(c)}
+              style={{ padding: "10px 0", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderBottom: i < Math.min(clientes.length, 5) - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+              <div style={{ width: 28, height: 28, borderRadius: 6, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: COLORS.textSub, flexShrink: 0 }}>{c.ini}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
-                <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {c.objetivo || "Sin objetivo"}{c.precio ? ` · $${(Number(c.precio) / 1000).toFixed(0)}K/mes` : ""}
-                </div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{c.nombre}</div>
               </div>
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: c.estadoColor, background: c.estadoColor + "18", borderRadius: 6, padding: "2px 7px" }}>{c.estado}</div>
-                <Icon name="chevronRight" size={12} color={COLORS.textMuted} />
-              </div>
-            </motion.div>
+              <span style={{ fontSize: 12, color: COLORS.textMuted }}>{c.objetivo || ""}</span>
+              {c.precio && <span style={{ fontSize: 13, color: COLORS.textSub, fontWeight: 500 }}>${Number(c.precio).toLocaleString("es-AR")}</span>}
+              <span style={{ fontSize: 11, fontWeight: 500, color: c.estadoColor }}>{c.estado}</span>
+            </div>
           ))}
-        </>
+        </div>
       )}
 
       {clientes.length === 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}
-          style={{ background: COLORS.surface, borderRadius: 16, padding: "28px 20px", border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>🏋️</div>
-          <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.text, marginBottom: 6 }}>Bienvenido a TuPersonal</div>
-          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 16 }}>Agregá tu primer cliente para empezar a gestionar tu negocio</div>
-          <motion.button whileTap={{ scale: 0.97 }} onClick={onNuevoCliente}
-            style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 24px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
-            + Agregar primer cliente
-          </motion.button>
-        </motion.div>
+        <div style={{ textAlign: "center", marginTop: 48 }}>
+          <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text, marginBottom: 6 }}>Sin clientes todavía</div>
+          <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Agregá tu primer cliente para comenzar</div>
+          <button onClick={onNuevoCliente}
+            style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "10px 20px", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+            Agregar cliente
+          </button>
+        </div>
       )}
     </>
   )
@@ -289,7 +253,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
   const [iaResultado, setIaResultado] = useState({})
   const [iaLoading, setIaLoading] = useState({})
 
-  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+  const inputStyle = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
   const waUrl = datos.telefono
     ? `https://wa.me/${datos.telefono.replace(/\D/g, "").replace(/^0/, "54").replace(/^(?!54)/, "549")}`
@@ -398,53 +362,43 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
     <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }} transition={{ duration: 0.22 }}
       style={{ display: "flex", flexDirection: "column", gap: 14, padding: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={onBack} style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "8px 12px", cursor: "pointer", display: "flex" }}>
+        <button onClick={onBack} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "8px 12px", cursor: "pointer", display: "flex" }}>
           <Icon name="arrowLeft" size={16} color={COLORS.text} />
         </button>
         <div style={T.h3}>Perfil</div>
         <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
           <button onClick={() => setEditando(!editando)}
-            style={{ background: editando ? COLORS.accent : COLORS.surface, border: `0.5px solid ${editando ? COLORS.accent : COLORS.border}`, borderRadius: 12, padding: "8px 14px", color: editando ? "#fff" : COLORS.textSub, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+            style={{ background: editando ? COLORS.accent : COLORS.surface, border: `1px solid ${editando ? COLORS.accent : COLORS.border}`, borderRadius: 6, padding: "8px 14px", color: editando ? "#fff" : COLORS.textSub, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
             {editando ? "Cancelar" : "Editar"}
           </button>
           <button onClick={eliminarCliente} disabled={eliminando}
-            style={{ background: "#3a1a1a", border: "0.5px solid #ef444433", borderRadius: 12, padding: "8px 14px", color: COLORS.red, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
+            style={{ background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 6, padding: "8px 14px", color: COLORS.red, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
             {eliminando ? "..." : "Eliminar"}
           </button>
         </div>
       </div>
 
-      <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 18, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: COLORS.accent, flexShrink: 0 }}>{datos.ini}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={T.h2}>{datos.nombre}</div>
-            <div style={{ ...T.body, marginTop: 2 }}>{datos.objetivo}</div>
-            <div style={{ marginTop: 6, display: "inline-block", background: (datos.estadoColor || COLORS.green) + "22", borderRadius: 8, padding: "3px 10px", fontSize: 11, fontWeight: 600, color: datos.estadoColor || COLORS.green }}>{datos.estado || "Al día"}</div>
-          </div>
-          {waUrl && (
-            <a href={waUrl} target="_blank" rel="noopener noreferrer"
-              style={{ width: 44, height: 44, borderRadius: 14, background: "#1a3a1a", border: "0.5px solid #22c55e33", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
-              <svg width={22} height={22} viewBox="0 0 24 24" fill="#22c55e">
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-              </svg>
-            </a>
-          )}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 16, borderBottom: `1px solid ${COLORS.border}` }}>
+        <div style={{ width: 44, height: 44, borderRadius: 8, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: COLORS.textSub, flexShrink: 0 }}>{datos.ini}</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={T.h2}>{datos.nombre}</div>
+          <div style={{ ...T.body, marginTop: 2 }}>{datos.objetivo}{datos.telefono ? ` · ${datos.telefono}` : ""}</div>
         </div>
-        {datos.telefono && (
-          <div style={{ marginTop: 10, paddingTop: 10, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 8 }}>
-            <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 11 19.79 19.79 0 01.16 2.38 2 2 0 012.18 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.09a16 16 0 006 6l.56-.56a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 14.92z"/>
+        <span style={{ fontSize: 11, fontWeight: 500, color: datos.estadoColor || COLORS.green }}>{datos.estado || "Al día"}</span>
+        {waUrl && (
+          <a href={waUrl} target="_blank" rel="noopener noreferrer"
+            style={{ width: 36, height: 36, borderRadius: 6, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="#22c55e">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
             </svg>
-            <span style={{ fontSize: 13, color: COLORS.textSub }}>{datos.telefono}</span>
-          </div>
+          </a>
         )}
       </div>
 
-      <div style={{ display: "flex", background: COLORS.surface, borderRadius: 14, padding: 3, gap: 3 }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${COLORS.border}` }}>
         {["info", "progreso", "pagos", "rutinas"].map(t => (
           <button key={t} onClick={() => { setTab(t); if (t === "rutinas") cargarRutinas() }}
-            style={{ flex: 1, padding: "9px 0", borderRadius: 11, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, background: tab === t ? COLORS.accent : "transparent", color: tab === t ? "#fff" : COLORS.textSub, transition: "all 0.2s" }}>
+            style={{ flex: 1, padding: "10px 0", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, background: "transparent", color: tab === t ? COLORS.text : COLORS.textMuted, borderBottom: tab === t ? `2px solid ${COLORS.accent}` : "2px solid transparent", transition: "all 0.15s", marginBottom: -1 }}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
         ))}
@@ -469,23 +423,19 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                   <input placeholder="Objetivo" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
                   <input placeholder="Teléfono (ej: 1134567890)" value={datos.telefono || ""} onChange={e => setDatos(p => ({ ...p, telefono: e.target.value }))} style={inputStyle} type="tel" />
                   <button onClick={guardarCambios} disabled={guardando}
-                    style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.5 : 1 }}>
+                    style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.5 : 1 }}>
                     {guardando ? "Guardando..." : "Guardar cambios"}
                   </button>
                 </>
               ) : (
                 <>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                    {[{ l: "Peso", v: `${datos.peso || "-"}kg` }, { l: "Altura", v: `${datos.altura || "-"}cm` }, { l: "Edad", v: `${datos.edad || "-"} años` }, { l: "Precio", v: `$${datos.precio || "-"}/mes` }].map((m, i) => (
-                      <div key={i} style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
-                        <div style={T.label}>{m.l}</div>
-                        <div style={{ ...T.num, fontSize: 22, marginTop: 4 }}>{m.v}</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+                    {[{ l: "Peso", v: `${datos.peso || "-"} kg` }, { l: "Altura", v: `${datos.altura || "-"} cm` }, { l: "Edad", v: `${datos.edad || "-"} años` }, { l: "Precio", v: `$${datos.precio || "-"}/mes` }, { l: "Objetivo", v: datos.objetivo || "Sin objetivo" }].map((m, i, arr) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+                        <span style={T.label}>{m.l}</span>
+                        <span style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{m.v}</span>
                       </div>
                     ))}
-                  </div>
-                  <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
-                    <div style={{ ...T.label, marginBottom: 8 }}>Objetivo</div>
-                    <div style={T.h3}>{datos.objetivo || "Sin objetivo definido"}</div>
                   </div>
                 </>
               )}
@@ -493,21 +443,21 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
           )}
           {tab === "progreso" && (
             <>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+              <div style={{ display: "flex", gap: 32, paddingBottom: 16, borderBottom: `1px solid ${COLORS.border}` }}>
+                <div>
                   <div style={T.label}>Peso actual</div>
                   <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{datos.peso ? `${datos.peso} kg` : "—"}</div>
                 </div>
-                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+                <div>
                   <div style={T.label}>Registros</div>
                   <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{(datos.peso_historial || []).length}</div>
                 </div>
               </div>
               {(datos.peso_historial || []).length > 0 && (
-                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+                <div style={{ marginTop: 8 }}>
                   <div style={{ ...T.label, marginBottom: 10 }}>Historial de peso</div>
                   {[...(datos.peso_historial || [])].reverse().slice(0, 6).map((h, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderBottom: i < 5 ? `0.5px solid ${COLORS.border}` : "none" }}>
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: i < 5 ? `1px solid ${COLORS.border}` : "none" }}>
                       <span style={{ color: COLORS.textSub }}>{h.fecha}</span>
                       <span style={{ fontWeight: 600, color: COLORS.text }}>{h.peso} kg</span>
                     </div>
@@ -515,25 +465,25 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                 </div>
               )}
               {Object.keys(datos.cargas || {}).length > 0 && (
-                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}` }}>
+                <div style={{ marginTop: 16 }}>
                   <div style={{ ...T.label, marginBottom: 10 }}>Cargas registradas</div>
                   {Object.entries(datos.cargas || {}).map(([nombre, carga], i, arr) => (
-                    <div key={nombre} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "5px 0", borderBottom: i < arr.length - 1 ? `0.5px solid ${COLORS.border}` : "none" }}>
+                    <div key={nombre} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
                       <span style={{ color: COLORS.textSub }}>{nombre}</span>
-                      <span style={{ fontWeight: 600, color: COLORS.accent }}>{carga}</span>
+                      <span style={{ fontWeight: 600, color: COLORS.text }}>{carga}</span>
                     </div>
                   ))}
                 </div>
               )}
               {(datos.peso_historial || []).length === 0 && Object.keys(datos.cargas || {}).length === 0 && (
-                <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
+                <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, marginTop: 24 }}>
                   El cliente aún no registró progreso
                 </div>
               )}
             </>
           )}
           {tab === "pagos" && (
-            <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, marginTop: 24 }}>
               Gestioná los pagos desde la sección Finanzas
             </div>
           )}
@@ -544,15 +494,15 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
               ) : (
                 <>
                 {rutinas.length === 0 && (
-                  <div style={{ background: COLORS.surface, borderRadius: 14, padding: 16, border: `0.5px solid ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
+                  <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, marginTop: 24 }}>
                     Sin rutinas asignadas todavía
                   </div>
                 )}
                 {rutinas.map((r) => {
                 const dias = typeof r.dias === "string" ? (() => { try { return JSON.parse(r.dias) } catch { return [] } })() : (r.dias || [])
                 return (
-                  <div key={r.id} style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div key={r.id} style={{ paddingBottom: 14, borderBottom: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <div>
                         <div style={T.h3}>{r.nombre}</div>
                         <div style={{ ...T.body, marginTop: 2 }}>{dias.length} {dias.length === 1 ? "día" : "días"}</div>
@@ -560,12 +510,12 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       <motion.button whileTap={{ scale: 0.96 }} onClick={() => ajustarConIA(r)} disabled={iaLoading[r.id]}
-                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.accentSub, border: `0.5px solid ${COLORS.accent}44`, borderRadius: 10, padding: "9px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: iaLoading[r.id] ? 0.6 : 1 }}>
+                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.accentSub, border: `1px solid ${COLORS.accent}44`, borderRadius: 10, padding: "9px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: iaLoading[r.id] ? 0.6 : 1 }}>
                         <Icon name="sparkle" size={13} color={COLORS.accent} />
                         {iaLoading[r.id] ? "Analizando..." : "Ajustar con IA"}
                       </motion.button>
                       <motion.button whileTap={{ scale: 0.96 }} onClick={() => exportarPDF(r)}
-                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "9px 0", color: COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "9px 0", color: COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                         <Icon name="download" size={13} color={COLORS.textSub} />
                         Exportar PDF
                       </motion.button>
@@ -574,7 +524,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                       {iaResultado[r.id] && (
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                           style={{ overflow: "hidden" }}>
-                          <div style={{ background: COLORS.accentSub + "44", border: `0.5px solid ${COLORS.accent}44`, borderRadius: 12, padding: "12px 14px" }}>
+                          <div style={{ background: COLORS.accentSub + "44", border: `1px solid ${COLORS.accent}44`, borderRadius: 6, padding: "12px 14px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent }}>Sugerencia IA</div>
                               <button onClick={() => setIaResultado(prev => ({ ...prev, [r.id]: null }))}
@@ -601,7 +551,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                     <>
                       <div style={{ fontSize: 11, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: 8 }}>Asignar rutina</div>
                       {noAsignadas.map(r => (
-                        <div key={r.id} style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 14px", border: `0.5px dashed ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div key={r.id} style={{ background: COLORS.surface, borderRadius: 8, padding: "12px 14px", border: `0.5px dashed ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                           <div>
                             <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.textSub }}>{r.nombre}</div>
                             <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>
@@ -696,7 +646,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
     } catch {}
   }
 
-  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+  const inputStyle = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
   const agregarCliente = async () => {
     if (!nuevo.nombre.trim()) return
@@ -786,17 +736,17 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
             {tab === "clientes" ? (
               <>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={copiarLink}
-                  style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `0.5px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 10, padding: "5px 9px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `1px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 10, padding: "5px 9px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
                   {linkCopiado === "error" ? "Error" : linkCopiado ? "¡Copiado!" : "Compartir link"}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
-                  style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: `0 2px 12px ${COLORS.accent}44`, whiteSpace: "nowrap" }}>
+                  style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: "none", whiteSpace: "nowrap" }}>
                   + Agregar cliente
                 </motion.button>
               </>
             ) : (
               <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarCrearGrupo(true)}
-                style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: `0 2px 12px ${COLORS.accent}44`, whiteSpace: "nowrap" }}>
+                style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: "none", whiteSpace: "nowrap" }}>
                 + Crear grupo
               </motion.button>
             )}
@@ -809,10 +759,10 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
           }
         </div>
         {/* Tab switcher */}
-        <div style={{ display: "flex", gap: 6, marginTop: 12 }}>
-          {[["clientes", "Mis clientes"], ["grupos", "Grupos"]].map(([t, label]) => (
+        <div style={{ display: "flex", gap: 0, marginTop: 12, borderBottom: `1px solid ${COLORS.border}` }}>
+          {[["clientes", "Clientes"], ["grupos", "Grupos"]].map(([t, label]) => (
             <button key={t} onClick={() => setTab(t)}
-              style={{ padding: "6px 14px", borderRadius: 20, border: `0.5px solid ${tab === t ? COLORS.accent : COLORS.border}`, background: tab === t ? COLORS.accentSub : "transparent", color: tab === t ? COLORS.accentLight : COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+              style={{ padding: "10px 16px", border: "none", background: "transparent", color: tab === t ? COLORS.text : COLORS.textMuted, fontSize: 13, fontWeight: 500, cursor: "pointer", borderBottom: tab === t ? `2px solid ${COLORS.accent}` : "2px solid transparent", marginBottom: -1 }}>
               {label}
             </button>
           ))}
@@ -826,7 +776,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
           <AnimatePresence>
             {mostrarCrearGrupo && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.accent}44`, overflow: "hidden" }}>
+                style={{ paddingBottom: 16, borderBottom: `1px solid ${COLORS.border}`, overflow: "hidden" }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, marginBottom: 12 }}>Nuevo grupo</div>
                 <input placeholder="Nombre del grupo (ej: Lunes/Miércoles, Avanzados...)" value={nombreGrupo}
                   onChange={e => setNombreGrupo(e.target.value)} onKeyDown={e => e.key === "Enter" && crearGrupo()}
@@ -836,11 +786,11 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button onClick={() => { setMostrarCrearGrupo(false); setNombreGrupo("") }}
-                    style={{ flex: 1, background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "11px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>
+                    style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "11px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>
                     Cancelar
                   </button>
                   <motion.button whileTap={{ scale: 0.97 }} onClick={crearGrupo} disabled={creandoGrupo || !nombreGrupo.trim()}
-                    style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: creandoGrupo || !nombreGrupo.trim() ? 0.5 : 1 }}>
+                    style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "11px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: creandoGrupo || !nombreGrupo.trim() ? 0.5 : 1 }}>
                     {creandoGrupo ? "Creando..." : "Crear grupo"}
                   </motion.button>
                 </div>
@@ -853,23 +803,21 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
           )}
 
           {!cargandoGrupos && grupos.length === 0 && !mostrarCrearGrupo && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              style={{ background: COLORS.surface, borderRadius: 20, padding: "36px 24px", border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 36, marginBottom: 14 }}>🏷️</div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>No tenés grupos todavía</div>
-              <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Creá un grupo y compartí el código para que tus clientes se unan automáticamente</div>
-              <motion.button whileTap={{ scale: 0.97 }} onClick={() => setMostrarCrearGrupo(true)}
-                style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 28px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-                + Crear primer grupo
-              </motion.button>
-            </motion.div>
+            <div style={{ textAlign: "center", marginTop: 40 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text, marginBottom: 6 }}>No tenés grupos todavía</div>
+              <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Creá un grupo y compartí el código</div>
+              <button onClick={() => setMostrarCrearGrupo(true)}
+                style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "10px 20px", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                Crear grupo
+              </button>
+            </div>
           )}
 
           {grupos.map((g, i) => {
             const miembros = clientes.filter(c => c.grupo_id === g.id)
             return (
-              <motion.div key={g.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                style={{ background: COLORS.surface, borderRadius: 16, padding: "16px 18px", border: `0.5px solid ${COLORS.border}` }}>
+              <div key={g.id}
+                style={{ paddingBottom: 14, borderBottom: `1px solid ${COLORS.border}` }}>
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: COLORS.text, marginBottom: 4 }}>{g.nombre}</div>
@@ -877,7 +825,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                     <motion.button whileTap={{ scale: 0.95 }} onClick={() => copiarCodigo(g.codigo, g.id)}
-                      style={{ background: grupoCopiado === g.id ? COLORS.green + "22" : COLORS.accentSub, border: `0.5px solid ${grupoCopiado === g.id ? COLORS.green : COLORS.accent}33`, borderRadius: 10, padding: "6px 12px", color: grupoCopiado === g.id ? COLORS.green : COLORS.accentLight, fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: 1.5, fontFamily: "monospace" }}>
+                      style={{ background: grupoCopiado === g.id ? COLORS.green + "22" : COLORS.accentSub, border: `1px solid ${grupoCopiado === g.id ? COLORS.green : COLORS.accent}33`, borderRadius: 10, padding: "6px 12px", color: grupoCopiado === g.id ? COLORS.green : COLORS.accentLight, fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: 1.5, fontFamily: "monospace" }}>
                       {grupoCopiado === g.id ? "¡Copiado!" : g.codigo}
                     </motion.button>
                     <button onClick={() => eliminarGrupo(g.id)}
@@ -887,13 +835,13 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                 {miembros.length > 0 && (
                   <div style={{ marginTop: 12, display: "flex", flexWrap: "wrap", gap: 6 }}>
                     {miembros.map(m => (
-                      <div key={m.id} style={{ fontSize: 11, background: COLORS.surface2, borderRadius: 20, padding: "3px 10px", color: COLORS.textSub }}>
+                      <div key={m.id} style={{ fontSize: 11, background: COLORS.surface2, borderRadius: 8, padding: "3px 10px", color: COLORS.textSub }}>
                         {m.nombre}
                       </div>
                     ))}
                   </div>
                 )}
-              </motion.div>
+              </div>
             )
           })}
         </>
@@ -906,11 +854,11 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
           <AnimatePresence>
             {mostrarForm && (
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.accent}44`, overflow: "hidden" }}>
+                style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.accent}44`, overflow: "hidden" }}>
                 <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
                   {[["buscar", "@ Buscar usuario"], ["manual", "+ Agregar manual"]].map(([m, label]) => (
                     <button key={m} onClick={() => { setModoAgregar(m); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") }}
-                      style={{ flex: 1, background: modoAgregar === m ? COLORS.accent : COLORS.surface2, border: `0.5px solid ${modoAgregar === m ? COLORS.accent : COLORS.border2}`, borderRadius: 10, padding: "8px 0", color: modoAgregar === m ? "#fff" : COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                      style={{ flex: 1, background: modoAgregar === m ? COLORS.accent : COLORS.surface2, border: `1px solid ${modoAgregar === m ? COLORS.accent : COLORS.border2}`, borderRadius: 10, padding: "8px 0", color: modoAgregar === m ? "#fff" : COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                       {label}
                     </button>
                   ))}
@@ -924,9 +872,9 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                       style={inputStyle} autoFocus />
                     <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                       <button onClick={() => { setMostrarForm(false); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") }}
-                        style={{ flex: 1, background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+                        style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
                       <motion.button whileTap={{ scale: 0.97 }} onClick={buscarPorUsername} disabled={buscando || !usernameBusq.trim()}
-                        style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 12, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: buscando || !usernameBusq.trim() ? 0.5 : 1 }}>
+                        style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: buscando || !usernameBusq.trim() ? 0.5 : 1 }}>
                         {buscando ? "Buscando..." : "Buscar"}
                       </motion.button>
                     </div>
@@ -945,10 +893,10 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                     )}
                     {clienteEncontrado && clienteEncontrado.trainer_id === null && (
                       <>
-                        <div style={{ background: COLORS.surface2, borderRadius: 12, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+                        <div style={{ background: COLORS.surface2, borderRadius: 6, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
                           {clienteEncontrado.avatar_url
-                            ? <img src={clienteEncontrado.avatar_url} style={{ width: 44, height: 44, borderRadius: 12, objectFit: "cover" }} />
-                            : <div style={{ width: 44, height: 44, borderRadius: 12, background: COLORS.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: COLORS.accent }}>
+                            ? <img src={clienteEncontrado.avatar_url} style={{ width: 44, height: 44, borderRadius: 6, objectFit: "cover" }} />
+                            : <div style={{ width: 44, height: 44, borderRadius: 6, background: COLORS.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: COLORS.accent }}>
                                 {(clienteEncontrado.nombre || "?")[0].toUpperCase()}
                               </div>
                           }
@@ -958,7 +906,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                           </div>
                         </div>
                         <motion.button whileTap={{ scale: 0.97 }} onClick={vincularCliente} disabled={cargando}
-                          style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", opacity: cargando ? 0.5 : 1 }}>
+                          style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", opacity: cargando ? 0.5 : 1 }}>
                           {cargando ? "Agregando..." : "Agregar como mi cliente"}
                         </motion.button>
                       </>
@@ -971,9 +919,9 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                     <input placeholder="Email" value={nuevo.email} onChange={e => setNuevo(p => ({ ...p, email: e.target.value }))} style={inputStyle} type="email" />
                     <input placeholder="Precio/mes ($)" value={nuevo.precio} onChange={e => setNuevo(p => ({ ...p, precio: e.target.value }))} style={inputStyle} type="number" />
                     <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => setMostrarForm(false)} style={{ flex: 1, background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+                      <button onClick={() => setMostrarForm(false)} style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
                       <motion.button whileTap={{ scale: 0.97 }} onClick={agregarCliente} disabled={cargando || !nuevo.nombre.trim()}
-                        style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 12, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: cargando ? 0.5 : 1 }}>
+                        style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: cargando ? 0.5 : 1 }}>
                         {cargando ? "Guardando..." : "Agregar cliente"}
                       </motion.button>
                     </div>
@@ -994,7 +942,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
               <div style={{ display: "flex", gap: 6 }}>
                 {[["todos", `Todos (${clientes.length})`], ["aldia", `Al día (${alDia})`], ["pendientes", `Pendientes (${pendientes})`]].map(([id, label]) => (
                   <button key={id} onClick={() => setFiltro(id)}
-                    style={{ padding: "6px 12px", borderRadius: 20, border: `0.5px solid ${filtro === id ? COLORS.accent : COLORS.border}`, background: filtro === id ? COLORS.accentSub : COLORS.surface, color: filtro === id ? COLORS.accentLight : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
+                    style={{ padding: "6px 12px", borderRadius: 8, border: `1px solid ${filtro === id ? COLORS.accent : COLORS.border}`, background: filtro === id ? COLORS.accentSub : COLORS.surface, color: filtro === id ? COLORS.accentLight : COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
                     {label}
                   </button>
                 ))}
@@ -1004,16 +952,14 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
 
           {/* Empty state */}
           {clientes.length === 0 && !mostrarForm && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              style={{ background: COLORS.surface, borderRadius: 20, padding: "36px 24px", border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
-              <div style={{ fontSize: 36, marginBottom: 14 }}>👥</div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: COLORS.text, marginBottom: 8 }}>No tenés clientes todavía</div>
-              <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Agregá tu primer cliente para empezar a gestionar entrenamientos y cobros</div>
-              <motion.button whileTap={{ scale: 0.97 }} onClick={() => setMostrarForm(true)}
-                style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "11px 28px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", boxShadow: `0 4px 16px ${COLORS.accent}44` }}>
-                + Agregar primer cliente
-              </motion.button>
-            </motion.div>
+            <div style={{ textAlign: "center", marginTop: 40 }}>
+              <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text, marginBottom: 6 }}>No tenés clientes todavía</div>
+              <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 20 }}>Agregá tu primer cliente para empezar</div>
+              <button onClick={() => setMostrarForm(true)}
+                style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "10px 20px", color: "#fff", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+                Agregar cliente
+              </button>
+            </div>
           )}
 
           {/* Lista */}
@@ -1022,59 +968,46 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
           )}
 
           {filtrados.map((c, i) => {
-            const ac = avatarColor(c.nombre)
             const isMenuOpen = menuAbierto === c.id
             return (
-              <motion.div key={c.id || i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                whileHover={{ y: -2, boxShadow: `0 4px 20px #00000040` }}
-                style={{ background: COLORS.surface, borderRadius: 16, border: `0.5px solid ${COLORS.border}`, position: "relative", overflow: "visible", transition: "border-color 0.2s" }}>
-                <div onClick={() => { setMenuAbierto(null); onVerPerfil(c) }} style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 13, cursor: "pointer" }}>
-                  {/* Avatar */}
-                  <div style={{ width: 46, height: 46, borderRadius: 15, background: `linear-gradient(135deg, ${ac}cc, ${ac}66)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: `0 2px 10px ${ac}44` }}>
+              <div key={c.id || i} style={{ position: "relative" }}>
+                <div onClick={() => { setMenuAbierto(null); onVerPerfil(c) }}
+                  style={{ padding: "12px 0", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderBottom: `1px solid ${COLORS.border}` }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 6, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600, color: COLORS.textSub, flexShrink: 0 }}>
                     {c.ini}
                   </div>
-                  {/* Info */}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
-                    <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 3, display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      {c.objetivo && <span>{c.objetivo}</span>}
-                      {c.peso && <><span style={{ color: COLORS.textMuted + "66" }}>·</span><span>{c.peso} kg</span></>}
-                      {c.precio && <><span style={{ color: COLORS.textMuted + "66" }}>·</span><span>${(Number(c.precio)/1000).toFixed(0)}K/mes</span></>}
+                    <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{c.nombre}</div>
+                    <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 1 }}>
+                      {[c.objetivo, c.peso && `${c.peso}kg`, c.precio && `$${(Number(c.precio)/1000).toFixed(0)}K/mes`].filter(Boolean).join(" · ")}
                     </div>
                   </div>
-                  {/* Estado pill */}
-                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: c.estadoColor, background: c.estadoColor + "18", borderRadius: 20, padding: "3px 10px", border: `0.5px solid ${c.estadoColor}44` }}>
-                      {c.meses_deuda > 0 ? `⚠ ${c.estado}` : `✓ Al día`}
-                    </div>
-                    {/* Menú ••• */}
-                    <motion.button whileTap={{ scale: 0.9 }} onClick={e => { e.stopPropagation(); setMenuAbierto(isMenuOpen ? null : c.id) }}
-                      style={{ width: 28, height: 28, borderRadius: 8, background: isMenuOpen ? COLORS.surface2 : "transparent", border: `0.5px solid ${isMenuOpen ? COLORS.border : "transparent"}`, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
-                      <span style={{ color: COLORS.textMuted, fontSize: 14, letterSpacing: 1 }}>•••</span>
-                    </motion.button>
-                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 500, color: c.estadoColor, flexShrink: 0 }}>
+                    {c.meses_deuda > 0 ? c.estado : "Al día"}
+                  </span>
+                  <button onClick={e => { e.stopPropagation(); setMenuAbierto(isMenuOpen ? null : c.id) }}
+                    style={{ width: 24, height: 24, background: "none", border: "none", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, padding: 0 }}>
+                    <span style={{ color: COLORS.textMuted, fontSize: 14 }}>···</span>
+                  </button>
                 </div>
 
-                {/* Dropdown */}
                 <AnimatePresence>
                   {isMenuOpen && (
-                    <motion.div initial={{ opacity: 0, scale: 0.95, y: -4 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: -4 }} transition={{ duration: 0.12 }}
-                      style={{ position: "absolute", right: 12, top: "calc(100% + 4px)", background: COLORS.surface, border: `0.5px solid ${COLORS.border2}`, borderRadius: 14, padding: 6, zIndex: 50, minWidth: 160, boxShadow: "0 8px 32px #00000060" }}>
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.1 }}
+                      style={{ position: "absolute", right: 0, top: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: 4, zIndex: 50, minWidth: 150, boxShadow: "0 4px 16px #00000040" }}>
                       {[
-                        { label: "Ver perfil", icon: "users", action: () => { setMenuAbierto(null); onVerPerfil(c) } },
-                        { label: "Enviar mensaje", icon: "chat", action: () => setMenuAbierto(null) },
-                        { label: eliminando === c.id ? "Eliminando..." : "Eliminar cliente", icon: "logout", danger: true, action: () => eliminarCliente(c) },
+                        { label: "Ver perfil", action: () => { setMenuAbierto(null); onVerPerfil(c) } },
+                        { label: eliminando === c.id ? "Eliminando..." : "Eliminar", danger: true, action: () => eliminarCliente(c) },
                       ].map((item) => (
                         <button key={item.label} onClick={item.action}
-                          style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "9px 12px", background: "none", border: "none", borderRadius: 10, color: item.danger ? COLORS.red : COLORS.text, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
-                          <Icon name={item.icon} size={14} color={item.danger ? COLORS.red : COLORS.textMuted} />
+                          style={{ display: "block", width: "100%", padding: "8px 12px", background: "none", border: "none", borderRadius: 4, color: item.danger ? COLORS.red : COLORS.text, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
                           {item.label}
                         </button>
                       ))}
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             )
           })}
         </>
@@ -1152,7 +1085,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
 
   const mesActual = new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })
 
-  const inputS = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 10 }
+  const inputS = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 10 }
 
   return (
     <>
@@ -1177,7 +1110,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
           { label: "Ticket promedio", value: ticketPromedio > 0 ? `$${(ticketPromedio / 1000).toFixed(0)}K` : "—", sub: "por cliente/mes", color: COLORS.accent },
         ].map((m, i) => (
           <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-            style={{ background: COLORS.surface, borderRadius: 16, padding: "14px 14px 12px", border: `0.5px solid ${COLORS.border}` }}>
+            style={{ background: COLORS.surface, borderRadius: 8, padding: "14px 14px 12px", border: `1px solid ${COLORS.border}` }}>
             <div style={T.label}>{m.label}</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: m.color, marginTop: 6, letterSpacing: -0.5 }}>{m.value}</div>
             <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 3 }}>{m.sub}</div>
@@ -1186,7 +1119,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
       </div>
 
       {total > 0 && (
-        <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
+        <div style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
             <div style={T.label}>Tasa de cobranza</div>
             <div style={{ fontSize: 16, fontWeight: 700, color: tasaCobranza >= 80 ? COLORS.green : COLORS.yellow }}>{tasaCobranza}%</div>
@@ -1199,7 +1132,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
         </div>
       )}
 
-      <div style={{ display: "flex", background: COLORS.surface, borderRadius: 14, padding: 3, gap: 3 }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${COLORS.border}` }}>
         {[["resumen", "Clientes"], ["cobros", "Cobros"]].map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, padding: "8px 0", borderRadius: 11, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, background: tab === id ? COLORS.accent : "transparent", color: tab === id ? "#fff" : COLORS.textSub, transition: "all 0.2s" }}>
@@ -1213,13 +1146,13 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
         <motion.div key="resumen" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {clientesLocal.length === 0 && (
-            <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
+            <div style={{ background: COLORS.surface, borderRadius: 8, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
               Agregá clientes con precio/mes para ver el seguimiento de cobros.
             </div>
           )}
           {clientesLocal.filter(c => Number(c.precio) > 0).map((c, i) => (
             <motion.div key={c.id || i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-              style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 14px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+              style={{ background: COLORS.surface, borderRadius: 8, padding: "12px 14px", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
               <div onClick={() => onVerPerfil?.(c)} style={{ width: 36, height: 36, borderRadius: 11, background: c.estadoColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: c.estadoColor, flexShrink: 0, cursor: onVerPerfil ? "pointer" : "default" }}>{c.ini}</div>
               <div onClick={() => onVerPerfil?.(c)} style={{ flex: 1, minWidth: 0, cursor: onVerPerfil ? "pointer" : "default" }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</div>
@@ -1227,7 +1160,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
               </div>
               <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, flexShrink: 0 }}>${(Number(c.precio) / 1000).toFixed(0)}K</div>
               <button onClick={() => toggleDeuda(c)} disabled={actualizando === c.id}
-                style={{ background: (c.meses_deuda || 0) === 0 ? "#3a1a1a" : "#1a3a1a", border: `0.5px solid ${(c.meses_deuda || 0) === 0 ? COLORS.red + "44" : COLORS.green + "44"}`, borderRadius: 10, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: (c.meses_deuda || 0) === 0 ? COLORS.red : COLORS.green, flexShrink: 0 }}>
+                style={{ background: (c.meses_deuda || 0) === 0 ? "#3a1a1a" : "#1a3a1a", border: `1px solid ${(c.meses_deuda || 0) === 0 ? COLORS.red + "44" : COLORS.green + "44"}`, borderRadius: 10, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: (c.meses_deuda || 0) === 0 ? COLORS.red : COLORS.green, flexShrink: 0 }}>
                 {actualizando === c.id ? "..." : (c.meses_deuda || 0) === 0 ? "Debe" : "Cobrado"}
               </button>
             </motion.div>
@@ -1244,7 +1177,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
       {tab === "cobros" && (
         <motion.div key="cobros" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
+          <div style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.border}` }}>
             <div style={{ ...T.label, marginBottom: 4 }}>Usuario de Mercado Pago</div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
               Ingresá tu usuario de MP (lo encontrás en tu perfil de la app). Tus clientes podrán hacerte click para pagarte.{" "}
@@ -1258,7 +1191,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
             )}
           </div>
 
-          <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
+          <div style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.border}` }}>
             <div style={{ ...T.label, marginBottom: 4 }}>Access Token (API avanzada)</div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
               Opcional. Con esto se genera un link de pago automático con el monto exacto. Encontralo en{" "}
@@ -1271,12 +1204,12 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
           </div>
 
           <motion.button whileTap={{ scale: 0.97 }} onClick={guardarSettings} disabled={guardandoSettings}
-            style={{ background: settingsOk ? COLORS.green : COLORS.accent, border: "none", borderRadius: 14, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardandoSettings ? 0.6 : 1, transition: "background 0.3s" }}>
+            style={{ background: settingsOk ? COLORS.green : COLORS.accent, border: "none", borderRadius: 8, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardandoSettings ? 0.6 : 1, transition: "background 0.3s" }}>
             {guardandoSettings ? "Guardando..." : settingsOk ? "✓ Guardado" : "Guardar configuración"}
           </motion.button>
 
           {(mpSettings.alias || mpSettings.access_token) && (
-            <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px solid ${COLORS.green}33` }}>
+            <div style={{ background: COLORS.surface, borderRadius: 8, padding: 14, border: `1px solid ${COLORS.green}33` }}>
               <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, marginBottom: 4 }}>✓ Cobros configurados</div>
               <div style={{ fontSize: 12, color: COLORS.textMuted }}>
                 {mpSettings.access_token ? "Tus clientes podrán pagar con un link automático de MP." : `Tus clientes verán un botón para pagar a "${mpSettings.alias}".`}
@@ -1338,7 +1271,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
         <div style={{ fontSize: 12, color: COLORS.textMuted }}>{rutinas.length} creadas</div>
       </div>
 
-      <div style={{ display: "flex", background: COLORS.surface, borderRadius: 14, padding: 3, gap: 3 }}>
+      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${COLORS.border}` }}>
         {[["lista", "Mis rutinas"], ["crear", "Crear nueva"]].map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)}
             style={{ flex: 1, padding: "9px 0", borderRadius: 11, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, background: tab === id ? COLORS.accent : "transparent", color: tab === id ? "#fff" : COLORS.textSub, transition: "all 0.2s" }}>
@@ -1351,7 +1284,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
         <motion.div key="lista" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {cargando && <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, padding: 20 }}>Cargando...</div>}
           {!cargando && rutinas.length === 0 && (
-            <div style={{ background: COLORS.surface, borderRadius: 16, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
+            <div style={{ background: COLORS.surface, borderRadius: 8, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
               <div style={{ fontSize: 13, color: COLORS.textMuted, marginBottom: 8 }}>No creaste rutinas todavía</div>
               <button onClick={() => setTab("crear")}
                 style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "9px 20px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
@@ -1365,10 +1298,10 @@ function RutinasPage({ clientes, user, onGuardar }) {
             const asignadosArr = Array.isArray(r.clientes_asignados) ? r.clientes_asignados :
               (() => { try { return JSON.parse(r.clientes_asignados || "[]") } catch { return [] } })()
             return (
-              <motion.div key={r.id} layout style={{ background: COLORS.surface, borderRadius: 16, border: `0.5px solid ${COLORS.border}`, overflow: "hidden" }}>
+              <motion.div key={r.id} layout style={{ background: COLORS.surface, borderRadius: 8, border: `1px solid ${COLORS.border}`, overflow: "hidden" }}>
                 <div onClick={() => setExpandida(abierta ? null : r.id)}
                   style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 12, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 6, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Icon name="dumbbell" size={18} color={COLORS.accent} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1386,11 +1319,11 @@ function RutinasPage({ clientes, user, onGuardar }) {
                   {abierta && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
                       style={{ overflow: "hidden" }}>
-                      <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 8, borderTop: `0.5px solid ${COLORS.border}`, paddingTop: 12 }}>
+                      <div style={{ padding: "0 16px 14px", display: "flex", flexDirection: "column", gap: 8, borderTop: `1px solid ${COLORS.border}`, paddingTop: 12 }}>
                         {dias.map((d, i) => {
                           const ejercicios = d.bloques?.flatMap(b => b.ejercicios || [b]) || []
                           return (
-                            <div key={i} style={{ background: COLORS.surface2, borderRadius: 12, padding: "10px 12px" }}>
+                            <div key={i} style={{ background: COLORS.surface2, borderRadius: 6, padding: "10px 12px" }}>
                               <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.accent, marginBottom: 6 }}>{d.nombre || `Día ${i + 1}`}</div>
                               {ejercicios.slice(0, 4).map((e, j) => (
                                 <div key={j} style={{ fontSize: 12, color: COLORS.textSub, padding: "2px 0" }}>
@@ -1405,23 +1338,23 @@ function RutinasPage({ clientes, user, onGuardar }) {
                         })}
                         <div style={{ display: "flex", gap: 6 }}>
                           <button onClick={() => setAsignando(asignando === r.id ? null : r.id)}
-                            style={{ flex: 1, background: COLORS.accentSub, border: `0.5px solid ${COLORS.accent}44`, borderRadius: 10, padding: "8px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                            style={{ flex: 1, background: COLORS.accentSub, border: `1px solid ${COLORS.accent}44`, borderRadius: 10, padding: "8px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                             <Icon name="users" size={13} color={COLORS.accent} /> Asignar
                           </button>
                           <button onClick={() => eliminar(r.id)} disabled={eliminando === r.id}
-                            style={{ flex: 1, background: "#3a1a1a", border: "0.5px solid #ef444433", borderRadius: 10, padding: "8px 0", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                            style={{ flex: 1, background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 10, padding: "8px 0", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
                             {eliminando === r.id ? "Eliminando..." : "Eliminar"}
                           </button>
                         </div>
                         {asignando === r.id && (
-                          <div style={{ background: COLORS.surface2, borderRadius: 12, padding: 10, display: "flex", flexDirection: "column", gap: 4 }}>
+                          <div style={{ background: COLORS.surface2, borderRadius: 6, padding: 10, display: "flex", flexDirection: "column", gap: 4 }}>
                             <div style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Seleccionar clientes</div>
                             {clientes.length === 0 && <div style={{ fontSize: 12, color: COLORS.textMuted }}>No tenés clientes</div>}
                             {clientes.map(c => {
                               const sel = asignadosArr.includes(c.id)
                               return (
                                 <button key={c.id} onClick={() => toggleAsignar(r.id, c.id, asignadosArr)}
-                                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: sel ? COLORS.accent + "22" : "transparent", border: `0.5px solid ${sel ? COLORS.accent + "44" : COLORS.border}`, borderRadius: 10, cursor: "pointer", width: "100%" }}>
+                                  style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 10px", background: sel ? COLORS.accent + "22" : "transparent", border: `1px solid ${sel ? COLORS.accent + "44" : COLORS.border}`, borderRadius: 10, cursor: "pointer", width: "100%" }}>
                                   <div style={{ width: 20, height: 20, borderRadius: 6, background: sel ? COLORS.accent : COLORS.surface, border: `1.5px solid ${sel ? COLORS.accent : COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     {sel && <Icon name="check" size={12} color="#fff" />}
                                   </div>
@@ -1436,7 +1369,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
                             {asignadosArr.map(id => {
                               const c = clientes.find(c => c.id === id)
                               return c ? (
-                                <div key={id} style={{ background: COLORS.accentSub, borderRadius: 20, padding: "4px 10px", fontSize: 11, color: COLORS.accentLight, fontWeight: 500 }}>{c.nombre}</div>
+                                <div key={id} style={{ background: COLORS.accentSub, borderRadius: 8, padding: "4px 10px", fontSize: 11, color: COLORS.accentLight, fontWeight: 500 }}>{c.nombre}</div>
                               ) : null
                             })}
                           </div>
@@ -1482,7 +1415,7 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
   const [mensaje, setMensaje] = useState("")
   const [error, setError] = useState("")
 
-  const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+  const inputStyle = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
   const guardar = async () => {
     if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
@@ -1537,7 +1470,7 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
       {error && <div style={{ fontSize: 13, color: COLORS.red, background: COLORS.red + "11", borderRadius: 10, padding: "10px 14px" }}>{error}</div>}
       {mensaje && <div style={{ fontSize: 13, color: COLORS.green, background: COLORS.green + "11", borderRadius: 10, padding: "10px 14px" }}>{mensaje}</div>}
 
-      <div style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 14px", border: `0.5px solid ${COLORS.border}` }}>
+      <div style={{ background: COLORS.surface, borderRadius: 8, padding: "12px 14px", border: `1px solid ${COLORS.border}` }}>
         <div style={{ fontSize: 11, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Email</div>
         <div style={{ fontSize: 14, color: COLORS.textSub }}>{user.email}</div>
       </div>
@@ -1548,12 +1481,12 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
         onChange={e => setDatos(p => ({ ...p, username: e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase() }))} style={inputStyle} />
 
       <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
-        style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1, width: "100%" }}>
+        style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1, width: "100%" }}>
         {guardando ? "Guardando..." : "Guardar cambios"}
       </motion.button>
 
       <button onClick={onLogout}
-        style={{ background: "none", border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "12px 0", color: COLORS.textMuted, fontSize: 14, cursor: "pointer", width: "100%" }}>
+        style={{ background: "none", border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textMuted, fontSize: 14, cursor: "pointer", width: "100%" }}>
         Cerrar sesión
       </button>
     </>
@@ -1668,7 +1601,7 @@ export default function App({ user: initialUser, onLogout }) {
     <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", fontFamily }}>
       {/* Sidebar — solo desktop */}
       {!isMobile && (
-        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0 }}>
+        <div style={{ width: 220, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "20px 16px 16px" }}>
             <div style={{ marginBottom: 14, padding: "0 4px" }}>
               <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 90, width: "auto", display: "block", cursor: "pointer" }} />
@@ -1714,7 +1647,7 @@ export default function App({ user: initialUser, onLogout }) {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(6px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
             <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 32, width: "auto", cursor: "pointer" }} />
             <button onClick={onLogout}
-              style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+              style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
               Salir
             </button>
           </div>
@@ -1726,7 +1659,7 @@ export default function App({ user: initialUser, onLogout }) {
 
         {/* Nav inferior — solo mobile */}
         {isMobile && !clienteSeleccionado && (
-          <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
+          <nav style={{ background: COLORS.bg, borderTop: `1px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActivePage(item.id)}
                 style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px 0", position: "relative" }}>

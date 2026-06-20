@@ -4,21 +4,22 @@ import { supabase } from "./supabase"
 import Chat from "./Chat"
 
 const COLORS = {
-  bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", border: "#3A3A3A", border2: "#444444",
-  text: "#F5F5F5", textSub: "#A0A0A0", textMuted: "#6B6B6B", accent: "#E8714A", accentSub: "#3D2418", accentLight: "#F0A07A",
-  green: "#22c55e", red: "#ef4444", yellow: "#f5a623",
+  bg: "#111111", surface: "#191919", surface2: "#222222", border: "#2a2a2a", border2: "#333333",
+  text: "#ececec", textSub: "#888888", textMuted: "#555555",
+  accent: "#E8714A", accentSub: "#2a1a12", accentLight: "#F0A07A",
+  green: "#3ecf6e", red: "#e5484d", yellow: "#e5a60c",
 }
 
 const T = {
-  h1: { fontSize: 28, fontWeight: 700, color: COLORS.text, letterSpacing: -0.8, lineHeight: 1.1 },
-  h2: { fontSize: 20, fontWeight: 600, color: COLORS.text, letterSpacing: -0.4 },
-  h3: { fontSize: 15, fontWeight: 600, color: COLORS.text, letterSpacing: -0.2 },
+  h1: { fontSize: 24, fontWeight: 600, color: COLORS.text, letterSpacing: "-0.025em", lineHeight: 1.2 },
+  h2: { fontSize: 18, fontWeight: 600, color: COLORS.text, letterSpacing: "-0.015em", lineHeight: 1.3 },
+  h3: { fontSize: 14, fontWeight: 500, color: COLORS.text, letterSpacing: "-0.01em", lineHeight: 1.4 },
   body: { fontSize: 14, fontWeight: 400, color: COLORS.textSub, lineHeight: 1.5 },
-  label: { fontSize: 11, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1.2 },
-  num: { fontSize: 32, fontWeight: 700, color: COLORS.text, letterSpacing: -1 },
+  label: { fontSize: 12, fontWeight: 500, color: COLORS.textMuted, letterSpacing: "0.02em" },
+  num: { fontSize: 30, fontWeight: 700, color: COLORS.text, letterSpacing: "-0.03em", lineHeight: 1.1 },
 }
 
-const inputStyle = { background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+const inputStyle = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
 function autoUsername(email, nombre) {
   const emailPart = (email || "").split("@")[0].replace(/[^a-zA-Z0-9_]/g, "").toLowerCase()
@@ -189,7 +190,7 @@ function Onboarding({ user, perfilExistente, onComplete }) {
       <input placeholder="Objetivo (ej: bajar 5kg, ganar masa)" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
 
       <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
-        style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
+        style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
         {guardando ? "Guardando..." : "Empezar →"}
       </motion.button>
     </div>
@@ -244,7 +245,7 @@ function ProgressChart({ data, width = 280, height = 120 }) {
 
 function DashboardCard({ label, value, unit, sub, icon, accent }) {
   return (
-    <div style={{ background: COLORS.surface, borderRadius: 16, padding: "18px 16px", border: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 6, position: "relative", overflow: "hidden" }}>
+    <div style={{ background: COLORS.surface, borderRadius: 8, padding: "18px 16px", border: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 6, position: "relative", overflow: "hidden" }}>
       {accent && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.accentLight})` }} />}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={T.label}>{label}</div>
@@ -300,7 +301,7 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <label style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 16, background: COLORS.accent + "22", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, color: COLORS.accent }}>
+            <div style={{ width: 52, height: 52, borderRadius: 8, background: COLORS.accent + "22", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, color: COLORS.accent }}>
               {perfil?.avatar_url
                 ? <img src={perfil.avatar_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : ini}
@@ -316,7 +317,7 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
 
       {/* Motivational banner */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-        style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}, ${COLORS.surface})`, borderRadius: 18, padding: "18px 20px", border: `0.5px solid ${COLORS.accent}33`, display: "flex", alignItems: "flex-start", gap: 14 }}>
+        style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}, ${COLORS.surface})`, borderRadius: 18, padding: "18px 20px", border: `1px solid ${COLORS.accent}33`, display: "flex", alignItems: "flex-start", gap: 14 }}>
         <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{motivacion.icon}</div>
         <div>
           {perfil?.objetivo && <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Tu objetivo: {perfil.objetivo}</div>}
@@ -342,7 +343,7 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
       {/* Weight progress chart */}
       {pesoHistorial.length >= 2 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
+          style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `1px solid ${COLORS.border}` }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
             <div>
               <div style={T.label}>Evolución de peso</div>
@@ -365,8 +366,8 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
         ].map((a) => (
           <motion.button key={a.page} whileTap={{ scale: 0.97 }}
             onClick={() => onNavigate?.(a.page)}
-            style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 14, padding: "14px 16px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 12, background: COLORS.accent + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "14px 16px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 6, background: COLORS.accent + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
               <Icon name={a.icon} size={18} color={COLORS.accent} />
             </div>
             <div>
@@ -409,7 +410,7 @@ function Rutina({ perfil }) {
   if (rutinas.length === 0) return (
     <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={T.h1}>Mi rutina</div>
-      <div style={{ background: COLORS.surface, borderRadius: 16, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
+      <div style={{ background: COLORS.surface, borderRadius: 8, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>
         Tu entrenador todavía no te asignó una rutina.
       </div>
     </div>
@@ -472,13 +473,13 @@ function Rutina({ perfil }) {
           <div style={T.h1}>Mi rutina</div>
         </div>
         <motion.button whileTap={{ scale: 0.95 }} onClick={descargarPDF}
-          style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "9px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 7, color: COLORS.textSub, fontSize: 13, fontWeight: 500 }}>
+          style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "9px 14px", cursor: "pointer", display: "flex", alignItems: "center", gap: 7, color: COLORS.textSub, fontSize: 13, fontWeight: 500 }}>
           <Icon name="download" size={15} color={COLORS.textSub} />
           PDF
         </motion.button>
       </div>
 
-      <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 16, border: `0.5px solid ${COLORS.accent}33` }}>
+      <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 16, border: `1px solid ${COLORS.accent}33` }}>
         <div style={{ ...T.label, color: COLORS.accentLight, marginBottom: 6 }}>Rutina asignada</div>
         <div style={T.h3}>{rutina.nombre}</div>
         <div style={{ ...T.body, color: COLORS.accentLight, marginTop: 4, fontSize: 13 }}>{dias.length} días de entrenamiento</div>
@@ -488,10 +489,10 @@ function Rutina({ perfil }) {
         const abierto = diaAbierto === i
         const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || []) || dia.ejercicios || []
         return (
-          <motion.div key={i} style={{ background: COLORS.surface, borderRadius: 18, border: `0.5px solid ${abierto ? COLORS.accent + "66" : COLORS.border}`, overflow: "hidden" }}>
+          <motion.div key={i} style={{ background: COLORS.surface, borderRadius: 18, border: `1px solid ${abierto ? COLORS.accent + "66" : COLORS.border}`, overflow: "hidden" }}>
             <div onClick={() => setDiaAbierto(abierto ? -1 : i)}
               style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
-              <div style={{ width: 40, height: 40, borderRadius: 14, background: abierto ? COLORS.accent : COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: abierto ? "#fff" : COLORS.textSub, flexShrink: 0 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 8, background: abierto ? COLORS.accent : COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: abierto ? "#fff" : COLORS.textSub, flexShrink: 0 }}>
                 {String.fromCharCode(65 + i)}
               </div>
               <div style={{ flex: 1 }}>
@@ -506,14 +507,14 @@ function Rutina({ perfil }) {
             <AnimatePresence>
               {abierto && (
                 <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}
-                  style={{ overflow: "hidden", borderTop: `0.5px solid ${COLORS.border}` }}>
+                  style={{ overflow: "hidden", borderTop: `1px solid ${COLORS.border}` }}>
                   {ejercicios.map((ej, j) => {
                     const activo = ejercicioActivo === `${i}-${j}`
                     const ytUrl = ej.video || `https://www.youtube.com/results?search_query=${encodeURIComponent((ej.nombre || "") + " técnica correcta")}`
                     return (
                       <div key={j}>
                         <div onClick={() => setEjercicioActivo(activo ? null : `${i}-${j}`)}
-                          style={{ padding: "13px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `0.5px solid ${COLORS.border}`, cursor: "pointer" }}>
+                          style={{ padding: "13px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer" }}>
                           <div style={{ width: 30, height: 30, borderRadius: 9, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: COLORS.accent, flexShrink: 0 }}>{j + 1}</div>
                           <div style={{ flex: 1 }}>
                             <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{ej.nombre || "Ejercicio"}</div>
@@ -528,11 +529,11 @@ function Rutina({ perfil }) {
                         <AnimatePresence>
                           {activo && (
                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                              style={{ overflow: "hidden", background: COLORS.bg, borderBottom: `0.5px solid ${COLORS.border}` }}>
+                              style={{ overflow: "hidden", background: COLORS.bg, borderBottom: `1px solid ${COLORS.border}` }}>
                               <div style={{ padding: "12px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
                                 {ej.notas && <div style={{ fontSize: 13, color: COLORS.textSub, fontStyle: "italic" }}>"{ej.notas}"</div>}
                                 <a href={ytUrl} target="_blank" rel="noopener noreferrer"
-                                  style={{ display: "flex", alignItems: "center", gap: 10, background: "#3a1a1a", borderRadius: 12, padding: "11px 14px", textDecoration: "none" }}>
+                                  style={{ display: "flex", alignItems: "center", gap: 10, background: "#3a1a1a", borderRadius: 6, padding: "11px 14px", textDecoration: "none" }}>
                                   <div style={{ width: 30, height: 30, borderRadius: 9, background: "#ef444422", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                     <Icon name="play" size={13} color={COLORS.red} />
                                   </div>
@@ -646,7 +647,7 @@ function Progreso({ perfil, onActualizar }) {
       <div style={T.h1}>Mi progreso</div>
 
       {/* Peso corporal */}
-      <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
+      <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `1px solid ${COLORS.border}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
             <div style={T.label}>Peso corporal</div>
@@ -672,17 +673,17 @@ function Progreso({ perfil, onActualizar }) {
             <input placeholder="Nuevo peso (kg)" value={pesoNuevo} onChange={e => setPesoNuevo(e.target.value)} type="number"
               style={{ ...inputStyle, flex: 1, marginBottom: 0 }} autoFocus />
             <button onClick={guardarPeso} disabled={guardandoPeso}
-              style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "0 16px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0, opacity: guardandoPeso ? 0.5 : 1 }}>
+              style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "0 16px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0, opacity: guardandoPeso ? 0.5 : 1 }}>
               {guardandoPeso ? "..." : "OK"}
             </button>
             <button onClick={() => setEditandoPeso(false)}
-              style={{ background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: "0 12px", color: COLORS.textSub, fontSize: 14, cursor: "pointer", flexShrink: 0 }}>
+              style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "0 12px", color: COLORS.textSub, fontSize: 14, cursor: "pointer", flexShrink: 0 }}>
               ✕
             </button>
           </div>
         ) : (
           <motion.button whileTap={{ scale: 0.97 }} onClick={() => setEditandoPeso(true)}
-            style={{ marginTop: 14, background: COLORS.surface2, border: `0.5px solid ${COLORS.border2}`, borderRadius: 12, padding: "10px 0", color: COLORS.text, fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%" }}>
+            style={{ marginTop: 14, background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "10px 0", color: COLORS.text, fontSize: 13, fontWeight: 500, cursor: "pointer", width: "100%" }}>
             Actualizar peso
           </motion.button>
         )}
@@ -706,7 +707,7 @@ function Progreso({ perfil, onActualizar }) {
                 <input placeholder="Nombre del ejercicio" value={ejercicioNuevo} onChange={e => setEjercicioNuevo(e.target.value)} onKeyDown={e => e.key === "Enter" && agregarEjercicio()}
                   style={{ ...inputStyle, flex: 1, marginBottom: 0 }} autoFocus />
                 <button onClick={agregarEjercicio}
-                  style={{ background: COLORS.accent, border: "none", borderRadius: 12, padding: "0 14px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
+                  style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "0 14px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", flexShrink: 0 }}>
                   +
                 </button>
               </div>
@@ -715,7 +716,7 @@ function Progreso({ perfil, onActualizar }) {
         </AnimatePresence>
 
         {Object.keys(cargas).length === 0 && !agregando && (
-          <div style={{ background: COLORS.surface, borderRadius: 14, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
+          <div style={{ background: COLORS.surface, borderRadius: 8, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
             Agregá tus ejercicios y la carga que usás en cada uno.
           </div>
         )}
@@ -723,7 +724,7 @@ function Progreso({ perfil, onActualizar }) {
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {Object.entries(cargas).map(([nombre, carga]) => (
             <motion.div key={nombre} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-              style={{ background: COLORS.surface, borderRadius: 14, padding: "13px 16px", border: `0.5px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+              style={{ background: COLORS.surface, borderRadius: 8, padding: "13px 16px", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text }}>{nombre}</div>
                 {editandoCarga === nombre ? (
@@ -735,7 +736,7 @@ function Progreso({ perfil, onActualizar }) {
                       OK
                     </button>
                     <button onClick={() => setEditandoCarga(null)}
-                      style={{ background: COLORS.surface2, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "0 10px", color: COLORS.textSub, fontSize: 13, cursor: "pointer" }}>
+                      style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "0 10px", color: COLORS.textSub, fontSize: 13, cursor: "pointer" }}>
                       ✕
                     </button>
                   </div>
@@ -761,7 +762,7 @@ function Progreso({ perfil, onActualizar }) {
       </div>
 
       {pesoHistorial.length > 0 && (
-        <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
+        <div style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.border}` }}>
           <div style={{ ...T.label, marginBottom: 10 }}>Historial de peso</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
             {[...pesoHistorial].reverse().slice(0, 5).map((h, i) => (
@@ -775,7 +776,7 @@ function Progreso({ perfil, onActualizar }) {
       )}
 
       {/* Fotos de progreso */}
-      <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
+      <div style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.border}` }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <div style={T.label}>Fotos de progreso</div>
           <label style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "6px 12px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: subiendoFoto ? 0.5 : 1 }}>
@@ -790,7 +791,7 @@ function Progreso({ perfil, onActualizar }) {
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
             {[...fotos].reverse().map((f, i) => (
-              <div key={i} style={{ borderRadius: 12, overflow: "hidden", background: COLORS.surface2 }}>
+              <div key={i} style={{ borderRadius: 6, overflow: "hidden", background: COLORS.surface2 }}>
                 <div style={{ aspectRatio: "3/4", overflow: "hidden" }}>
                   <img src={f.url} alt="progreso" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
@@ -814,7 +815,7 @@ function AliasCard({ alias, monto }) {
     <div style={{ marginTop: 16 }}>
       <a href={mpUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: "none", display: "block" }}>
         <motion.div whileTap={{ scale: 0.97 }}
-          style={{ padding: "14px 20px", borderRadius: 14, background: "#009ee3", color: "#fff", fontSize: 14, fontWeight: 600, textAlign: "center", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          style={{ padding: "14px 20px", borderRadius: 8, background: "#009ee3", color: "#fff", fontSize: 14, fontWeight: 600, textAlign: "center", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
           <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
           Pagar con Mercado Pago
         </motion.div>
@@ -871,7 +872,7 @@ function Pagos({ perfil }) {
         <div style={T.h1}>Mis pagos</div>
       </div>
 
-      <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
+      <div style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `1px solid ${COLORS.border}` }}>
         <div style={T.label}>Plan mensual</div>
         <div style={{ ...T.num, fontSize: 32, marginTop: 8, color: COLORS.text }}>
           {perfil?.precio ? `$${Number(perfil.precio).toLocaleString("es-AR")}` : "—"}
@@ -881,22 +882,22 @@ function Pagos({ perfil }) {
         {error && <div style={{ fontSize: 12, color: COLORS.red, marginTop: 12 }}>{error}</div>}
 
         {mpSettings === null ? (
-          <div style={{ marginTop: 16, height: 44, background: COLORS.surface2, borderRadius: 12 }} />
+          <div style={{ marginTop: 16, height: 44, background: COLORS.surface2, borderRadius: 6 }} />
         ) : hasAccessToken && perfil?.precio ? (
           <motion.button whileTap={{ scale: 0.97 }} onClick={pagarConMP} disabled={generando}
-            style={{ width: "100%", padding: "13px 0", borderRadius: 14, background: "#009ee3", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 16, opacity: generando ? 0.7 : 1 }}>
+            style={{ width: "100%", padding: "13px 0", borderRadius: 8, background: "#009ee3", border: "none", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", marginTop: 16, opacity: generando ? 0.7 : 1 }}>
             {generando ? "Generando link..." : "Pagar con Mercado Pago"}
           </motion.button>
         ) : hasAlias ? (
           <AliasCard alias={mpSettings.mp_alias} monto={perfil?.precio} />
         ) : (
-          <div style={{ marginTop: 16, fontSize: 13, color: COLORS.textMuted, background: COLORS.surface2, borderRadius: 12, padding: "12px 14px", textAlign: "center" }}>
+          <div style={{ marginTop: 16, fontSize: 13, color: COLORS.textMuted, background: COLORS.surface2, borderRadius: 6, padding: "12px 14px", textAlign: "center" }}>
             Coordiná el pago con tu entrenador
           </div>
         )}
       </div>
 
-      <div style={{ background: COLORS.surface, borderRadius: 14, padding: 14, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 12 }}>
+      <div style={{ background: COLORS.surface, borderRadius: 8, padding: 14, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 12 }}>
         El seguimiento de pagos y historial lo gestiona tu entrenador.
       </div>
     </>
@@ -998,7 +999,7 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
           <div style={{ ...T.label, marginBottom: 4 }}>Tu cuenta</div>
           <div style={T.h1}>Perfil</div>
         </div>
-        <button onClick={onLogout} style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: 8, cursor: "pointer", display: "flex" }}>
+        <button onClick={onLogout} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: 8, cursor: "pointer", display: "flex" }}>
           <Icon name="logout" size={16} color={COLORS.textSub} />
         </button>
       </div>
@@ -1043,7 +1044,7 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
       </div>
 
       <motion.button whileTap={{ scale: 0.97 }} onClick={guardar} disabled={guardando}
-        style={{ background: COLORS.accent, border: "none", borderRadius: 14, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
+        style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
         {guardando ? "Guardando..." : "Guardar cambios"}
       </motion.button>
     </>
@@ -1134,7 +1135,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
   }
 
   const bottomNav = (
-    <nav style={{ background: COLORS.bg, borderTop: `0.5px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", flexShrink: 0 }}>
+    <nav style={{ background: COLORS.bg, borderTop: `1px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", flexShrink: 0 }}>
       {navItems.map(item => (
         <button key={item.id} onClick={() => setActivePage(item.id)}
           style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px 0" }}>
@@ -1148,7 +1149,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
   // Preview mode: always mobile layout
   if (previewMode) return (
     <div style={{ background: COLORS.bg, height: "100%", display: "flex", flexDirection: "column", fontFamily }}>
-      <div style={{ background: COLORS.accent + "22", borderBottom: `0.5px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+      <div style={{ background: COLORS.accent + "22", borderBottom: `1px solid ${COLORS.accent}44`, padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
         <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, letterSpacing: 0.5 }}>Vista previa — como lo ve el cliente</div>
         <button onClick={onLogout} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 16, color: COLORS.accent, padding: 0, lineHeight: 1 }}>✕</button>
       </div>
@@ -1163,7 +1164,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", fontFamily }}>
       {/* Sidebar — solo desktop */}
       {!isMobile && (
-        <div style={{ width: 220, background: COLORS.surface, borderRight: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0 }}>
+        <div style={{ width: 220, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0 }}>
           <div style={{ padding: "20px 16px 16px" }}>
             <div style={{ marginBottom: 14, padding: "0 4px" }}>
               <img src="/logo-white.png" alt="TuPersonal" style={{ height: 90, width: "auto", display: "block" }} />
@@ -1209,7 +1210,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(6px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
             <img src="/logo-white.png" alt="TuPersonal" style={{ height: 32, width: "auto" }} />
             <button onClick={onLogout}
-              style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+              style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
               Salir
             </button>
           </div>
