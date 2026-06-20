@@ -196,9 +196,87 @@ function Onboarding({ user, perfilExistente, onComplete }) {
   )
 }
 
-function Inicio({ perfil, onLogout, onActualizar }) {
+function ProgressChart({ data, width = 280, height = 120 }) {
+  if (!data || data.length < 2) return null
+  const pts = data.slice(-10)
+  const vals = pts.map(p => p.peso)
+  const max = Math.max(...vals), min = Math.min(...vals)
+  const range = max - min || 1
+  const padY = 16, padX = 8
+  const chartW = width - padX * 2, chartH = height - padY * 2
+  const points = pts.map((p, i) => ({
+    x: padX + (i / (pts.length - 1)) * chartW,
+    y: padY + chartH - ((p.peso - min) / range) * chartH,
+  }))
+  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ")
+  const areaPath = `${linePath} L${points[points.length - 1].x},${height} L${points[0].x},${height} Z`
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height + 20}`} style={{ display: "block" }}>
+      <defs>
+        <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={COLORS.accent} stopOpacity="0.3" />
+          <stop offset="100%" stopColor={COLORS.accent} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      {[0, 0.5, 1].map((f, i) => {
+        const y = padY + chartH - f * chartH
+        const val = (min + f * range).toFixed(1)
+        return <g key={i}>
+          <line x1={padX} y1={y} x2={width - padX} y2={y} stroke={COLORS.border} strokeWidth="0.5" strokeDasharray="3,3" />
+          <text x={width - padX + 2} y={y + 3} fontSize="8" fill={COLORS.textMuted} textAnchor="start">{val}</text>
+        </g>
+      })}
+      <path d={areaPath} fill="url(#chartGrad)" />
+      <path d={linePath} fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      {points.map((p, i) => (
+        <circle key={i} cx={p.x} cy={p.y} r={i === points.length - 1 ? 4 : 2.5}
+          fill={i === points.length - 1 ? COLORS.accent : COLORS.surface} stroke={COLORS.accent} strokeWidth="1.5" />
+      ))}
+      {pts.map((p, i) => (
+        <text key={i} x={points[i].x} y={height + 14} fontSize="8" fill={COLORS.textMuted} textAnchor="middle">
+          {p.fecha?.slice(5) || ""}
+        </text>
+      ))}
+    </svg>
+  )
+}
+
+function DashboardCard({ label, value, unit, sub, icon, accent }) {
+  return (
+    <div style={{ background: COLORS.surface, borderRadius: 16, padding: "18px 16px", border: `0.5px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 6, position: "relative", overflow: "hidden" }}>
+      {accent && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg, ${COLORS.accent}, ${COLORS.accentLight})` }} />}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <div style={T.label}>{label}</div>
+        {icon && <Icon name={icon} size={16} color={COLORS.textMuted} />}
+      </div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+        <span style={{ fontSize: 28, fontWeight: 700, color: COLORS.text, letterSpacing: -1 }}>{value}</span>
+        {unit && <span style={{ fontSize: 13, fontWeight: 500, color: COLORS.textMuted }}>{unit}</span>}
+      </div>
+      {sub && <div style={{ fontSize: 11, color: COLORS.textMuted }}>{sub}</div>}
+    </div>
+  )
+}
+
+function getMotivationalMessage(objetivo) {
+  const obj = (objetivo || "").toLowerCase()
+  if (obj.includes("masa") || obj.includes("musculo") || obj.includes("ganar") || obj.includes("volumen"))
+    return { text: "Cada repetición te acerca a tu mejor versión. La constancia es tu mejor aliada.", icon: "💪" }
+  if (obj.includes("bajar") || obj.includes("perder") || obj.includes("definir") || obj.includes("secar"))
+    return { text: "El progreso no siempre es lineal, pero cada día que entrenás suma. Seguí así.", icon: "🔥" }
+  if (obj.includes("fuerza") || obj.includes("power") || obj.includes("fuerte"))
+    return { text: "La fuerza se construye con paciencia. Hoy levantás más que ayer.", icon: "🏋️" }
+  if (obj.includes("salud") || obj.includes("movilidad") || obj.includes("bienestar"))
+    return { text: "Invertir en tu salud es la mejor decisión. Tu cuerpo te lo agradece.", icon: "🌱" }
+  return { text: "Cada entrenamiento cuenta. Seguí empujando tus límites.", icon: "⚡" }
+}
+
+function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
   const nombre = perfil?.nombre || "Atleta"
   const ini = nombre.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+  const pesoHistorial = perfil?.peso_historial || []
+  const motivacion = getMotivationalMessage(perfil?.objetivo)
 
   const handleAvatarChange = async (file) => {
     const ext = file.name.split(".").pop()
@@ -212,65 +290,91 @@ function Inicio({ perfil, onLogout, onActualizar }) {
     }
   }
 
+  const pesoDiff = pesoHistorial.length >= 2
+    ? (pesoHistorial[pesoHistorial.length - 1].peso - pesoHistorial[pesoHistorial.length - 2].peso).toFixed(1)
+    : null
+
   return (
     <>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+      {/* Header */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <label style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
-            <div style={{ width: 56, height: 56, borderRadius: 18, background: COLORS.accent + "22", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: COLORS.accent }}>
+            <div style={{ width: 52, height: 52, borderRadius: 16, background: COLORS.accent + "22", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, color: COLORS.accent }}>
               {perfil?.avatar_url
                 ? <img src={perfil.avatar_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 : ini}
             </div>
-            <div style={{ position: "absolute", bottom: -2, right: -2, width: 18, height: 18, borderRadius: 6, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width={9} height={9} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>
-            </div>
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarChange(f) }} />
           </label>
           <div>
-            <div style={{ ...T.label, marginBottom: 4 }}>Tu entrenador</div>
-            <div style={T.h1}>Hola, {nombre.split(" ")[0]}</div>
+            <div style={{ fontSize: 13, color: COLORS.textMuted, fontWeight: 500 }}>Bienvenido</div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, letterSpacing: -0.5 }}>{nombre.split(" ")[0]}</div>
           </div>
         </div>
-        <button onClick={onLogout} style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 12, padding: 8, cursor: "pointer", display: "flex" }}>
-          <Icon name="logout" size={16} color={COLORS.textSub} />
-        </button>
       </div>
 
+      {/* Motivational banner */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        style={{ background: `linear-gradient(135deg, ${COLORS.accentSub}, ${COLORS.surface})`, borderRadius: 18, padding: "18px 20px", border: `0.5px solid ${COLORS.accent}33`, display: "flex", alignItems: "flex-start", gap: 14 }}>
+        <div style={{ fontSize: 28, lineHeight: 1, flexShrink: 0, marginTop: 2 }}>{motivacion.icon}</div>
+        <div>
+          {perfil?.objetivo && <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>Tu objetivo: {perfil.objetivo}</div>}
+          <div style={{ fontSize: 14, color: COLORS.textSub, lineHeight: 1.5, fontStyle: "italic" }}>{motivacion.text}</div>
+        </div>
+      </motion.div>
+
+      {/* Stats grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-          <div style={T.label}>Peso actual</div>
-          <div style={{ ...T.num, fontSize: 26, marginTop: 6 }}>{perfil?.peso ? `${perfil.peso}kg` : "—"}</div>
-          <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 2 }}>Actualizalo en Progreso</div>
-        </div>
-        <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-          <div style={T.label}>Objetivo</div>
-          <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text, marginTop: 8, lineHeight: 1.4 }}>{perfil?.objetivo || "Sin definir"}</div>
-        </div>
+        <DashboardCard
+          label="Peso actual" value={perfil?.peso || "—"} unit={perfil?.peso ? "kg" : ""}
+          sub={pesoDiff ? `${Number(pesoDiff) > 0 ? "+" : ""}${pesoDiff}kg vs anterior` : "Registrá en Progreso"}
+          accent
+        />
+        <DashboardCard label="Altura" value={perfil?.altura || "—"} unit={perfil?.altura ? "cm" : ""} icon="trendingUp" />
+        <DashboardCard label="Edad" value={perfil?.edad || "—"} unit={perfil?.edad ? "años" : ""} icon="user" />
+        <DashboardCard
+          label="Objetivo" value={perfil?.objetivo ? "Activo" : "—"}
+          sub={perfil?.objetivo || "Sin definir"} icon="check"
+        />
       </div>
 
-      {perfil?.objetivo && (
-        <div style={{ background: COLORS.accentSub, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.accent}33` }}>
-          <div style={{ ...T.label, color: COLORS.accentLight, marginBottom: 6 }}>Tu meta</div>
-          <div style={T.h3}>{perfil.objetivo}</div>
-          <div style={{ ...T.body, color: "#818cf8", marginTop: 6, fontSize: 13 }}>Seguí avanzando — vas por buen camino.</div>
-        </div>
+      {/* Weight progress chart */}
+      {pesoHistorial.length >= 2 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          style={{ background: COLORS.surface, borderRadius: 18, padding: 18, border: `0.5px solid ${COLORS.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <div>
+              <div style={T.label}>Evolución de peso</div>
+              <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>Últimas {Math.min(pesoHistorial.length, 10)} mediciones</div>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 4, background: COLORS.accent }} />
+              <span style={{ fontSize: 11, color: COLORS.textMuted }}>kg</span>
+            </div>
+          </div>
+          <ProgressChart data={pesoHistorial} />
+        </motion.div>
       )}
 
-      <div style={{ background: COLORS.surface, borderRadius: 16, padding: 16, border: `0.5px solid ${COLORS.border}` }}>
-        <div style={{ ...T.label, marginBottom: 8 }}>Tus datos</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-          {[
-            { l: "Peso", v: perfil?.peso ? `${perfil.peso}kg` : "—" },
-            { l: "Altura", v: perfil?.altura ? `${perfil.altura}cm` : "—" },
-            { l: "Edad", v: perfil?.edad ? `${perfil.edad}a` : "—" },
-          ].map((m, i) => (
-            <div key={i} style={{ textAlign: "center" }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.text }}>{m.v}</div>
-              <div style={{ fontSize: 10, color: COLORS.textMuted, marginTop: 2 }}>{m.l}</div>
+      {/* Quick actions */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {[
+          { label: "Mi rutina", desc: "Ver ejercicios", icon: "dumbbell", page: "rutina" },
+          { label: "Mi progreso", desc: "Actualizar datos", icon: "trendingUp", page: "progreso" },
+        ].map((a) => (
+          <motion.button key={a.page} whileTap={{ scale: 0.97 }}
+            onClick={() => onNavigate?.(a.page)}
+            style={{ background: COLORS.surface, border: `0.5px solid ${COLORS.border}`, borderRadius: 14, padding: "14px 16px", cursor: "pointer", textAlign: "left", display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 12, background: COLORS.accent + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Icon name={a.icon} size={18} color={COLORS.accent} />
             </div>
-          ))}
-        </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>{a.label}</div>
+              <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 1 }}>{a.desc}</div>
+            </div>
+          </motion.button>
+        ))}
       </div>
     </>
   )
@@ -994,7 +1098,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
   }, [user?.id, user?.email, initialPerfil])
 
   const screenStyle = { flex: 1, overflowY: "scroll", overflowX: "hidden", padding: 20, display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }
-  const fontFamily = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif"
+  const fontFamily = "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif"
 
   if (cargando) return (
     <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", justifyContent: "center", alignItems: "center", fontFamily }}>
@@ -1015,7 +1119,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
 
   const renderPage = () => {
     const pages = {
-      inicio: <Inicio perfil={perfilMock} onLogout={onLogout} onActualizar={previewMode ? () => {} : setPerfil} />,
+      inicio: <Inicio perfil={perfilMock} onLogout={onLogout} onActualizar={previewMode ? () => {} : setPerfil} onNavigate={setActivePage} />,
       rutina: <Rutina perfil={perfilMock} />,
       progreso: <Progreso perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} />,
       chat: <Chat user={user} clienteId={perfilMock?.id} trainerId={perfilMock?.trainer_id} modo="cliente" />,
