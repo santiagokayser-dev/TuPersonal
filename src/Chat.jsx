@@ -42,7 +42,7 @@ function Avatar({ nombre, size = 42, radius = 13 }) {
   )
 }
 
-function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente }) {
+function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfileClick }) {
   const [mensajes, setMensajes] = useState([])
   const [texto, setTexto] = useState("")
   const [enviando, setEnviando] = useState(false)
@@ -81,9 +81,11 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente }) {
     <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, overflow: "hidden" }}>
       {/* Header del hilo */}
       <div style={{ padding: "14px 20px", borderBottom: `0.5px solid ${C.border2}`, flexShrink: 0, display: "flex", alignItems: "center", gap: 12, background: C.surface }}>
-        <Avatar nombre={nombreOtro} size={38} radius={12} />
+        <div onClick={onProfileClick} style={{ cursor: onProfileClick ? "pointer" : "default" }}>
+          <Avatar nombre={nombreOtro} size={38} radius={12} />
+        </div>
         <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: C.text }}>{nombreOtro}</div>
+          <div onClick={onProfileClick} style={{ fontSize: 15, fontWeight: 700, color: C.text, cursor: onProfileClick ? "pointer" : "default" }}>{nombreOtro}</div>
           <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 1 }}>
             {cliente?.objetivo && <span style={{ fontSize: 11, color: C.textMuted }}>{cliente.objetivo}</span>}
             {cliente?.objetivo && <span style={{ fontSize: 10, color: C.textMuted + "44" }}>·</span>}
@@ -179,7 +181,7 @@ function ConversacionItem({ c, noLeidos, lastMsg, seleccionado, onClick }) {
   )
 }
 
-export default function Chat({ user, clientes = [], clienteId = null, trainerId = null, modo = "trainer" }) {
+export default function Chat({ user, clientes = [], clienteId = null, trainerId = null, modo = "trainer", onProfileClick }) {
   const [seleccionado, setSeleccionado] = useState(null)
   const [noLeidos, setNoLeidos] = useState({})
   const [lastMessages, setLastMessages] = useState({})
@@ -220,7 +222,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
     )
     return (
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <HiloChat trainerId={trainerId} clienteId={clienteId} miSender="cliente" nombreOtro="Tu entrenador" />
+        <HiloChat trainerId={trainerId} clienteId={clienteId} miSender="cliente" nombreOtro="Tu entrenador" onProfileClick={onProfileClick} />
       </div>
     )
   }
@@ -281,10 +283,12 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
                 <button onClick={() => setSeleccionado(null)} style={{ background: C.surface3, border: `0.5px solid ${C.border2}`, borderRadius: 10, padding: "6px 10px", cursor: "pointer" }}>
                   <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 </button>
-                <Avatar nombre={seleccionado.nombre} size={28} radius={9} />
-                <div style={{ fontSize: 14, fontWeight: 600, color: C.text }}>{seleccionado.nombre}</div>
+                <div onClick={() => onProfileClick?.(seleccionado)} style={{ cursor: onProfileClick ? "pointer" : "default" }}>
+                  <Avatar nombre={seleccionado.nombre} size={28} radius={9} />
+                </div>
+                <div onClick={() => onProfileClick?.(seleccionado)} style={{ fontSize: 14, fontWeight: 600, color: C.text, cursor: onProfileClick ? "pointer" : "default" }}>{seleccionado.nombre}</div>
               </div>
-              <HiloChat trainerId={user?.id} clienteId={seleccionado.id} miSender="trainer" nombreOtro={seleccionado.nombre} cliente={seleccionado} />
+              <HiloChat trainerId={user?.id} clienteId={seleccionado.id} miSender="trainer" nombreOtro={seleccionado.nombre} cliente={seleccionado} onProfileClick={() => onProfileClick?.(seleccionado)} />
             </motion.div>
           )}
         </AnimatePresence>
@@ -302,7 +306,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
       {/* Chat */}
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0, background: C.bg }}>
         {seleccionado ? (
-          <HiloChat trainerId={user?.id} clienteId={seleccionado.id} miSender="trainer" nombreOtro={seleccionado.nombre} cliente={seleccionado} />
+          <HiloChat trainerId={user?.id} clienteId={seleccionado.id} miSender="trainer" nombreOtro={seleccionado.nombre} cliente={seleccionado} onProfileClick={() => onProfileClick?.(seleccionado)} />
         ) : (
           <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10 }}>
             <div style={{ width: 52, height: 52, borderRadius: 16, background: C.surface, border: `0.5px solid ${C.border2}`, display: "flex", alignItems: "center", justifyContent: "center" }}>

@@ -1614,7 +1614,7 @@ export default function App({ user: initialUser, onLogout }) {
     if (activePage === "chat") return (
       <motion.div key="chat" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
         style={{ flex: 1, overflow: "hidden", display: "flex" }}>
-        <Chat user={user} clientes={clientes} modo="trainer" />
+        <Chat user={user} clientes={clientes} modo="trainer" onProfileClick={(c) => setClienteSeleccionado(c)} />
       </motion.div>
     )
 

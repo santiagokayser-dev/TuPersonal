@@ -1122,7 +1122,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
       inicio: <Inicio perfil={perfilMock} onLogout={onLogout} onActualizar={previewMode ? () => {} : setPerfil} onNavigate={setActivePage} />,
       rutina: <Rutina perfil={perfilMock} />,
       progreso: <Progreso perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} />,
-      chat: <Chat user={user} clienteId={perfilMock?.id} trainerId={perfilMock?.trainer_id} modo="cliente" />,
+      chat: <Chat user={user} clienteId={perfilMock?.id} trainerId={perfilMock?.trainer_id} modo="cliente" onProfileClick={() => setActivePage("perfil")} />,
       pagos: <Pagos perfil={perfilMock} />,
       perfil: <PerfilClienteEditar user={user} perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} onLogout={onLogout} />,
     }
