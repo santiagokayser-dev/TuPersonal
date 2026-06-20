@@ -85,7 +85,8 @@ export default function Auth() {
 
   const handleRegistro = async () => {
     if (!email || !password) return setError("Completá email y contraseña")
-    if (password.length < 6) return setError("La contraseña debe tener al menos 6 caracteres")
+    if (password.length < 8) return setError("La contraseña debe tener al menos 8 caracteres")
+    if (!/[A-Z]/.test(password) || !/[0-9]/.test(password)) return setError("La contraseña debe tener al menos una mayúscula y un número")
     if (!username.trim()) return setError("Elegí un nombre de usuario")
     if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) return setError("El usuario solo puede tener letras, números y _ (3–20 caracteres)")
     setCargando(true)

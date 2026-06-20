@@ -844,13 +844,13 @@ function Pagos({ perfil }) {
     setGenerando(true)
     setError("")
     try {
-      const res = await fetch("https://api.mercadopago.com/checkout/preferences", {
+      const res = await fetch("/api/mp-preference", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${mpSettings.mp_access_token}` },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: [{ title: "Plan mensual entrenamiento personal", quantity: 1, unit_price: Number(perfil.precio), currency_id: "ARS" }],
-          back_urls: { success: window.location.href, failure: window.location.href, pending: window.location.href },
-          auto_return: "approved",
+          access_token: mpSettings.mp_access_token,
+          unit_price: Number(perfil.precio),
+          back_url: window.location.href,
         })
       })
       const data = await res.json()

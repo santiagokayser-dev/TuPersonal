@@ -9,7 +9,7 @@ import Chat from "./Chat"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
-const API_KEY = import.meta.env.VITE_ANTHROPIC_KEY
+// API key moved to server-side (api/anthropic.js)
 
 const COLORS = {
   bg: "#1A1A1A", surface: "#262626", surface2: "#2F2F2F", border: "#3A3A3A", border2: "#444444",
@@ -347,9 +347,9 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
     try {
       const dias = typeof rutina.dias === "string" ? JSON.parse(rutina.dias) : rutina.dias
       const resumen = dias?.map(d => `${d.nombre}: ${d.bloques?.map(b => b.ejercicios?.map(e => e.nombre).join(", ") || b.nombre || "").join(", ")}`).join(" | ") || ""
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/anthropic", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": API_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
           max_tokens: 400,
