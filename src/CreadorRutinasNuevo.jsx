@@ -560,18 +560,18 @@ function GeneradorAI({ onRutinaGenerada, clientes }) {
   const [prompt, setPrompt] = useState("")
   const [clienteSel, setClienteSel] = useState("")
   const [cargando, setCargando] = useState(false)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState("")
 
   const generar = async () => {
     if (!prompt.trim()) return
     setCargando(true)
-    setError(false)
+    setError("")
     try {
       const res = await fetch("/api/anthropic", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 4000,
           messages: [{
             role: "user",
@@ -592,11 +592,23 @@ Respondé SOLO con JSON válido, sin texto extra, con este formato exacto:
         })
       })
       const data = await res.json()
-      const texto = data.content[0].text
+
+      if (!res.ok) {
+        if (data.error === "API key not configured") {
+          setError("Falta configurar la API key de Anthropic en Vercel. Agregá ANTHROPIC_KEY en las variables de entorno del proyecto.")
+        } else {
+          setError(`Error del servidor: ${data.error || res.status}`)
+        }
+        setCargando(false)
+        return
+      }
+
+      const texto = data.content?.[0]?.text
+      if (!texto) { setError("La AI no devolvió respuesta. Intentá de nuevo."); setCargando(false); return }
+
       const clean = texto.replace(/```json|```/g, "").trim()
       const rutina = JSON.parse(clean)
 
-      // Convertir al formato de bloques
       const dias = rutina.dias.map(d => ({
         nombre: d.nombre,
         bloques: d.ejercicios.map(ej => ({
@@ -615,8 +627,8 @@ Respondé SOLO con JSON válido, sin texto extra, con este formato exacto:
       }))
 
       onRutinaGenerada(rutina.nombre, dias)
-    } catch {
-      setError(true)
+    } catch (e) {
+      setError(e.message?.includes("fetch") ? "Sin conexión. Revisá tu internet." : `Error: ${e.message}`)
     }
     setCargando(false)
   }
@@ -653,7 +665,7 @@ Respondé SOLO con JSON válido, sin texto extra, con este formato exacto:
           </motion.div>
         )}
         {error && (
-          <div style={{ color: C.red, fontSize: 12, textAlign: "center" }}>Hubo un error. Revisá la conexión e intentá de nuevo.</div>
+          <div style={{ color: C.red, fontSize: 12, background: C.red + "11", borderRadius: 8, padding: "8px 12px", lineHeight: 1.5 }}>{error}</div>
         )}
       </div>
     </motion.div>
