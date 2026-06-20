@@ -344,7 +344,7 @@ function Rutina({ perfil }) {
       </div>`
     }).join("")
 
-    const html = `<!DOCTYPE html><html><head><title>${rutina.nombre}</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rutina.nombre}</title>
       <style>@media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }</style>
     </head><body style="background:#1A1A1A;color:#F5F5F5;font-family:-apple-system,sans-serif;padding:30px;margin:0;">
       <h1 style="font-size:22px;margin:0 0 4px;">${rutina.nombre}</h1>
