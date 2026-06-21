@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
 import Chat from "./Chat"
@@ -409,6 +409,7 @@ function Rutina({ perfil }) {
   const [cargando, setCargando] = useState(true)
   const [diaAbierto, setDiaAbierto] = useState(0)
   const [ejercicioActivo, setEjercicioActivo] = useState(null)
+  const diaRefs = useRef([])
 
   useEffect(() => {
     if (!perfil?.id) { setCargando(false); return }
@@ -512,8 +513,12 @@ function Rutina({ perfil }) {
         const abierto = diaAbierto === i
         const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || []) || dia.ejercicios || []
         return (
-          <motion.div key={i} style={{ background: COLORS.surface, borderRadius: 18, border: `1px solid ${abierto ? COLORS.accent + "66" : COLORS.border}`, overflow: "hidden" }}>
-            <div onClick={() => setDiaAbierto(abierto ? -1 : i)}
+          <motion.div key={i} ref={el => diaRefs.current[i] = el} style={{ background: COLORS.surface, borderRadius: 18, border: `1px solid ${abierto ? COLORS.accent + "66" : COLORS.border}`, overflow: "hidden" }}>
+            <div onClick={() => {
+              const abriendo = diaAbierto !== i
+              setDiaAbierto(abriendo ? i : -1)
+              if (abriendo) setTimeout(() => diaRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" }), 120)
+            }}
               style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
               <div style={{ width: 40, height: 40, borderRadius: 8, background: abierto ? COLORS.accent : COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: abierto ? "#fff" : COLORS.textSub, flexShrink: 0 }}>
                 {String.fromCharCode(65 + i)}
