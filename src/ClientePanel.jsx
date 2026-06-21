@@ -129,7 +129,7 @@ function Onboarding({ user, perfilExistente, onComplete }) {
         return
       }
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-      avatar_url = urlData.publicUrl
+      avatar_url = urlData.publicUrl + `?v=${Date.now()}`
     }
 
     const campos = {
@@ -311,7 +311,7 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
       return
     }
     const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-    const avatar_url = urlData.publicUrl
+    const avatar_url = urlData.publicUrl + `?v=${Date.now()}`
     const { error: dbErr } = await supabase.from("clientes").update({ avatar_url }).eq("id", perfil.id)
     if (dbErr) { setAvatarError(`Foto subida pero no guardada en perfil: ${dbErr.message}`); return }
     onActualizar({ ...perfil, avatar_url })
@@ -961,7 +961,7 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
         return
       }
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-      avatar_url = urlData.publicUrl
+      avatar_url = urlData.publicUrl + `?v=${Date.now()}`
     }
 
     const campos = {

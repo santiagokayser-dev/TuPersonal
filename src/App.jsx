@@ -1438,17 +1438,16 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
         return
       }
       const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-      avatar_url = urlData.publicUrl
+      avatar_url = urlData.publicUrl + `?v=${Date.now()}`
     }
 
-    const { error: updateErr } = await supabase.auth.updateUser({
+    const { data: updateData, error: updateErr } = await supabase.auth.updateUser({
       data: { nombre: datos.nombre, username: datos.username.toLowerCase(), avatar_url }
     })
 
     if (!updateErr) {
       setMensaje("¡Perfil actualizado!")
-      const { data: { user: refreshed } } = await supabase.auth.getUser()
-      if (refreshed) onUserUpdated?.(refreshed)
+      if (updateData?.user) onUserUpdated?.(updateData.user)
     } else setError("No se pudo guardar")
     setGuardando(false)
   }
