@@ -110,8 +110,3 @@ code {
   background: var(--code-bg);
 }
 
-@media (display-mode: standalone) {
-  #bottom-nav .nav-label {
-    display: none;
-  }
-}
