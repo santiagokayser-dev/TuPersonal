@@ -59,6 +59,19 @@ const navItems = [
   { id: "perfil", icon: "user", label: "Perfil" },
 ]
 
+function AvatarImg({ src, ini, size = 52, radius = 8, fontSize = 17, accentColor = "#2563EB" }) {
+  const [broken, setBroken] = useState(false)
+  if (src && !broken) {
+    return <img src={src} alt="avatar" onError={() => setBroken(true)}
+      style={{ width: size, height: size, borderRadius: radius, objectFit: "cover", display: "block" }} />
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: radius, background: accentColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize, fontWeight: 700, color: accentColor, flexShrink: 0 }}>
+      {ini}
+    </div>
+  )
+}
+
 function AvatarPicker({ preview, onChange }) {
   const ini = "?"
   return (
@@ -108,10 +121,15 @@ function Onboarding({ user, perfilExistente, onComplete }) {
       const ext = avatarFile.name.split(".").pop()
       const path = `${user.id}.${ext}`
       const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true })
-      if (!upErr) {
-        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-        avatar_url = urlData.publicUrl
+      if (upErr) {
+        setError(upErr.message?.includes("Bucket not found")
+          ? "Bucket 'avatars' no existe. Crealo en Supabase Dashboard → Storage (público)."
+          : `Error al subir foto: ${upErr.message}`)
+        setGuardando(false)
+        return
       }
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+      avatar_url = urlData.publicUrl
     }
 
     const campos = {
@@ -279,16 +297,24 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
   const pesoHistorial = perfil?.peso_historial || []
   const motivacion = getMotivationalMessage(perfil?.objetivo)
 
+  const [avatarError, setAvatarError] = useState("")
+
   const handleAvatarChange = async (file) => {
+    setAvatarError("")
     const ext = file.name.split(".").pop()
     const path = `${perfil.user_id || perfil.id}.${ext}`
     const { error } = await supabase.storage.from("avatars").upload(path, file, { upsert: true })
-    if (!error) {
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-      const avatar_url = urlData.publicUrl
-      await supabase.from("clientes").update({ avatar_url }).eq("id", perfil.id)
-      onActualizar({ ...perfil, avatar_url })
+    if (error) {
+      setAvatarError(error.message?.includes("Bucket not found")
+        ? "Bucket 'avatars' no existe en Supabase Storage. Crealo desde el dashboard."
+        : `Error al subir foto: ${error.message}`)
+      return
     }
+    const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+    const avatar_url = urlData.publicUrl
+    const { error: dbErr } = await supabase.from("clientes").update({ avatar_url }).eq("id", perfil.id)
+    if (dbErr) { setAvatarError(`Foto subida pero no guardada en perfil: ${dbErr.message}`); return }
+    onActualizar({ ...perfil, avatar_url })
   }
 
   const pesoDiff = pesoHistorial.length >= 2
@@ -301,13 +327,10 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <label style={{ cursor: "pointer", position: "relative", flexShrink: 0 }}>
-            <div style={{ width: 52, height: 52, borderRadius: 8, background: COLORS.accent + "22", overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 700, color: COLORS.accent }}>
-              {perfil?.avatar_url
-                ? <img src={perfil.avatar_url} alt="avatar" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                : ini}
-            </div>
+            <AvatarImg src={perfil?.avatar_url} ini={ini} size={52} radius={8} fontSize={17} accentColor={COLORS.accent} />
             <input type="file" accept="image/*" style={{ display: "none" }} onChange={e => { const f = e.target.files?.[0]; if (f) handleAvatarChange(f) }} />
           </label>
+          {avatarError && <div style={{ fontSize: 11, color: COLORS.red, background: COLORS.red + "11", borderRadius: 8, padding: "6px 10px", marginTop: 4, maxWidth: 220 }}>{avatarError}</div>}
           <div>
             <div style={{ fontSize: 13, color: COLORS.textMuted, fontWeight: 500 }}>Bienvenido</div>
             <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, letterSpacing: -0.5 }}>{nombre.split(" ")[0]}</div>
@@ -925,15 +948,20 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
     setError("")
     setMensaje("")
 
-    let avatar_url = null
+    let avatar_url = perfil?.avatar_url || null
     if (avatarFile) {
       const ext = avatarFile.name.split(".").pop()
       const path = `${user.id}.${ext}`
       const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true })
-      if (!upErr) {
-        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-        avatar_url = urlData.publicUrl
+      if (upErr) {
+        setError(upErr.message?.includes("Bucket not found")
+          ? "Bucket 'avatars' no existe. Crealo en Supabase Dashboard → Storage → New bucket (público)."
+          : `Error al subir foto: ${upErr.message}`)
+        setGuardando(false)
+        return
       }
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+      avatar_url = urlData.publicUrl
     }
 
     const campos = {
@@ -943,7 +971,7 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
       altura: Number(datos.altura) || null,
       edad: Number(datos.edad) || null,
       objetivo: datos.objetivo || null,
-      ...(avatar_url ? { avatar_url } : {}),
+      avatar_url,
     }
 
     let result = null

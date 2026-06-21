@@ -1430,10 +1430,15 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
       const ext = avatarFile.name.split(".").pop()
       const path = `trainer-${user.id}.${ext}`
       const { error: upErr } = await supabase.storage.from("avatars").upload(path, avatarFile, { upsert: true })
-      if (!upErr) {
-        const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
-        avatar_url = urlData.publicUrl
+      if (upErr) {
+        setError(upErr.message?.includes("Bucket not found")
+          ? "Bucket 'avatars' no existe. Crealo en Supabase Dashboard → Storage → New bucket (público)."
+          : `Error al subir foto: ${upErr.message}`)
+        setGuardando(false)
+        return
       }
+      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(path)
+      avatar_url = urlData.publicUrl
     }
 
     const { error: updateErr } = await supabase.auth.updateUser({
