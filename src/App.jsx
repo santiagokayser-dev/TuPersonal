@@ -713,13 +713,20 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
     const { data: { user } } = await supabase.auth.getUser()
     const link = `${window.location.origin}?invite=${user.id}`
     try {
-      if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(link) }
-      else {
+      if (navigator.share) {
+        await navigator.share({ title: "TuPersonal", text: "Descargá la app y conectate conmigo:", url: link })
+        setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(link)
+        setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
+      } else {
         const el = document.createElement("textarea"); el.value = link; el.style.cssText = "position:fixed;opacity:0"
         document.body.appendChild(el); el.focus(); el.select(); document.execCommand("copy"); document.body.removeChild(el)
+        setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
       }
-      setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
-    } catch { setLinkCopiado("error"); setTimeout(() => setLinkCopiado(false), 2500) }
+    } catch (e) {
+      if (e?.name !== "AbortError") { setLinkCopiado("error"); setTimeout(() => setLinkCopiado(false), 2500) }
+    }
   }
 
   const pendientes = clientes.filter(c => c.meses_deuda > 0).length
@@ -742,7 +749,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
               <>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={copiarLink}
                   style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `1px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 10, padding: "5px 9px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
-                  {linkCopiado === "error" ? "Error" : linkCopiado ? "¡Copiado!" : "Compartir link"}
+                  {linkCopiado === "error" ? "Error" : linkCopiado ? "✓ Listo" : "Compartir link"}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
                   style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: "none", whiteSpace: "nowrap" }}>
