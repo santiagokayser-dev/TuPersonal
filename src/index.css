@@ -109,3 +109,15 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+@media (display-mode: standalone) {
+  .nav-pwa {
+    padding-top: 6px !important;
+  }
+  .nav-pwa button {
+    padding: 0 !important;
+  }
+  .nav-pwa .nav-label {
+    display: none;
+  }
+}

@@ -70,7 +70,16 @@ function useIsMobile() {
 }
 
 function useIsPWA() {
-  return window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches
+  const [pwa, setPwa] = useState(() =>
+    window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches
+  )
+  useEffect(() => {
+    const mq = window.matchMedia("(display-mode: standalone)")
+    const handle = (e) => setPwa(e.matches || window.navigator.standalone === true)
+    mq.addEventListener("change", handle)
+    return () => mq.removeEventListener("change", handle)
+  }, [])
+  return pwa
 }
 
 function normCliente(c) {
@@ -1730,19 +1739,19 @@ export default function App({ user: initialUser, onLogout }) {
 
         {/* Nav inferior — solo mobile */}
         {isMobile && !clienteSeleccionado && (
-          <nav style={{ background: COLORS.bg, borderTop: `1px solid ${COLORS.border}`, display: "flex", paddingTop: isPWA ? 1 : 2, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
+          <nav className={isPWA ? "nav-pwa" : ""} style={{ background: COLORS.bg, borderTop: `1px solid ${COLORS.border}`, display: "flex", paddingTop: isPWA ? 6 : 2, paddingBottom: "env(safe-area-inset-bottom)", paddingLeft: 0, paddingRight: 0, flexShrink: 0 }}>
             {navItems.map(item => (
               <button key={item.id} onClick={() => setActivePage(item.id)}
-                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: isPWA ? 1 : 2, padding: isPWA ? "1px 0" : "2px 0", position: "relative" }}>
+                style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "0", position: "relative" }}>
                 <div style={{ position: "relative" }}>
-                  <Icon name={item.icon} size={isPWA ? 20 : 22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
+                  <Icon name={item.icon} size={isPWA ? 22 : 22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
                   {item.id === "chat" && chatNoLeidos > 0 && (
                     <span style={{ position: "absolute", top: -4, right: -8, minWidth: 16, height: 16, borderRadius: 8, background: COLORS.accent, border: `2px solid ${COLORS.bg}`, fontSize: 8, fontWeight: 800, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
                       {chatNoLeidos > 9 ? "9+" : chatNoLeidos}
                     </span>
                   )}
                 </div>
-                <span style={{ fontSize: isPWA ? 9 : 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
+                <span className="nav-label" style={{ fontSize: 10, fontWeight: 500, color: activePage === item.id ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
               </button>
             ))}
           </nav>
