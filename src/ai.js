@@ -1,12 +1,12 @@
 const VITE_KEY = import.meta.env.VITE_ANTHROPIC_KEY
 
-export async function askClaude({ model = "claude-haiku-4-5-20251001", max_tokens = 1024, messages }) {
+export async function askClaude({ model = "claude-haiku-4-5-20251001", max_tokens = 1024, messages, system }) {
   // Try serverless proxy first; fall back to direct browser call with VITE key
   try {
     const res = await fetch("/api/anthropic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ model, max_tokens, messages }),
+      body: JSON.stringify({ model, max_tokens, messages, system }),
     })
     const data = await res.json()
     if (res.ok) return data.content?.[0]?.text ?? null
@@ -27,7 +27,7 @@ export async function askClaude({ model = "claude-haiku-4-5-20251001", max_token
       "anthropic-version": "2023-06-01",
       "anthropic-dangerous-direct-browser-access": "true",
     },
-    body: JSON.stringify({ model, max_tokens, messages }),
+    body: JSON.stringify({ model, max_tokens, messages, ...(system && { system }) }),
   })
   const data = await res.json()
   if (!res.ok) throw new Error(data.error?.message || `HTTP ${res.status}`)

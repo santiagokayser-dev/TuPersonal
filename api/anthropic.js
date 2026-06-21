@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_KEY
   if (!apiKey) return res.status(500).json({ error: "API key not configured" })
 
-  const { model, max_tokens, messages } = req.body || {}
+  const { model, max_tokens, messages, system } = req.body || {}
   if (!messages?.length) return res.status(400).json({ error: "Messages required" })
 
   try {
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
         model: model || "claude-haiku-4-5-20251001",
         max_tokens: Math.min(max_tokens || 400, 4096),
         messages,
+        ...(system && { system }),
       }),
     })
     const data = await response.json()
