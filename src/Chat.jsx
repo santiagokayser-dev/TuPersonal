@@ -106,16 +106,16 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfi
           const prevMio = i > 0 && mensajes[i - 1].sender === m.sender
           return (
             <motion.div key={m.id} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-              style={{ display: "flex", justifyContent: esMio ? "flex-end" : "flex-start", marginTop: prevMio ? 2 : 8 }}>
+              style={{ width: "100%", display: "flex", justifyContent: esMio ? "flex-end" : "flex-start", marginTop: prevMio ? 2 : 8 }}>
               <div style={{
-                maxWidth: "68%", padding: "9px 14px",
-                borderRadius: esMio ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                maxWidth: "72%", padding: "9px 14px",
+                borderRadius: esMio ? "18px 4px 18px 18px" : "4px 18px 18px 18px",
                 background: esMio ? C.accent : C.surface3,
                 border: esMio ? "none" : `1px solid ${C.border2}`,
                 boxShadow: esMio ? `0 2px 12px ${C.accent}33` : "none",
               }}>
-                <div style={{ fontSize: 14, color: C.text, lineHeight: 1.45 }}>{m.texto}</div>
-                <div style={{ fontSize: 10, color: esMio ? "#a5b4fc99" : C.textMuted, marginTop: 3, textAlign: "right" }}>
+                <div style={{ fontSize: 14, color: C.text, lineHeight: 1.45, textAlign: "left" }}>{m.texto}</div>
+                <div style={{ fontSize: 10, color: esMio ? "#ffffff88" : C.textMuted, marginTop: 3, textAlign: "right" }}>
                   {formatHora(m.created_at)}
                 </div>
               </div>
