@@ -1836,6 +1836,8 @@ export default function App({ user: initialUser, onLogout }) {
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [chatbotAbierto, setChatbotAbierto] = useState(false)
   const [planesAbierto, setPlanesAbierto] = useState(false)
+  const [installBanner, setInstallBanner] = useState(() => localStorage.getItem("pwa-banner-dismissed") !== "1")
+  const [installOS, setInstallOS] = useState(null)
   const isMobile = useIsMobile()
   const isPWA = useIsPWA()
 
@@ -1992,6 +1994,83 @@ export default function App({ user: initialUser, onLogout }) {
             <div style={{ width: 36 }} />
           </div>
         )}
+
+        {/* Banner instalar PWA — solo en navegador */}
+        {isMobile && !isPWA && installBanner && (
+          <div style={{ background: "linear-gradient(90deg, #1a1a2e, #16213e)", borderBottom: `1px solid ${COLORS.accent}33`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span style={{ flex: 1, fontSize: 13, color: "#e2e8f0", fontWeight: 500 }}>Agregá TuPersonal como app</span>
+            <button onClick={() => setInstallOS("ios")}
+              style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "5px 10px", color: "#e2e8f0", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+              iOS
+            </button>
+            <button onClick={() => setInstallOS("android")}
+              style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "5px 10px", color: "#fff", fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+              Android
+            </button>
+            <button onClick={() => { setInstallBanner(false); localStorage.setItem("pwa-banner-dismissed", "1") }}
+              style={{ background: "none", border: "none", cursor: "pointer", padding: 2, color: COLORS.textMuted, flexShrink: 0 }}>
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+        )}
+
+        {/* Modal instrucciones instalación */}
+        <AnimatePresence>
+          {installOS && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => setInstallOS(null)}
+              style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 400, display: "flex", alignItems: "flex-end", justifyContent: "center" }}>
+              <motion.div initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }} transition={{ type: "spring", damping: 26, stiffness: 280 }}
+                onClick={e => e.stopPropagation()}
+                style={{ background: COLORS.surface, borderRadius: "22px 22px 0 0", padding: "24px 24px calc(24px + env(safe-area-inset-bottom))", width: "100%", maxWidth: 480 }}>
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: COLORS.border2, margin: "0 auto 20px" }} />
+                <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+                  {installOS === "ios"
+                    ? <svg width={28} height={28} viewBox="0 0 24 24" fill={COLORS.text}><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    : <svg width={28} height={28} viewBox="0 0 24 24" fill="#3ddc84"><path d="M17.523 15.341c-.41 0-.744-.334-.744-.744s.334-.744.744-.744.744.334.744.744-.333.744-.744.744m-11.046 0c-.41 0-.744-.334-.744-.744s.334-.744.744-.744.744.334.744.744-.334.744-.744.744m11.4-4.836l1.33-2.304a.276.276 0 00-.101-.377.276.276 0 00-.377.101l-1.348 2.335A8.432 8.432 0 0012 9.513a8.432 8.432 0 00-5.381 1.747L5.271 8.925a.276.276 0 00-.377-.101.276.276 0 00-.101.377l1.33 2.304C3.592 12.94 2.14 15.22 2 17.834h20c-.14-2.614-1.592-4.894-4.123-6.329"/></svg>
+                  }
+                  <div style={{ fontSize: 17, fontWeight: 700, color: COLORS.text }}>
+                    Instalar en {installOS === "ios" ? "iPhone / iPad" : "Android"}
+                  </div>
+                </div>
+                {installOS === "ios" ? (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {[
+                      ["1", "Abrí esta página en Safari (no Chrome)"],
+                      ["2", "Tocá el ícono de compartir ⬆ en la barra inferior"],
+                      ["3", 'Desplazate y elegí "Agregar a pantalla de inicio"'],
+                      ["4", 'Tocá "Agregar" arriba a la derecha'],
+                    ].map(([n, text]) => (
+                      <div key={n} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                        <div style={{ width: 26, height: 26, borderRadius: 8, background: COLORS.accent + "22", border: `1px solid ${COLORS.accent}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: COLORS.accent, flexShrink: 0 }}>{n}</div>
+                        <span style={{ fontSize: 14, color: COLORS.textSub, lineHeight: 1.5, paddingTop: 3 }}>{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                    {[
+                      ["1", "Abrí esta página en Chrome"],
+                      ["2", "Tocá los 3 puntos ⋮ arriba a la derecha"],
+                      ["3", 'Elegí "Agregar a pantalla de inicio" o "Instalar app"'],
+                      ["4", 'Confirmá tocando "Agregar"'],
+                    ].map(([n, text]) => (
+                      <div key={n} style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+                        <div style={{ width: 26, height: 26, borderRadius: 8, background: "#3ddc8422", border: "1px solid #3ddc8444", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700, color: "#3ddc84", flexShrink: 0 }}>{n}</div>
+                        <span style={{ fontSize: 14, color: COLORS.textSub, lineHeight: 1.5, paddingTop: 3 }}>{text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <button onClick={() => setInstallOS(null)}
+                  style={{ marginTop: 24, width: "100%", padding: "13px 0", borderRadius: 12, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, color: COLORS.textSub, fontSize: 14, fontWeight: 500, cursor: "pointer" }}>
+                  Entendido
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Drawer mobile */}
         <AnimatePresence>
