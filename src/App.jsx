@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from "framer-motion"
 import AgendaReal from "./Agenda"
 import { EJERCICIOS } from "./ejercicios"
 import { supabase } from "./supabase"
+import { askClaude } from "./ai"
 import CreadorRutinasNuevo from "./CreadorRutinasNuevo"
 import ClientePanel from "./ClientePanel"
 import Chat from "./Chat"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
-// API key moved to server-side (api/anthropic.js)
+const AI_KEY = import.meta.env.VITE_ANTHROPIC_KEY
 
 const COLORS = {
   bg: "#111111", surface: "#191919", surface2: "#222222", border: "#2a2a2a", border2: "#333333",
@@ -311,17 +312,11 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
     try {
       const dias = typeof rutina.dias === "string" ? JSON.parse(rutina.dias) : rutina.dias
       const resumen = dias?.map(d => `${d.nombre}: ${d.bloques?.map(b => b.ejercicios?.map(e => e.nombre).join(", ") || b.nombre || "").join(", ")}`).join(" | ") || ""
-      const res = await fetch("/api/anthropic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 400,
-          messages: [{ role: "user", content: `Sos personal trainer experto. Analizá la rutina "${rutina.nombre}" de ${datos.nombre} (peso: ${datos.peso || "?"}kg, objetivo: ${datos.objetivo || "general"}). Ejercicios: ${resumen}. Cargas actuales: ${JSON.stringify(datos.cargas || {})}. Peso histórico (últimos 3): ${JSON.stringify((datos.peso_historial || []).slice(-3))}. Sugerí ajustes de progresión en máximo 120 palabras, usando bullet points (•). En español, directo.` }]
-        })
+      const texto = await askClaude({
+        max_tokens: 400,
+        messages: [{ role: "user", content: `Sos personal trainer experto. Analizá la rutina "${rutina.nombre}" de ${datos.nombre} (peso: ${datos.peso || "?"}kg, objetivo: ${datos.objetivo || "general"}). Ejercicios: ${resumen}. Cargas actuales: ${JSON.stringify(datos.cargas || {})}. Peso histórico (últimos 3): ${JSON.stringify((datos.peso_historial || []).slice(-3))}. Sugerí ajustes de progresión en máximo 120 palabras, usando bullet points (•). En español, directo.` }]
       })
-      const d = await res.json()
-      setIaResultado(prev => ({ ...prev, [rutina.id]: d.content?.[0]?.text || "Sin respuesta" }))
+      setIaResultado(prev => ({ ...prev, [rutina.id]: texto || "Sin respuesta" }))
     } catch {
       setIaResultado(prev => ({ ...prev, [rutina.id]: "Error al conectar con IA. Intentá de nuevo." }))
     }

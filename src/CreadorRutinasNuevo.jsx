@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { EJERCICIOS, MUSCULO_ALIASES } from "./ejercicios"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import { askClaude } from "./ai"
 
 const C = {
   bg: "#080808", surface: "#111111", surface2: "#1a1a1a", border: "#222222", border2: "#2a2a2a",
@@ -567,15 +568,11 @@ function GeneradorAI({ onRutinaGenerada, clientes }) {
     setCargando(true)
     setError("")
     try {
-      const res = await fetch("/api/anthropic", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-haiku-4-5-20251001",
-          max_tokens: 4000,
-          messages: [{
-            role: "user",
-            content: `Sos un personal trainer experto. Generá una rutina de entrenamiento basada en esto: "${prompt}"${clienteSel ? ` para el cliente ${clienteSel}` : ""}.
+      const texto = await askClaude({
+        max_tokens: 4000,
+        messages: [{
+          role: "user",
+          content: `Sos un personal trainer experto. Generá una rutina de entrenamiento basada en esto: "${prompt}"${clienteSel ? ` para el cliente ${clienteSel}` : ""}.
 Respondé SOLO con JSON válido, sin texto extra, con este formato exacto:
 {
   "nombre": "nombre de la rutina",
@@ -588,22 +585,8 @@ Respondé SOLO con JSON válido, sin texto extra, con este formato exacto:
     }
   ]
 }`
-          }]
-        })
+        }]
       })
-      const data = await res.json()
-
-      if (!res.ok) {
-        if (data.error === "API key not configured") {
-          setError("Falta configurar la API key de Anthropic en Vercel. Agregá ANTHROPIC_KEY en las variables de entorno del proyecto.")
-        } else {
-          setError(`Error del servidor: ${data.error || res.status}`)
-        }
-        setCargando(false)
-        return
-      }
-
-      const texto = data.content?.[0]?.text
       if (!texto) { setError("La AI no devolvió respuesta. Intentá de nuevo."); setCargando(false); return }
 
       const clean = texto.replace(/```json|```/g, "").trim()
@@ -628,7 +611,13 @@ Respondé SOLO con JSON válido, sin texto extra, con este formato exacto:
 
       onRutinaGenerada(rutina.nombre, dias)
     } catch (e) {
-      setError(e.message?.includes("fetch") ? "Sin conexión. Revisá tu internet." : `Error: ${e.message}`)
+      if (e.message?.includes("fetch") || e.message?.includes("network")) {
+        setError("Sin conexión. Revisá tu internet.")
+      } else if (e.message?.includes("401") || e.message?.includes("invalid x-api-key")) {
+        setError("API key inválida. Revisá el valor de VITE_ANTHROPIC_KEY en Vercel.")
+      } else {
+        setError(`Error: ${e.message}`)
+      }
     }
     setCargando(false)
   }
