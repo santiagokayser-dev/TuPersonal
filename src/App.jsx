@@ -581,7 +581,7 @@ function avatarColor(name) {
   return AVATAR_COLORS[(name || "?").charCodeAt(0) % AVATAR_COLORS.length]
 }
 
-function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCliente }) {
+function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCliente, user }) {
   const [mostrarForm, setMostrarForm] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [linkCopiado, setLinkCopiado] = useState(false)
@@ -709,23 +709,22 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
     setEliminando(null)
   }
 
-  const copiarLink = async () => {
-    const { data: { user } } = await supabase.auth.getUser()
-    const link = `${window.location.origin}?invite=${user.id}`
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: "TuPersonal", text: "Descargá la app y conectate conmigo:", url: link })
-        setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
-      } else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(link)
-        setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
-      } else {
+  const copiarLink = () => {
+    const link = `${window.location.origin}?invite=${user?.id}`
+    if (navigator.share) {
+      navigator.share({ title: "TuPersonal", text: "Descargá la app y conectate conmigo:", url: link })
+        .then(() => { setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500) })
+        .catch(e => { if (e?.name !== "AbortError") { setLinkCopiado("error"); setTimeout(() => setLinkCopiado(false), 2500) } })
+    } else if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(link)
+        .then(() => { setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500) })
+        .catch(() => { setLinkCopiado("error"); setTimeout(() => setLinkCopiado(false), 2500) })
+    } else {
+      try {
         const el = document.createElement("textarea"); el.value = link; el.style.cssText = "position:fixed;opacity:0"
         document.body.appendChild(el); el.focus(); el.select(); document.execCommand("copy"); document.body.removeChild(el)
         setLinkCopiado(true); setTimeout(() => setLinkCopiado(false), 2500)
-      }
-    } catch (e) {
-      if (e?.name !== "AbortError") { setLinkCopiado("error"); setTimeout(() => setLinkCopiado(false), 2500) }
+      } catch { setLinkCopiado("error"); setTimeout(() => setLinkCopiado(false), 2500) }
     }
   }
 
@@ -1621,6 +1620,7 @@ export default function App({ user: initialUser, onLogout }) {
       inicio: <Inicio clientes={clientes} nombreTrainer={nombreTrainer} onVerPerfil={setClienteSeleccionado} onNuevoCliente={() => setActivePage("clientes")} />,
       clientes: <Clientes
         clientes={clientes}
+        user={user}
         onVerPerfil={setClienteSeleccionado}
         onClienteAgregado={(c) => setClientes(prev => [...prev, c])}
         onEliminarCliente={(id) => setClientes(prev => prev.filter(c => c.id !== id))}
