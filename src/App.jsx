@@ -1584,6 +1584,7 @@ export default function App({ user: initialUser, onLogout }) {
   const [previewCliente, setPreviewCliente] = useState(null)
   const [user, setUser] = useState(initialUser)
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
+  const [drawerAbierto, setDrawerAbierto] = useState(false)
   const isMobile = useIsMobile()
   const isPWA = useIsPWA()
 
@@ -1729,14 +1730,73 @@ export default function App({ user: initialUser, onLogout }) {
       <div style={{ flex: 1, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", overflow: "hidden", overscrollBehavior: "none" }}>
         {/* Header mobile */}
         {isMobile && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(6px + env(safe-area-inset-top))", paddingLeft: 20, paddingRight: 20, paddingBottom: 0, flexShrink: 0 }}>
-            <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 32, width: "auto", cursor: "pointer" }} />
-            <button onClick={onLogout}
-              style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "5px 10px", color: COLORS.textMuted, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
-              Salir
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(10px + env(safe-area-inset-top))", paddingLeft: 16, paddingRight: 16, paddingBottom: 8, flexShrink: 0 }}>
+            <button onClick={() => setDrawerAbierto(true)}
+              style={{ width: 36, height: 36, borderRadius: 12, background: user?.user_metadata?.avatar_url ? "none" : COLORS.accent, overflow: "hidden", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#fff", padding: 0, flexShrink: 0 }}>
+              {user?.user_metadata?.avatar_url
+                ? <img src={user.user_metadata.avatar_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                : (nombreTrainer || "E").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+              }
             </button>
+            <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 28, width: "auto", cursor: "pointer", position: "absolute", left: "50%", transform: "translateX(-50%)" }} />
+            <div style={{ width: 36 }} />
           </div>
         )}
+
+        {/* Drawer mobile */}
+        <AnimatePresence>
+          {drawerAbierto && (
+            <>
+              <motion.div key="overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+                onClick={() => setDrawerAbierto(false)}
+                style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", zIndex: 200, backdropFilter: "blur(2px)" }} />
+              <motion.div key="drawer" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 28, stiffness: 260 }}
+                style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 280, background: COLORS.surface, zIndex: 201, display: "flex", flexDirection: "column", boxShadow: "4px 0 24px rgba(0,0,0,0.4)" }}>
+                {/* Perfil */}
+                <div style={{ padding: "calc(20px + env(safe-area-inset-top)) 20px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 52, height: 52, borderRadius: 18, background: user?.user_metadata?.avatar_url ? "none" : COLORS.accent, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
+                      {user?.user_metadata?.avatar_url
+                        ? <img src={user.user_metadata.avatar_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        : (nombreTrainer || "E").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+                      }
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text, lineHeight: 1.2 }}>{nombreTrainer || "Entrenador"}</div>
+                      <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 3 }}>Entrenador personal</div>
+                    </div>
+                  </div>
+                </div>
+                {/* Nav items */}
+                <div style={{ flex: 1, overflowY: "auto", padding: "10px 10px", scrollbarWidth: "none" }}>
+                  {navItems.map(item => {
+                    const activo = activePage === item.id && !clienteSeleccionado
+                    return (
+                      <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null); setDrawerAbierto(false) }}
+                        style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", background: activo ? COLORS.accent + "22" : "transparent", border: "none", borderRadius: 12, cursor: "pointer", marginBottom: 2, position: "relative" }}>
+                        <Icon name={item.icon} size={20} color={activo ? COLORS.accentLight : COLORS.textMuted} />
+                        <span style={{ fontSize: 14, fontWeight: activo ? 600 : 400, color: activo ? COLORS.text : COLORS.textSub }}>{item.label}</span>
+                        {item.id === "chat" && chatNoLeidos > 0 && (
+                          <span style={{ marginLeft: "auto", minWidth: 20, height: 20, borderRadius: 10, background: COLORS.accent, fontSize: 10, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>
+                            {chatNoLeidos > 9 ? "9+" : chatNoLeidos}
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+                {/* Logout */}
+                <div style={{ padding: "14px 20px", borderTop: `1px solid ${COLORS.border}`, paddingBottom: "calc(14px + env(safe-area-inset-bottom))" }}>
+                  <button onClick={onLogout}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 12, background: "none", border: "none", cursor: "pointer", padding: "10px 14px", borderRadius: 10, color: COLORS.textMuted }}>
+                    <Icon name="logout" size={18} color={COLORS.textMuted} />
+                    <span style={{ fontSize: 14, fontWeight: 400 }}>Cerrar sesión</span>
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
 
         <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", overscrollBehavior: "none" }}>
           <AnimatePresence mode="wait">{renderPage()}</AnimatePresence>
