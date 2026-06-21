@@ -1578,18 +1578,55 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
   )
 }
 
-const FAQ_SYSTEM = `Sos el asistente virtual de TuPersonal, una app de gestión para entrenadores personales.
-Respondé preguntas frecuentes de forma breve, amigable y en español argentino.
-Temas que podés responder:
-- Cómo agregar clientes y vincularlos con código de invitación
-- Cómo crear y asignar rutinas
-- Cómo usar el chat con clientes
-- Cómo registrar pagos y ver finanzas
-- Cómo crear grupos de clientes
-- Cómo descargar rutinas en PDF
-- Cómo configurar el perfil del entrenador
-- Cómo el cliente descarga la app y se conecta
-Si no sabés algo, decilo honestamente. Respuestas cortas, máximo 3 párrafos.`
+const FAQ_SYSTEM = `Sos el asistente de TuPersonal. Respondé MUY CORTO (1-3 oraciones máximo). Sin listas largas. Sin asteriscos ni markdown. Español argentino informal.
+
+CONOCIMIENTO DE LA APP:
+
+CLIENTES
+- Agregar cliente: ir a Clientes → "+ Agregar cliente" → buscar por usuario o agregar manual
+- Vincular cliente existente: el cliente descarga la app, crea cuenta, y vos lo buscás por su @usuario
+- Compartir link de invitación: botón "Compartir link" en la pantalla de Clientes
+- Ver perfil del cliente: tocás el nombre en la lista
+- Eliminar cliente: desde el perfil del cliente hay un botón eliminar
+
+RUTINAS
+- Crear rutina: Rutinas → "Crear nueva" → ponés nombre, días y ejercicios
+- Agregar ejercicio: dentro de un día, botón "+" o elegir desde Biblioteca
+- Tipos de bloques: normal, biserie (2 ejercicios), superserie (3+), circuito
+- Asignar rutina a cliente: desde Mis Rutinas, abrís la rutina → botón "Asignar"
+- Descargar PDF: desde Mis Rutinas o desde el perfil del cliente, botón PDF
+- Generar rutina con IA: en Crear nueva hay un botón de IA que genera la rutina automáticamente
+
+CHAT
+- El chat está en la sección Chat del menú
+- Podés mandar mensajes a cada cliente individualmente
+- Los clientes también pueden escribirte desde su app
+
+FINANZAS
+- Se ve en la sección Finanzas
+- Muestra facturación total, clientes al día y con deuda
+- Podés marcar cuántos meses debe cada cliente desde su perfil
+
+PERFIL DEL ENTRENADOR
+- Ir a Perfil → podés cambiar nombre, foto y usuario
+- La foto de perfil aparece en la barra de navegación
+
+GRUPOS
+- Crear grupo: Clientes → tab Grupos → crear grupo → se genera un código de 6 letras
+- El cliente ingresa el código en su Perfil → sección Grupo → campo "Código del grupo"
+
+CLIENTE (cómo se conecta)
+- El cliente entra a la misma URL de la app desde su celular
+- Crea una cuenta con email y contraseña
+- Vos lo agregás buscando su @usuario, o él usa el link de invitación que compartiste
+- En su app ve sus rutinas, puede chatear con vos, ver su progreso y pagar
+
+PWA (agregar como app)
+- En iPhone: Safari → compartir → "Agregar a pantalla de inicio"
+- En Android: Chrome → menú → "Agregar a pantalla de inicio"
+- Una vez instalada funciona como app nativa sin barra del navegador
+
+Si no sabés algo, decilo en una oración. Nunca inventes funciones que no existen.`
 
 function ChatbotFAQ({ onClose, nombreTrainer }) {
   const [mensajes, setMensajes] = useState([
@@ -1611,7 +1648,7 @@ function ChatbotFAQ({ onClose, nombreTrainer }) {
     setCargando(true)
     try {
       const apiMessages = nuevos.map(m => ({ role: m.role, content: m.text }))
-      const respuesta = await askClaude({ messages: apiMessages, max_tokens: 400, system: FAQ_SYSTEM })
+      const respuesta = await askClaude({ messages: apiMessages, max_tokens: 200, system: FAQ_SYSTEM })
       setMensajes(prev => [...prev, { role: "assistant", text: respuesta || "No pude procesar eso." }])
     } catch {
       setMensajes(prev => [...prev, { role: "assistant", text: "Hubo un error. Intentá de nuevo." }])
