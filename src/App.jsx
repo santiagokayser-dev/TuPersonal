@@ -1242,6 +1242,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
   const [eliminando, setEliminando] = useState(null)
   const [asignando, setAsignando] = useState(null)
   const [busqueda, setBusqueda] = useState("")
+  const [busquedaAsignar, setBusquedaAsignar] = useState("")
 
   const cargar = async () => {
     setCargando(true)
@@ -1385,7 +1386,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
                           )
                         })}
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button onClick={() => setAsignando(asignando === r.id ? null : r.id)}
+                          <button onClick={() => { setAsignando(asignando === r.id ? null : r.id); setBusquedaAsignar("") }}
                             style={{ flex: 1, background: COLORS.accentSub, border: `1px solid ${COLORS.accent}44`, borderRadius: 10, padding: "8px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                             <Icon name="users" size={13} color={COLORS.accent} /> Asignar
                           </button>
@@ -1401,8 +1402,16 @@ function RutinasPage({ clientes, user, onGuardar }) {
                         {asignando === r.id && (
                           <div style={{ background: COLORS.surface2, borderRadius: 6, padding: 10, display: "flex", flexDirection: "column", gap: 4 }}>
                             <div style={{ fontSize: 11, color: COLORS.textMuted, fontWeight: 500, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Seleccionar clientes</div>
+                            {clientes.length >= 10 && (
+                              <input
+                                value={busquedaAsignar}
+                                onChange={e => setBusquedaAsignar(e.target.value)}
+                                placeholder="Buscar cliente..."
+                                style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "8px 12px", color: COLORS.text, fontSize: 13, outline: "none", width: "100%", boxSizing: "border-box", marginBottom: 4 }}
+                              />
+                            )}
                             {clientes.length === 0 && <div style={{ fontSize: 12, color: COLORS.textMuted }}>No tenés clientes</div>}
-                            {clientes.map(c => {
+                            {clientes.filter(c => !busquedaAsignar || c.nombre.toLowerCase().includes(busquedaAsignar.toLowerCase())).map(c => {
                               const sel = asignadosArr.includes(c.id)
                               return (
                                 <button key={c.id} onClick={() => toggleAsignar(r.id, c.id, asignadosArr)}
