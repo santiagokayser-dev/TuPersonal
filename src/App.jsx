@@ -1578,6 +1578,120 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
   )
 }
 
+const PLANES = [
+  {
+    id: "gratis",
+    nombre: "Gratis",
+    precio: "$0",
+    periodo: "",
+    descripcion: "Para empezar",
+    color: COLORS.textMuted,
+    bg: COLORS.surface,
+    border: COLORS.border,
+    features: [
+      "Hasta 3 clientes",
+      "Rutinas básicas",
+      "Chat con clientes",
+      "PDF de rutinas",
+    ],
+    cta: "Plan actual",
+    ctaDisabled: true,
+  },
+  {
+    id: "pro",
+    nombre: "Pro",
+    precio: "$4.999",
+    periodo: "/mes",
+    descripcion: "Para crecer",
+    color: COLORS.accent,
+    bg: COLORS.accent + "12",
+    border: COLORS.accent + "55",
+    badge: "Popular",
+    features: [
+      "Hasta 20 clientes",
+      "Rutinas ilimitadas",
+      "Generación con IA",
+      "Grupos de clientes",
+      "Agenda y finanzas",
+      "Soporte por WhatsApp",
+    ],
+    cta: "Elegir Pro",
+    ctaDisabled: false,
+  },
+  {
+    id: "elite",
+    nombre: "Elite",
+    precio: "$9.999",
+    periodo: "/mes",
+    descripcion: "Sin límites",
+    color: "#f59e0b",
+    bg: "#f59e0b12",
+    border: "#f59e0b44",
+    features: [
+      "Clientes ilimitados",
+      "Todo lo de Pro",
+      "IA avanzada prioritaria",
+      "Marca personalizada",
+      "Soporte 24/7 dedicado",
+      "Acceso anticipado a novedades",
+    ],
+    cta: "Elegir Elite",
+    ctaDisabled: false,
+  },
+]
+
+function PlanesModal({ onClose }) {
+  return (
+    <motion.div key="planes" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }} transition={{ type: "spring", damping: 28, stiffness: 260 }}
+      style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", background: COLORS.bg }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "calc(14px + env(safe-area-inset-top)) 20px 16px", borderBottom: `1px solid ${COLORS.border}`, background: COLORS.surface, flexShrink: 0 }}>
+        <div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: COLORS.text }}>Planes</div>
+          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>Elegí el plan que mejor se adapta a vos</div>
+        </div>
+        <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <svg width={22} height={22} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      {/* Planes */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+        {PLANES.map(plan => (
+          <div key={plan.id} style={{ background: plan.bg, border: `1.5px solid ${plan.border}`, borderRadius: 18, padding: 20, position: "relative" }}>
+            {plan.badge && (
+              <div style={{ position: "absolute", top: 16, right: 16, background: plan.color, borderRadius: 8, padding: "3px 10px", fontSize: 11, fontWeight: 700, color: "#fff" }}>
+                {plan.badge}
+              </div>
+            )}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: plan.color, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>{plan.nombre}</div>
+              <div style={{ display: "flex", alignItems: "baseline", gap: 2 }}>
+                <span style={{ fontSize: 32, fontWeight: 800, color: COLORS.text, letterSpacing: -1 }}>{plan.precio}</span>
+                <span style={{ fontSize: 14, color: COLORS.textMuted }}>{plan.periodo}</span>
+              </div>
+              <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: 2 }}>{plan.descripcion}</div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8, marginBottom: 18 }}>
+              {plan.features.map((f, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={plan.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <span style={{ fontSize: 13, color: COLORS.textSub }}>{f}</span>
+                </div>
+              ))}
+            </div>
+            <button
+              disabled={plan.ctaDisabled}
+              onClick={() => !plan.ctaDisabled && window.open(`https://wa.me/541122987419?text=Hola, quiero contratar el plan ${plan.nombre} de TuPersonal`, "_blank")}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: plan.ctaDisabled ? COLORS.surface2 : plan.color, color: plan.ctaDisabled ? COLORS.textMuted : plan.id === "gratis" ? "#fff" : "#fff", fontSize: 14, fontWeight: 600, cursor: plan.ctaDisabled ? "default" : "pointer", opacity: plan.ctaDisabled ? 0.7 : 1 }}>
+              {plan.cta}
+            </button>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
 const FAQ_SYSTEM = `Sos el asistente de TuPersonal. Respondé MUY CORTO (1-3 oraciones máximo). Sin listas largas. Sin asteriscos ni markdown. Español argentino informal.
 
 CONOCIMIENTO DE LA APP:
@@ -1715,6 +1829,7 @@ export default function App({ user: initialUser, onLogout }) {
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [chatbotAbierto, setChatbotAbierto] = useState(false)
+  const [planesAbierto, setPlanesAbierto] = useState(false)
   const isMobile = useIsMobile()
   const isPWA = useIsPWA()
 
@@ -1927,6 +2042,12 @@ export default function App({ user: initialUser, onLogout }) {
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="25%" stopColor="#e6683c"/><stop offset="50%" stopColor="#dc2743"/><stop offset="75%" stopColor="#cc2366"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><circle cx="12" cy="12" r="4" stroke="#fff" strokeWidth="1.8" fill="none"/><circle cx="17.5" cy="6.5" r="1.2" fill="#fff"/><rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" strokeWidth="1.8" fill="none"/></svg>
                     <span style={{ fontSize: 14, color: COLORS.textSub }}>@tupersonal.ar</span>
                   </a>
+                  {/* Mejorar plan */}
+                  <button onClick={() => { setDrawerAbierto(false); setPlanesAbierto(true) }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", borderRadius: 12, cursor: "pointer", background: "linear-gradient(135deg, #f59e0b22, #f59e0b11)", border: `1px solid #f59e0b44`, marginBottom: 2 }}>
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <span style={{ fontSize: 14, fontWeight: 600, color: "#f59e0b" }}>Mejorar plan</span>
+                  </button>
                   {/* Chatbot FAQ */}
                   <div style={{ height: 1, background: COLORS.border, margin: "8px 4px" }} />
                   <button onClick={() => { setDrawerAbierto(false); setChatbotAbierto(true) }}
@@ -1981,6 +2102,11 @@ export default function App({ user: initialUser, onLogout }) {
       {/* Chatbot FAQ */}
       <AnimatePresence>
         {chatbotAbierto && <ChatbotFAQ onClose={() => setChatbotAbierto(false)} nombreTrainer={nombreTrainer} />}
+      </AnimatePresence>
+
+      {/* Planes */}
+      <AnimatePresence>
+        {planesAbierto && <PlanesModal onClose={() => setPlanesAbierto(false)} />}
       </AnimatePresence>
 
       {/* Overlay vista previa del cliente */}
