@@ -1259,6 +1259,35 @@ function RutinasPage({ clientes, user, onGuardar }) {
     setRutinas(prev => prev.map(r => r.id === rutinaId ? { ...r, clientes_asignados: nuevos } : r))
   }
 
+  const exportarPDF = (r) => {
+    const doc = new jsPDF()
+    const dias = (() => { try { return typeof r.dias === "string" ? JSON.parse(r.dias) : (r.dias || []) } catch { return [] } })()
+    const asignadosArr = Array.isArray(r.clientes_asignados) ? r.clientes_asignados :
+      (() => { try { return JSON.parse(r.clientes_asignados || "[]") } catch { return [] } })()
+    const nombresClientes = asignadosArr.map(id => clientes.find(c => c.id === id)?.nombre).filter(Boolean).join(", ") || "Sin asignar"
+    doc.setFontSize(18); doc.setTextColor(40, 40, 40)
+    doc.text(r.nombre, 14, 20)
+    doc.setFontSize(11); doc.setTextColor(100)
+    doc.text(`Clientes: ${nombresClientes}`, 14, 28)
+    doc.text(`Fecha: ${new Date().toLocaleDateString("es-AR")}`, 14, 34)
+    let y = 44
+    dias.forEach(dia => {
+      const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || [b]) || dia.ejercicios || []
+      doc.setFontSize(13); doc.setTextColor(40)
+      doc.text(dia.nombre || "Día", 14, y); y += 4
+      autoTable(doc, {
+        startY: y,
+        head: [["Ejercicio", "Series", "Reps", "RIR", "Descanso"]],
+        body: ejercicios.map(e => [e.nombre || "", e.series || "", e.reps || "", e.rir !== undefined ? e.rir : "", e.descanso ? `${e.descanso}s` : ""]),
+        styles: { fontSize: 10, cellPadding: 3 },
+        headStyles: { fillColor: [232, 113, 74] },
+        margin: { left: 14, right: 14 },
+      })
+      y = doc.lastAutoTable.finalY + 10
+    })
+    doc.save(`${r.nombre}.pdf`)
+  }
+
   const getNombreClientes = (asignados) => {
     if (!asignados || !asignados.length) return "Sin asignar"
     const nombres = asignados.map(id => {
@@ -1346,6 +1375,10 @@ function RutinasPage({ clientes, user, onGuardar }) {
                           <button onClick={() => setAsignando(asignando === r.id ? null : r.id)}
                             style={{ flex: 1, background: COLORS.accentSub, border: `1px solid ${COLORS.accent}44`, borderRadius: 10, padding: "8px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                             <Icon name="users" size={13} color={COLORS.accent} /> Asignar
+                          </button>
+                          <button onClick={() => exportarPDF(r)}
+                            style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "8px 0", color: COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
+                            <Icon name="download" size={13} color={COLORS.textSub} /> PDF
                           </button>
                           <button onClick={() => eliminar(r.id)} disabled={eliminando === r.id}
                             style={{ flex: 1, background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 10, padding: "8px 0", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
