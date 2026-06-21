@@ -513,11 +513,11 @@ function Rutina({ perfil }) {
         const abierto = diaAbierto === i
         const ejercicios = dia.bloques?.flatMap(b => b.ejercicios || []) || dia.ejercicios || []
         return (
-          <motion.div key={i} ref={el => diaRefs.current[i] = el} style={{ background: COLORS.surface, borderRadius: 18, border: `1px solid ${abierto ? COLORS.accent + "66" : COLORS.border}`, overflow: "hidden" }}>
+          <div key={i} ref={el => diaRefs.current[i] = el} style={{ background: COLORS.surface, borderRadius: 18, border: `1px solid ${abierto ? COLORS.accent + "66" : COLORS.border}` }}>
             <div onClick={() => {
               const abriendo = diaAbierto !== i
               setDiaAbierto(abriendo ? i : -1)
-              if (abriendo) setTimeout(() => diaRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" }), 120)
+              if (abriendo) setTimeout(() => diaRefs.current[i]?.scrollIntoView({ behavior: "smooth", block: "start" }), 150)
             }}
               style={{ padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
               <div style={{ width: 40, height: 40, borderRadius: 8, background: abierto ? COLORS.accent : COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: abierto ? "#fff" : COLORS.textSub, flexShrink: 0 }}>
@@ -527,60 +527,52 @@ function Rutina({ perfil }) {
                 <div style={T.h3}>{dia.nombre || `Día ${i + 1}`}</div>
                 <div style={{ ...T.body, fontSize: 12, marginTop: 2 }}>{ejercicios.length} ejercicios</div>
               </div>
-              <motion.div animate={{ rotate: abierto ? 90 : 0 }} transition={{ duration: 0.2 }}>
+              <div style={{ transform: `rotate(${abierto ? 90 : 0}deg)`, transition: "transform 0.2s" }}>
                 <Icon name="chevronRight" size={16} color={COLORS.textMuted} />
-              </motion.div>
+              </div>
             </div>
 
-            <AnimatePresence>
-              {abierto && (
-                <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }}
-                  style={{ overflow: "hidden", borderTop: `1px solid ${COLORS.border}` }}>
-                  {ejercicios.map((ej, j) => {
-                    const activo = ejercicioActivo === `${i}-${j}`
-                    const ytUrl = ej.video || `https://www.youtube.com/results?search_query=${encodeURIComponent((ej.nombre || "") + " técnica correcta")}`
-                    return (
-                      <div key={j}>
-                        <div onClick={() => setEjercicioActivo(activo ? null : `${i}-${j}`)}
-                          style={{ padding: "13px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer" }}>
-                          <div style={{ width: 30, height: 30, borderRadius: 9, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: COLORS.accent, flexShrink: 0 }}>{j + 1}</div>
-                          <div style={{ flex: 1 }}>
-                            <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{ej.nombre || "Ejercicio"}</div>
-                            <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-                              {[ej.series && `${ej.series} series`, ej.reps && `${ej.reps} reps`, ej.rir !== undefined && ej.rir !== "" && `RIR ${ej.rir}`, ej.descanso && `${ej.descanso}s`].filter(Boolean).map((tag, k) => (
-                                <span key={k} style={{ fontSize: 11, color: COLORS.textMuted, background: COLORS.surface2, borderRadius: 6, padding: "2px 7px" }}>{tag}</span>
-                              ))}
-                            </div>
+            <div style={{ maxHeight: abierto ? "2000px" : "0", overflow: "hidden", transition: "max-height 0.3s ease" }}>
+              <div style={{ borderTop: `1px solid ${COLORS.border}` }}>
+                {ejercicios.map((ej, j) => {
+                  const activo = ejercicioActivo === `${i}-${j}`
+                  const ytUrl = ej.video || `https://www.youtube.com/results?search_query=${encodeURIComponent((ej.nombre || "") + " técnica correcta")}`
+                  return (
+                    <div key={j}>
+                      <div onClick={() => setEjercicioActivo(activo ? null : `${i}-${j}`)}
+                        style={{ padding: "13px 18px", display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer" }}>
+                        <div style={{ width: 30, height: 30, borderRadius: 9, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: COLORS.accent, flexShrink: 0 }}>{j + 1}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{ej.nombre || "Ejercicio"}</div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
+                            {[ej.series && `${ej.series} series`, ej.reps && `${ej.reps} reps`, ej.rir !== undefined && ej.rir !== "" && `RIR ${ej.rir}`, ej.descanso && `${ej.descanso}s`].filter(Boolean).map((tag, k) => (
+                              <span key={k} style={{ fontSize: 11, color: COLORS.textMuted, background: COLORS.surface2, borderRadius: 6, padding: "2px 7px" }}>{tag}</span>
+                            ))}
                           </div>
-                          <Icon name="chevronRight" size={14} color={COLORS.textMuted} />
                         </div>
-                        <AnimatePresence>
-                          {activo && (
-                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                              style={{ overflow: "hidden", background: COLORS.bg, borderBottom: `1px solid ${COLORS.border}` }}>
-                              <div style={{ padding: "12px 18px", display: "flex", flexDirection: "column", gap: 8 }}>
-                                {ej.notas && <div style={{ fontSize: 13, color: COLORS.textSub, fontStyle: "italic" }}>"{ej.notas}"</div>}
-                                <a href={ytUrl} target="_blank" rel="noopener noreferrer"
-                                  style={{ display: "flex", alignItems: "center", gap: 10, background: "#3a1a1a", borderRadius: 6, padding: "11px 14px", textDecoration: "none" }}>
-                                  <div style={{ width: 30, height: 30, borderRadius: 9, background: "#ef444422", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <Icon name="play" size={13} color={COLORS.red} />
-                                  </div>
-                                  <div>
-                                    <div style={{ fontSize: 13, fontWeight: 500, color: "#fca5a5" }}>Ver técnica</div>
-                                    <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 1 }}>YouTube · {ej.nombre}</div>
-                                  </div>
-                                </a>
-                              </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
+                        <Icon name="chevronRight" size={14} color={COLORS.textMuted} />
                       </div>
-                    )
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
+                      <div style={{ maxHeight: activo ? "400px" : "0", overflow: "hidden", transition: "max-height 0.25s ease", background: COLORS.bg }}>
+                        <div style={{ padding: "12px 18px", display: "flex", flexDirection: "column", gap: 8, borderBottom: `1px solid ${COLORS.border}` }}>
+                          {ej.notas && <div style={{ fontSize: 13, color: COLORS.textSub, fontStyle: "italic" }}>"{ej.notas}"</div>}
+                          <a href={ytUrl} target="_blank" rel="noopener noreferrer"
+                            style={{ display: "flex", alignItems: "center", gap: 10, background: "#3a1a1a", borderRadius: 6, padding: "11px 14px", textDecoration: "none" }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 9, background: "#ef444422", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                              <Icon name="play" size={13} color={COLORS.red} />
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 500, color: "#fca5a5" }}>Ver técnica</div>
+                              <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 1 }}>YouTube · {ej.nombre}</div>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
         )
       })}
     </>
