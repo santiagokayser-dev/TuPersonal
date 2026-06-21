@@ -172,7 +172,7 @@ function ConversacionItem({ c, noLeidos, lastMsg, seleccionado, onClick, cargand
             ? <span style={{ color: C.surface3 }}>—</span>
             : lastMsg
               ? <>{lastMsg.sender === "trainer" && <span style={{ color: C.textMuted }}>Tú: </span>}{lastMsg.texto}</>
-              : <span style={{ fontStyle: "italic" }}>Sin mensajes aún</span>
+              : <span style={{ fontStyle: "italic" }}>Iniciar conversación</span>
           }
         </div>
       </div>
