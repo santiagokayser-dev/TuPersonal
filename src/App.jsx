@@ -2082,7 +2082,8 @@ export default function App({ user: initialUser, onLogout }) {
               <motion.div key="drawer" initial={{ x: "-100%" }} animate={{ x: 0 }} exit={{ x: "-100%" }} transition={{ type: "spring", damping: 28, stiffness: 260 }}
                 style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 280, background: COLORS.surface, zIndex: 201, display: "flex", flexDirection: "column", boxShadow: "4px 0 24px rgba(0,0,0,0.4)" }}>
                 {/* Perfil */}
-                <div style={{ padding: "calc(20px + env(safe-area-inset-top)) 20px 20px", borderBottom: `1px solid ${COLORS.border}` }}>
+                <button onClick={() => { setActivePage("perfil"); setClienteSeleccionado(null); setDrawerAbierto(false) }}
+                  style={{ padding: "calc(20px + env(safe-area-inset-top)) 20px 20px", borderBottom: `1px solid ${COLORS.border}`, background: "none", border: "none", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", width: "100%", textAlign: "left" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 52, height: 52, borderRadius: 18, background: user?.user_metadata?.avatar_url ? "none" : COLORS.accent, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
                       {user?.user_metadata?.avatar_url
@@ -2090,15 +2091,16 @@ export default function App({ user: initialUser, onLogout }) {
                         : (nombreTrainer || "E").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
                       }
                     </div>
-                    <div style={{ minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text, lineHeight: 1.2 }}>{nombreTrainer || "Entrenador"}</div>
                       <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 3 }}>Entrenador personal</div>
                     </div>
+                    <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}><path d="M9 18l6-6-6-6"/></svg>
                   </div>
-                </div>
+                </button>
                 {/* Nav items */}
                 <div style={{ flex: 1, overflowY: "auto", padding: "10px 10px", scrollbarWidth: "none" }}>
-                  {navItems.map(item => {
+                  {navItems.filter(item => item.id !== "perfil").map(item => {
                     const activo = activePage === item.id && !clienteSeleccionado
                     return (
                       <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null); setDrawerAbierto(false) }}
