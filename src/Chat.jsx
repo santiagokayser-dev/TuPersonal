@@ -143,7 +143,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfi
   )
 }
 
-function ConversacionItem({ c, noLeidos, lastMsg, seleccionado, onClick }) {
+function ConversacionItem({ c, noLeidos, lastMsg, seleccionado, onClick, cargando }) {
   const unread = noLeidos[c.id] || 0
   const isSelected = seleccionado?.id === c.id
 
@@ -168,9 +168,11 @@ function ConversacionItem({ c, noLeidos, lastMsg, seleccionado, onClick }) {
           </div>
         </div>
         <div style={{ fontSize: 12, color: unread > 0 ? "#aaa" : C.textMuted, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-          {lastMsg
-            ? <>{lastMsg.sender === "trainer" && <span style={{ color: C.textMuted }}>Tú: </span>}{lastMsg.texto}</>
-            : <span style={{ fontStyle: "italic" }}>Sin mensajes aún</span>
+          {cargando
+            ? <span style={{ color: C.surface3 }}>—</span>
+            : lastMsg
+              ? <>{lastMsg.sender === "trainer" && <span style={{ color: C.textMuted }}>Tú: </span>}{lastMsg.texto}</>
+              : <span style={{ fontStyle: "italic" }}>Sin mensajes aún</span>
           }
         </div>
       </div>
@@ -186,22 +188,25 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
   const [noLeidos, setNoLeidos] = useState({})
   const [lastMessages, setLastMessages] = useState({})
   const [busqueda, setBusqueda] = useState("")
+  const [cargando, setCargando] = useState(true)
   const [isMobile] = useState(() => window.innerWidth < 768)
 
   const esCliente = modo === "cliente"
 
   useEffect(() => {
-    if (esCliente || !user?.id) return
+    if (esCliente || !user?.id) { setCargando(false); return }
     supabase.from("mensajes").select("cliente_id,texto,created_at,sender,leido")
       .eq("trainer_id", user.id).order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (!data) return
-        const last = {}, counts = {}
-        data.forEach(m => {
-          if (!last[m.cliente_id]) last[m.cliente_id] = m
-          if (!m.leido && m.sender === "cliente") counts[m.cliente_id] = (counts[m.cliente_id] || 0) + 1
-        })
-        setLastMessages(last); setNoLeidos(counts)
+        if (data) {
+          const last = {}, counts = {}
+          data.forEach(m => {
+            if (!last[m.cliente_id]) last[m.cliente_id] = m
+            if (!m.leido && m.sender === "cliente") counts[m.cliente_id] = (counts[m.cliente_id] || 0) + 1
+          })
+          setLastMessages(last); setNoLeidos(counts)
+        }
+        setCargando(false)
       })
   }, [user?.id, esCliente])
 
@@ -262,7 +267,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
           </div>
         )}
         {filtrados.map(c => (
-          <ConversacionItem key={c.id} c={c} noLeidos={noLeidos} lastMsg={lastMessages[c.id]} seleccionado={seleccionado} onClick={() => setSeleccionado(c)} />
+          <ConversacionItem key={c.id} c={c} noLeidos={noLeidos} lastMsg={lastMessages[c.id]} seleccionado={seleccionado} onClick={() => setSeleccionado(c)} cargando={cargando} />
         ))}
       </div>
     </div>
