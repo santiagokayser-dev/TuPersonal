@@ -960,7 +960,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar }) {
         </button>
         {TIPOS.slice(1).map(t => (
           <button key={t.id} onClick={() => { agregarBloque(t.id); setBiblioteca(false) }}
-            style={{ flex: 1, background: t.color + "11", border: `0.5px solid ${t.color}44`, borderRadius: 12, padding: "0", height: 42, color: t.color, fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
+            style={{ flex: 1, background: t.color + "11", border: `0.5px solid ${t.color}44`, borderRadius: 12, padding: "0 4px", height: 42, color: t.color, fontSize: 10, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
             + {t.label}
           </button>
         ))}
