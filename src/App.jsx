@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import AgendaReal from "./Agenda"
 import { EJERCICIOS } from "./ejercicios"
@@ -1578,6 +1578,96 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
   )
 }
 
+const FAQ_SYSTEM = `Sos el asistente virtual de TuPersonal, una app de gestión para entrenadores personales.
+Respondé preguntas frecuentes de forma breve, amigable y en español argentino.
+Temas que podés responder:
+- Cómo agregar clientes y vincularlos con código de invitación
+- Cómo crear y asignar rutinas
+- Cómo usar el chat con clientes
+- Cómo registrar pagos y ver finanzas
+- Cómo crear grupos de clientes
+- Cómo descargar rutinas en PDF
+- Cómo configurar el perfil del entrenador
+- Cómo el cliente descarga la app y se conecta
+Si no sabés algo, decilo honestamente. Respuestas cortas, máximo 3 párrafos.`
+
+function ChatbotFAQ({ onClose, nombreTrainer }) {
+  const [mensajes, setMensajes] = useState([
+    { role: "assistant", text: `¡Hola${nombreTrainer ? ", " + nombreTrainer.split(" ")[0] : ""}! 👋 Soy tu asistente de TuPersonal. ¿En qué te puedo ayudar?` }
+  ])
+  const [input, setInput] = useState("")
+  const [cargando, setCargando] = useState(false)
+  const endRef = useRef(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }) }, [mensajes])
+
+  const enviar = async () => {
+    const texto = input.trim()
+    if (!texto || cargando) return
+    const nuevos = [...mensajes, { role: "user", text: texto }]
+    setMensajes(nuevos)
+    setInput("")
+    setCargando(true)
+    try {
+      const apiMessages = nuevos.map(m => ({ role: m.role, content: m.text }))
+      const respuesta = await askClaude({ messages: apiMessages, max_tokens: 400, system: FAQ_SYSTEM })
+      setMensajes(prev => [...prev, { role: "assistant", text: respuesta || "No pude procesar eso." }])
+    } catch {
+      setMensajes(prev => [...prev, { role: "assistant", text: "Hubo un error. Intentá de nuevo." }])
+    }
+    setCargando(false)
+  }
+
+  return (
+    <motion.div key="chatbot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", background: COLORS.bg }}>
+      {/* Header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(14px + env(safe-area-inset-top)) 16px 14px", borderBottom: `1px solid ${COLORS.border}`, background: COLORS.surface, flexShrink: 0 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 12, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>Asistente FAQ</div>
+          <div style={{ fontSize: 11, color: COLORS.textMuted }}>Preguntame sobre TuPersonal</div>
+        </div>
+        <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      {/* Mensajes */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 10, scrollbarWidth: "none" }}>
+        {mensajes.map((m, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+            <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: m.role === "user" ? "18px 4px 18px 18px" : "4px 18px 18px 18px", background: m.role === "user" ? COLORS.accent : COLORS.surface, fontSize: 14, color: m.role === "user" ? "#fff" : COLORS.text, lineHeight: 1.5 }}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {cargando && (
+          <div style={{ display: "flex", justifyContent: "flex-start" }}>
+            <div style={{ padding: "10px 16px", borderRadius: "4px 18px 18px 18px", background: COLORS.surface }}>
+              <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2 }}
+                style={{ fontSize: 18, color: COLORS.textMuted, letterSpacing: 4 }}>···</motion.div>
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      {/* Input */}
+      <div style={{ padding: "12px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom))", borderTop: `1px solid ${COLORS.border}`, display: "flex", gap: 8, background: COLORS.surface, flexShrink: 0 }}>
+        <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && enviar()}
+          placeholder="Escribí tu pregunta..."
+          style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "10px 14px", color: COLORS.text, fontSize: 14, outline: "none" }} />
+        <button onClick={enviar} disabled={!input.trim() || cargando}
+          style={{ width: 42, height: 42, borderRadius: 12, background: input.trim() && !cargando ? COLORS.accent : COLORS.surface2, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: !input.trim() || cargando ? 0.4 : 1 }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function App({ user: initialUser, onLogout }) {
   const [activePage, setActivePage] = useState("inicio")
   const [clienteSeleccionado, setClienteSeleccionado] = useState(null)
@@ -1587,6 +1677,7 @@ export default function App({ user: initialUser, onLogout }) {
   const [user, setUser] = useState(initialUser)
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
+  const [chatbotAbierto, setChatbotAbierto] = useState(false)
   const isMobile = useIsMobile()
   const isPWA = useIsPWA()
 
@@ -1799,6 +1890,13 @@ export default function App({ user: initialUser, onLogout }) {
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="25%" stopColor="#e6683c"/><stop offset="50%" stopColor="#dc2743"/><stop offset="75%" stopColor="#cc2366"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><circle cx="12" cy="12" r="4" stroke="#fff" strokeWidth="1.8" fill="none"/><circle cx="17.5" cy="6.5" r="1.2" fill="#fff"/><rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" strokeWidth="1.8" fill="none"/></svg>
                     <span style={{ fontSize: 14, color: COLORS.textSub }}>@tupersonal.ar</span>
                   </a>
+                  {/* Chatbot FAQ */}
+                  <div style={{ height: 1, background: COLORS.border, margin: "8px 4px" }} />
+                  <button onClick={() => { setDrawerAbierto(false); setChatbotAbierto(true) }}
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", borderRadius: 12, cursor: "pointer", background: COLORS.accent + "18", border: "none" }}>
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: COLORS.accent }}>Asistente FAQ</span>
+                  </button>
                 </div>
                 {/* Logout */}
                 <div style={{ padding: "14px 20px", borderTop: `1px solid ${COLORS.border}`, paddingBottom: "calc(14px + env(safe-area-inset-bottom))" }}>
@@ -1842,6 +1940,11 @@ export default function App({ user: initialUser, onLogout }) {
           </nav>
         )}
       </div>
+
+      {/* Chatbot FAQ */}
+      <AnimatePresence>
+        {chatbotAbierto && <ChatbotFAQ onClose={() => setChatbotAbierto(false)} nombreTrainer={nombreTrainer} />}
+      </AnimatePresence>
 
       {/* Overlay vista previa del cliente */}
       <AnimatePresence>
