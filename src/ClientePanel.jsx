@@ -939,6 +939,39 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
   const [mensaje, setMensaje] = useState("")
   const [error, setError] = useState("")
 
+  // Grupos
+  const [grupoActual, setGrupoActual] = useState(null)
+  const [codigoInput, setCodigoInput] = useState("")
+  const [uniendose, setUniendose] = useState(false)
+  const [grupoMsg, setGrupoMsg] = useState("")
+
+  useEffect(() => {
+    if (!perfil?.grupo_id) return
+    supabase.from("grupos").select("nombre").eq("id", perfil.grupo_id).maybeSingle()
+      .then(({ data }) => { if (data) setGrupoActual(data.nombre) })
+  }, [perfil?.grupo_id])
+
+  const unirseGrupo = async () => {
+    const codigo = codigoInput.trim().toUpperCase()
+    if (!codigo) return
+    setUniendose(true)
+    setGrupoMsg("")
+    const { data: grupo, error: gErr } = await supabase.from("grupos").select("id, nombre").eq("codigo", codigo).maybeSingle()
+    if (gErr || !grupo) { setGrupoMsg("Código incorrecto"); setUniendose(false); return }
+    const { error: uErr } = await supabase.from("clientes").update({ grupo_id: grupo.id }).eq("id", perfil.id)
+    if (uErr) { setGrupoMsg("No se pudo unir: " + uErr.message); setUniendose(false); return }
+    setGrupoActual(grupo.nombre)
+    onActualizar({ ...perfil, grupo_id: grupo.id })
+    setCodigoInput("")
+    setGrupoMsg("¡Te uniste a " + grupo.nombre + "!")
+    setUniendose(false)
+  }
+
+  const salirGrupo = async () => {
+    const { error: uErr } = await supabase.from("clientes").update({ grupo_id: null }).eq("id", perfil.id)
+    if (!uErr) { setGrupoActual(null); onActualizar({ ...perfil, grupo_id: null }) }
+  }
+
   const guardar = async () => {
     if (!datos.nombre.trim()) return setError("Ingresá tu nombre")
     setGuardando(true)
@@ -1072,6 +1105,44 @@ function PerfilClienteEditar({ user, perfil, onActualizar, onLogout }) {
         style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "14px 0", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.6 : 1 }}>
         {guardando ? "Guardando..." : "Guardar cambios"}
       </motion.button>
+
+      {/* Grupo */}
+      {perfil?.id && (
+        <div style={{ background: COLORS.surface, borderRadius: 12, padding: 16, border: `1px solid ${COLORS.border}` }}>
+          <div style={{ ...T.label, marginBottom: 10 }}>Grupo</div>
+          {grupoMsg && (
+            <div style={{ fontSize: 13, color: grupoMsg.startsWith("¡") ? COLORS.green : COLORS.red, background: (grupoMsg.startsWith("¡") ? COLORS.green : COLORS.red) + "11", borderRadius: 8, padding: "8px 12px", marginBottom: 10 }}>
+              {grupoMsg}
+            </div>
+          )}
+          {grupoActual ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{grupoActual}</div>
+                <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>Grupo actual</div>
+              </div>
+              <button onClick={salirGrupo}
+                style={{ background: COLORS.red + "18", border: `1px solid ${COLORS.red}33`, borderRadius: 8, padding: "6px 12px", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
+                Salir
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: "flex", gap: 8 }}>
+              <input
+                placeholder="Código del grupo"
+                value={codigoInput}
+                onChange={e => setCodigoInput(e.target.value.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 6))}
+                onKeyDown={e => e.key === "Enter" && unirseGrupo()}
+                style={{ ...inputStyle, marginBottom: 0, flex: 1, letterSpacing: 2, fontWeight: 700, textTransform: "uppercase" }}
+              />
+              <motion.button whileTap={{ scale: 0.95 }} onClick={unirseGrupo} disabled={uniendose || !codigoInput.trim()}
+                style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "0 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: uniendose || !codigoInput.trim() ? 0.5 : 1, whiteSpace: "nowrap" }}>
+                {uniendose ? "..." : "Unirme"}
+              </motion.button>
+            </div>
+          )}
+        </div>
+      )}
     </>
   )
 }

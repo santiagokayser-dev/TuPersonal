@@ -648,12 +648,17 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
     setGrupos(prev => prev.filter(g => g.id !== id))
   }
 
-  const copiarCodigo = async (codigo, id) => {
-    try {
-      await navigator.clipboard.writeText(codigo)
-      setGrupoCopiado(id)
-      setTimeout(() => setGrupoCopiado(null), 2000)
-    } catch {}
+  const copiarCodigo = (codigo, id) => {
+    const mostrarOk = () => { setGrupoCopiado(id); setTimeout(() => setGrupoCopiado(null), 2000) }
+    if (navigator.share) {
+      navigator.share({ title: "TuPersonal — código de grupo", text: `Usá el código ${codigo} para unirte a mi grupo en TuPersonal.` }).then(mostrarOk).catch(() => {})
+    } else if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(codigo).then(mostrarOk).catch(() => {})
+    } else {
+      const el = document.createElement("textarea"); el.value = codigo; el.style.cssText = "position:fixed;opacity:0"
+      document.body.appendChild(el); el.focus(); el.select(); document.execCommand("copy"); document.body.removeChild(el)
+      mostrarOk()
+    }
   }
 
   const inputStyle = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
