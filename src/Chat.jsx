@@ -266,9 +266,20 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
             Agregá clientes para chatear
           </div>
         )}
-        {filtrados.map(c => (
-          <ConversacionItem key={c.id} c={c} noLeidos={noLeidos} lastMsg={lastMessages[c.id]} seleccionado={seleccionado} onClick={() => setSeleccionado(c)} cargando={cargando} />
-        ))}
+        {cargando && clientes.length > 0
+          ? clientes.map((_, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 14px" }}>
+                <div style={{ width: 40, height: 40, borderRadius: 13, background: C.surface3, flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ width: "45%", height: 12, borderRadius: 6, background: C.surface3, marginBottom: 7 }} />
+                  <div style={{ width: "65%", height: 10, borderRadius: 6, background: C.surface2 }} />
+                </div>
+              </div>
+            ))
+          : filtrados.map(c => (
+              <ConversacionItem key={c.id} c={c} noLeidos={noLeidos} lastMsg={lastMessages[c.id]} seleccionado={seleccionado} onClick={() => setSeleccionado(c)} cargando={cargando} />
+            ))
+        }
       </div>
     </div>
   )
