@@ -219,11 +219,13 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
               style={{ padding: "10px 0", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderBottom: i < Math.min(clientes.length, 5) - 1 ? `1px solid ${COLORS.border}` : "none" }}>
               <div style={{ width: 28, height: 28, borderRadius: 6, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: COLORS.textSub, flexShrink: 0 }}>{c.ini}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{c.nombre}</div>
+                <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</div>
+                {c.objetivo && <div style={{ fontSize: 12, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>{c.objetivo}</div>}
               </div>
-              <span style={{ fontSize: 12, color: COLORS.textMuted }}>{c.objetivo || ""}</span>
-              {c.precio && <span style={{ fontSize: 13, color: COLORS.textSub, fontWeight: 500 }}>${Number(c.precio).toLocaleString("es-AR")}</span>}
-              <span style={{ fontSize: 11, fontWeight: 500, color: c.estadoColor }}>{c.estado}</span>
+              <div style={{ flexShrink: 0, textAlign: "right" }}>
+                {c.precio && <div style={{ fontSize: 13, color: COLORS.textSub, fontWeight: 500 }}>${Number(c.precio).toLocaleString("es-AR")}</div>}
+                <div style={{ fontSize: 11, fontWeight: 500, color: c.estadoColor }}>{c.estado}</div>
+              </div>
             </div>
           ))}
         </div>
