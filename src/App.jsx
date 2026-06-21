@@ -1241,6 +1241,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
   const [expandida, setExpandida] = useState(null)
   const [eliminando, setEliminando] = useState(null)
   const [asignando, setAsignando] = useState(null)
+  const [busqueda, setBusqueda] = useState("")
 
   const cargar = async () => {
     setCargando(true)
@@ -1323,6 +1324,12 @@ function RutinasPage({ clientes, user, onGuardar }) {
 
       {tab === "lista" && (
         <motion.div key="lista" initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <input
+            value={busqueda}
+            onChange={e => setBusqueda(e.target.value)}
+            placeholder="Buscar rutina..."
+            style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "10px 14px", color: COLORS.text, fontSize: 14, outline: "none", width: "100%", boxSizing: "border-box" }}
+          />
           {cargando && <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, padding: 20 }}>Cargando...</div>}
           {!cargando && rutinas.length === 0 && (
             <div style={{ background: COLORS.surface, borderRadius: 8, padding: 24, border: `0.5px dashed ${COLORS.border}`, textAlign: "center" }}>
@@ -1333,7 +1340,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
               </button>
             </div>
           )}
-          {rutinas.map((r) => {
+          {rutinas.filter(r => !busqueda || r.nombre.toLowerCase().includes(busqueda.toLowerCase())).map((r) => {
             const dias = (() => { try { return typeof r.dias === "string" ? JSON.parse(r.dias) : (r.dias || []) } catch { return [] } })()
             const abierta = expandida === r.id
             const asignadosArr = Array.isArray(r.clientes_asignados) ? r.clientes_asignados :
