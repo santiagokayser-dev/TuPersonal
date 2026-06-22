@@ -1,27 +1,34 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" })
 
-  const { access_token, title, unit_price, currency_id, back_url } = req.body || {}
-  if (!access_token || !unit_price) return res.status(400).json({ error: "Missing required fields" })
+  const token = process.env.MP_ACCESS_TOKEN
+  if (!token) return res.status(500).json({ error: "MP_ACCESS_TOKEN no configurado" })
+
+  const { title, unit_price, currency_id } = req.body || {}
+  if (!unit_price) return res.status(400).json({ error: "Falta unit_price" })
+
+  const backUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "https://tu-personal-dcef.vercel.app"
 
   try {
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${access_token}`,
+        "Authorization": `Bearer ${token}`,
       },
       body: JSON.stringify({
         items: [{
-          title: title || "Plan mensual entrenamiento personal",
+          title: title || "Plan TuPersonal",
           quantity: 1,
           unit_price: Number(unit_price),
           currency_id: currency_id || "ARS",
         }],
         back_urls: {
-          success: back_url || "https://tu-personal-dcef.vercel.app",
-          failure: back_url || "https://tu-personal-dcef.vercel.app",
-          pending: back_url || "https://tu-personal-dcef.vercel.app",
+          success: backUrl,
+          failure: backUrl,
+          pending: backUrl,
         },
         auto_return: "approved",
       }),
@@ -30,6 +37,6 @@ export default async function handler(req, res) {
     if (!response.ok) return res.status(response.status).json(data)
     res.status(200).json({ init_point: data.init_point })
   } catch {
-    res.status(502).json({ error: "Failed to reach Mercado Pago API" })
+    res.status(502).json({ error: "No se pudo conectar con Mercado Pago" })
   }
 }

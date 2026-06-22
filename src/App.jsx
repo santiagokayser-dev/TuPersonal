@@ -1617,6 +1617,7 @@ const PLANES = [
     ],
     cta: "Elegir Pro",
     ctaDisabled: false,
+    unitPrice: 4999,
   },
   {
     id: "elite",
@@ -1637,10 +1638,37 @@ const PLANES = [
     ],
     cta: "Elegir Elite",
     ctaDisabled: false,
+    unitPrice: 9999,
   },
 ]
 
 function PlanesModal({ onClose }) {
+  const [loading, setLoading] = useState(null)
+  const [error, setError] = useState(null)
+
+  async function activarPlan(plan) {
+    if (plan.ctaDisabled) return
+    setLoading(plan.id)
+    setError(null)
+    try {
+      const res = await fetch("/api/mp-preference", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: `TuPersonal ${plan.nombre} — ${plan.precio}${plan.periodo}`,
+          unit_price: plan.unitPrice,
+          currency_id: "ARS",
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Error al crear preferencia")
+      window.location.href = data.init_point
+    } catch (e) {
+      setError(e.message)
+      setLoading(null)
+    }
+  }
+
   return (
     <motion.div key="planes" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }} transition={{ type: "spring", damping: 28, stiffness: 260 }}
       style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", background: COLORS.bg }}>
@@ -1656,6 +1684,11 @@ function PlanesModal({ onClose }) {
       </div>
       {/* Planes */}
       <div style={{ flex: 1, overflowY: "auto", padding: "20px 16px", display: "flex", flexDirection: "column", gap: 14, scrollbarWidth: "none", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+        {error && (
+          <div style={{ background: "#ff444422", border: "1px solid #ff444455", borderRadius: 10, padding: "10px 14px", fontSize: 13, color: "#ff6666" }}>
+            {error}
+          </div>
+        )}
         {PLANES.map(plan => (
           <div key={plan.id} style={{ background: plan.bg, border: `1.5px solid ${plan.border}`, borderRadius: 18, padding: 20, position: "relative" }}>
             {plan.badge && (
@@ -1680,10 +1713,10 @@ function PlanesModal({ onClose }) {
               ))}
             </div>
             <button
-              disabled={plan.ctaDisabled}
-              onClick={() => !plan.ctaDisabled && window.open(`https://wa.me/541122987419?text=Hola, quiero contratar el plan ${plan.nombre} de TuPersonal`, "_blank")}
-              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: plan.ctaDisabled ? COLORS.surface2 : plan.color, color: plan.ctaDisabled ? COLORS.textMuted : plan.id === "gratis" ? "#fff" : "#fff", fontSize: 14, fontWeight: 600, cursor: plan.ctaDisabled ? "default" : "pointer", opacity: plan.ctaDisabled ? 0.7 : 1 }}>
-              {plan.cta}
+              disabled={plan.ctaDisabled || loading === plan.id}
+              onClick={() => activarPlan(plan)}
+              style={{ width: "100%", padding: "13px 0", borderRadius: 12, border: "none", background: plan.ctaDisabled ? COLORS.surface2 : plan.color, color: plan.ctaDisabled ? COLORS.textMuted : "#fff", fontSize: 14, fontWeight: 600, cursor: (plan.ctaDisabled || loading === plan.id) ? "default" : "pointer", opacity: (plan.ctaDisabled || loading === plan.id) ? 0.7 : 1 }}>
+              {loading === plan.id ? "Redirigiendo..." : plan.cta}
             </button>
           </div>
         ))}
