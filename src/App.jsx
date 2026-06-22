@@ -1499,6 +1499,7 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
   const [asignando, setAsignando] = useState(null)
   const [busqueda, setBusqueda] = useState("")
   const [busquedaAsignar, setBusquedaAsignar] = useState("")
+  const [rutinaEditando, setRutinaEditando] = useState(null)
 
   const cargar = async () => {
     setCargando(true)
@@ -1571,8 +1572,8 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
       </div>
 
       <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${COLORS.border}` }}>
-        {[["lista", "Mis rutinas"], ["crear", "Crear nueva"]].map(([id, label]) => (
-          <button key={id} onClick={() => setTab(id)}
+        {[["lista", "Mis rutinas"], ["crear", rutinaEditando ? `Editar` : "Crear nueva"]].map(([id, label]) => (
+          <button key={id} onClick={() => { setTab(id); if (id === "lista") { setRutinaEditando(null); setExpandida(null) } }}
             style={{ flex: 1, padding: "9px 0", borderRadius: 11, border: "none", cursor: "pointer", fontSize: 13, fontWeight: 500, background: tab === id ? COLORS.accent : "transparent", color: tab === id ? "#fff" : COLORS.textSub, transition: "all 0.2s" }}>
             {label}
           </button>
@@ -1604,7 +1605,7 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
               (() => { try { return JSON.parse(r.clientes_asignados || "[]") } catch { return [] } })()
             return (
               <motion.div key={r.id} layout style={{ background: COLORS.surface, borderRadius: 8, border: `1px solid ${COLORS.border}`, overflow: "hidden" }}>
-                <div onClick={() => setExpandida(abierta ? null : r.id)}
+                <div onClick={() => { setRutinaEditando(r); setTab("crear") }}
                   style={{ padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, cursor: "pointer" }}>
                   <div style={{ width: 40, height: 40, borderRadius: 6, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <Icon name="dumbbell" size={18} color={COLORS.accent} />
@@ -1703,9 +1704,26 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
 
       {tab === "crear" && (
         <motion.div key="crear" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <CreadorRutinasNuevo clientes={clientes} planActual={planActual} onMejorarPlan={onMejorarPlan} onGuardar={async (datos) => {
-            await onGuardar(datos)
+          <CreadorRutinasNuevo
+            key={rutinaEditando?.id || "nueva"}
+            clientes={clientes}
+            planActual={planActual}
+            onMejorarPlan={onMejorarPlan}
+            rutinaInicial={rutinaEditando}
+            onEliminar={async () => {
+              if (!rutinaEditando?.id) return
+              await eliminar(rutinaEditando.id)
+              setRutinaEditando(null)
+              setTab("lista")
+            }}
+            onGuardar={async (datos) => {
+            if (rutinaEditando?.id) {
+              await supabase.from("rutinas").update({ nombre: datos.nombre, dias: JSON.stringify(datos.dias), clientes_asignados: datos.clientesAsignados }).eq("id", rutinaEditando.id)
+            } else {
+              await onGuardar(datos)
+            }
             await cargar()
+            setRutinaEditando(null)
             setTab("lista")
           }} />
         </motion.div>

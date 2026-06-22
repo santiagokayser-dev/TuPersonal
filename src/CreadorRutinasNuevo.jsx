@@ -510,9 +510,14 @@ function generarPDF(nombre, dias) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActual = "gratis", onMejorarPlan }) {
-  const [nombre, setNombre] = useState("")
-  const [dias, setDias] = useState([{ nombre: "Día A", bloques: [] }, { nombre: "Día B", bloques: [] }, { nombre: "Día C", bloques: [] }])
+export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActual = "gratis", onMejorarPlan, rutinaInicial = null, onEliminar }) {
+  const esEdicion = !!rutinaInicial?.id
+  const diasIniciales = (() => {
+    if (!rutinaInicial) return [{ nombre: "Día A", bloques: [] }, { nombre: "Día B", bloques: [] }, { nombre: "Día C", bloques: [] }]
+    try { return typeof rutinaInicial.dias === "string" ? JSON.parse(rutinaInicial.dias) : (rutinaInicial.dias || []) } catch { return [] }
+  })()
+  const [nombre, setNombre] = useState(rutinaInicial?.nombre || "")
+  const [dias, setDias] = useState(diasIniciales)
   const [diaActivo, setDiaActivo] = useState(0)
   const [clientesAsignados, setClientesAsignados] = useState([])
   const [guardando, setGuardando] = useState(false)
@@ -582,8 +587,14 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
 
       {/* ── Título + acciones superiores */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-        <div style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: -0.5 }}>Crear rutina</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: -0.5 }}>{esEdicion ? "Editar rutina" : "Crear rutina"}</div>
         <div style={{ display: "flex", gap: 8 }}>
+          {esEdicion && (
+            <button onClick={onEliminar}
+              style={{ height: 38, padding: "0 14px", background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 10, color: "#ef4444", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
+              Eliminar
+            </button>
+          )}
           <button onClick={() => generarPDF(nombre, dias)}
             style={{ height: 38, padding: "0 14px", background: C.surface, border: `1px solid ${C.border}`, borderRadius: 10, color: C.textSub, fontSize: 13, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
             <Ico d="M12 3v12M8 11l4 4 4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2" size={14} color={C.textSub} />
