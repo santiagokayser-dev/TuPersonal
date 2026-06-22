@@ -889,9 +889,13 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                 onClick={e => { if (e.target === e.currentTarget) { setMostrarForm(false); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") } }}>
                 <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 280 }}
                   style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "20px 16px", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
-                  {/* Handle */}
-                  <div style={{ width: 36, height: 4, borderRadius: 2, background: COLORS.border2, margin: "0 auto 18px" }} />
-                  <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, marginBottom: 16 }}>Agregar cliente</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text }}>Agregar cliente</div>
+                    <button onClick={() => { setMostrarForm(false); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") }}
+                      style={{ background: COLORS.surface2, border: "none", borderRadius: 8, width: 32, height: 32, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
+                  </div>
 
                   {/* Tabs */}
                   <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
