@@ -260,7 +260,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
   )
 }
 
-function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar }) {
+function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, planActual = "gratis", onMejorarPlan }) {
   const [tab, setTab] = useState("info")
   const [editando, setEditando] = useState(false)
   const [datos, setDatos] = useState(cliente)
@@ -521,11 +521,18 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar })
                       </div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
+                      {planActual === "gratis" ? (
+                        <motion.button whileTap={{ scale: 0.96 }} onClick={() => onMejorarPlan?.()}
+                          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 10, padding: "9px 0", color: COLORS.textMuted, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                          🔒 Ajustar con IA <span style={{ fontSize: 10, background: "#f59e0b22", color: "#f59e0b", borderRadius: 4, padding: "1px 5px", marginLeft: 2 }}>Pro</span>
+                        </motion.button>
+                      ) : (
                       <motion.button whileTap={{ scale: 0.96 }} onClick={() => ajustarConIA(r)} disabled={iaLoading[r.id]}
                         style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.accentSub, border: `1px solid ${COLORS.accent}44`, borderRadius: 10, padding: "9px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: iaLoading[r.id] ? 0.6 : 1 }}>
                         <Icon name="sparkle" size={13} color={COLORS.accent} />
                         {iaLoading[r.id] ? "Analizando..." : "Ajustar con IA"}
                       </motion.button>
+                      )}
                       <motion.button whileTap={{ scale: 0.96 }} onClick={() => exportarPDF(r)}
                         style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "9px 0", color: COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
                         <Icon name="download" size={13} color={COLORS.textSub} />
@@ -1483,7 +1490,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
   )
 }
 
-function RutinasPage({ clientes, user, onGuardar }) {
+function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejorarPlan }) {
   const [tab, setTab] = useState("lista")
   const [rutinas, setRutinas] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -1696,7 +1703,7 @@ function RutinasPage({ clientes, user, onGuardar }) {
 
       {tab === "crear" && (
         <motion.div key="crear" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <CreadorRutinasNuevo clientes={clientes} onGuardar={async (datos) => {
+          <CreadorRutinasNuevo clientes={clientes} planActual={planActual} onMejorarPlan={onMejorarPlan} onGuardar={async (datos) => {
             await onGuardar(datos)
             await cargar()
             setTab("lista")
@@ -2152,6 +2159,8 @@ export default function App({ user: initialUser, onLogout }) {
           cliente={clienteSeleccionado}
           onBack={() => setClienteSeleccionado(null)}
           onPreview={() => setPreviewCliente(clienteSeleccionado)}
+          planActual={planActual}
+          onMejorarPlan={() => setPlanesAbierto(true)}
           onEliminar={(id) => {
             setClientes(prev => prev.filter(c => c.id !== id))
             setClienteSeleccionado(null)
@@ -2190,7 +2199,7 @@ export default function App({ user: initialUser, onLogout }) {
         onEliminarCliente={(id) => setClientes(prev => prev.filter(c => c.id !== id))}
         onMejorarPlan={() => setPlanesAbierto(true)}
       />,
-      rutinas: <RutinasPage clientes={clientes} user={user} onGuardar={async ({ nombre, dias, clientesAsignados }) => {
+      rutinas: <RutinasPage clientes={clientes} user={user} planActual={planActual} onMejorarPlan={() => setPlanesAbierto(true)} onGuardar={async ({ nombre, dias, clientesAsignados }) => {
         const { error } = await supabase.from("rutinas").insert({
           trainer_id: user?.id,
           nombre,

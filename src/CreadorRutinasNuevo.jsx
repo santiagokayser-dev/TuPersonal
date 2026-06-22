@@ -510,7 +510,7 @@ function generarPDF(nombre, dias) {
 }
 
 // ── Main Component ────────────────────────────────────────────────────────────
-export default function CreadorRutinasNuevo({ clientes = [], onGuardar }) {
+export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActual = "gratis", onMejorarPlan }) {
   const [nombre, setNombre] = useState("")
   const [dias, setDias] = useState([{ nombre: "Día A", bloques: [] }, { nombre: "Día B", bloques: [] }, { nombre: "Día C", bloques: [] }])
   const [diaActivo, setDiaActivo] = useState(0)
@@ -601,17 +601,31 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar }) {
         style={{ ...inp, fontSize: 16, padding: "13px 16px", borderRadius: 14, fontWeight: 700, marginBottom: 12 }} />
 
       {/* ── Botón IA */}
-      <button onClick={() => setAiPanel(v => !v)}
-        style={{ background: aiPanel ? "#1a1025" : C.surface, border: `1px solid ${aiPanel ? "#7c3aed55" : C.border}`, borderRadius: 14, padding: "12px 16px", marginBottom: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: "#7c3aed22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>✨</div>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: aiPanel ? "#c4b5fd" : C.text }}>Generar con IA</div>
-          <div style={{ fontSize: 12, color: aiPanel ? "#818cf8" : C.textMuted, marginTop: 1 }}>Describís el objetivo y la IA arma todo</div>
-        </div>
-        <div style={{ marginLeft: "auto" }}>
-          <Ico d={aiPanel ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"} size={16} color={aiPanel ? "#818cf8" : C.textMuted} />
-        </div>
-      </button>
+      {planActual === "gratis" ? (
+        <button onClick={() => onMejorarPlan?.()}
+          style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "12px 16px", marginBottom: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left", opacity: 0.75 }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "#33333344", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>🔒</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: C.textSub, display: "flex", alignItems: "center", gap: 8 }}>
+              Generar con IA
+              <span style={{ fontSize: 10, background: "#f59e0b22", color: "#f59e0b", borderRadius: 4, padding: "2px 6px", fontWeight: 700 }}>Pro</span>
+            </div>
+            <div style={{ fontSize: 12, color: C.textMuted, marginTop: 1 }}>Disponible en plan Pro y Elite</div>
+          </div>
+        </button>
+      ) : (
+        <button onClick={() => setAiPanel(v => !v)}
+          style={{ background: aiPanel ? "#1a1025" : C.surface, border: `1px solid ${aiPanel ? "#7c3aed55" : C.border}`, borderRadius: 14, padding: "12px 16px", marginBottom: 12, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, textAlign: "left" }}>
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: "#7c3aed22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>✨</div>
+          <div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: aiPanel ? "#c4b5fd" : C.text }}>Generar con IA</div>
+            <div style={{ fontSize: 12, color: aiPanel ? "#818cf8" : C.textMuted, marginTop: 1 }}>Describís el objetivo y la IA arma todo</div>
+          </div>
+          <div style={{ marginLeft: "auto" }}>
+            <Ico d={aiPanel ? "M18 15l-6-6-6 6" : "M6 9l6 6 6-6"} size={16} color={aiPanel ? "#818cf8" : C.textMuted} />
+          </div>
+        </button>
+      )}
 
       <AnimatePresence>
         {aiPanel && <GeneradorAI onRutinaGenerada={handleRutinaAI} clientes={clientes} onCerrar={() => setAiPanel(false)} />}
