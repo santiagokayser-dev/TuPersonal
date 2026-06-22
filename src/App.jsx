@@ -9,6 +9,7 @@ import ClientePanel from "./ClientePanel"
 import Chat from "./Chat"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
+import ConfirmModal from "./ConfirmModal"
 
 const AI_KEY = import.meta.env.VITE_ANTHROPIC_KEY
 
@@ -266,6 +267,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
   const [datos, setDatos] = useState(cliente)
   const [guardando, setGuardando] = useState(false)
   const [eliminando, setEliminando] = useState(false)
+  const [confirmFn, setConfirmFn] = useState(null)
   const [rutinas, setRutinas] = useState([])
   const [cargandoRutinas, setCargandoRutinas] = useState(false)
   const [iaResultado, setIaResultado] = useState({})
@@ -383,7 +385,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
             style={{ background: editando ? COLORS.accent : COLORS.surface, border: `1px solid ${editando ? COLORS.accent : COLORS.border}`, borderRadius: 6, padding: "8px 14px", color: editando ? "#fff" : COLORS.textSub, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
             {editando ? "Cancelar" : "Editar"}
           </button>
-          <button onClick={eliminarCliente} disabled={eliminando}
+          <button onClick={() => setConfirmFn(() => eliminarCliente)} disabled={eliminando}
             style={{ background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 6, padding: "8px 14px", color: COLORS.red, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
             {eliminando ? "..." : "Eliminar"}
           </button>
@@ -592,6 +594,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
           )}
         </motion.div>
       </AnimatePresence>
+      <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
     </motion.div>
   )
 }
@@ -622,6 +625,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
   const [busqError, setBusqError] = useState("")
   const [buscando, setBuscando] = useState(false)
   const [tab, setTab] = useState("clientes")
+  const [confirmFn, setConfirmFn] = useState(null)
 
   // Grupos state
   const [grupos, setGrupos] = useState([])
@@ -870,7 +874,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                       style={{ background: grupoCopiado === g.id ? COLORS.green + "22" : COLORS.accentSub, border: `1px solid ${grupoCopiado === g.id ? COLORS.green : COLORS.accent}33`, borderRadius: 10, padding: "6px 12px", color: grupoCopiado === g.id ? COLORS.green : COLORS.accentLight, fontSize: 13, fontWeight: 700, cursor: "pointer", letterSpacing: 1.5, fontFamily: "monospace" }}>
                       {grupoCopiado === g.id ? "¡Copiado!" : g.codigo}
                     </motion.button>
-                    <button onClick={() => eliminarGrupo(g.id)}
+                    <button onClick={() => setConfirmFn(() => () => eliminarGrupo(g.id))}
                       style={{ background: "none", border: "none", cursor: "pointer", padding: 4, color: COLORS.textMuted, fontSize: 16, lineHeight: 1 }}>✕</button>
                   </div>
                 </div>
@@ -1053,7 +1057,7 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                       style={{ position: "absolute", right: 0, top: "100%", background: COLORS.surface, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: 4, zIndex: 50, minWidth: 150, boxShadow: "0 4px 16px #00000040" }}>
                       {[
                         { label: "Ver perfil", action: () => { setMenuAbierto(null); onVerPerfil(c) } },
-                        { label: eliminando === c.id ? "Eliminando..." : "Eliminar", danger: true, action: () => eliminarCliente(c) },
+                        { label: eliminando === c.id ? "Eliminando..." : "Eliminar", danger: true, action: () => { setMenuAbierto(null); setConfirmFn(() => () => eliminarCliente(c)) } },
                       ].map((item) => (
                         <button key={item.label} onClick={item.action}
                           style={{ display: "block", width: "100%", padding: "8px 12px", background: "none", border: "none", borderRadius: 4, color: item.danger ? COLORS.red : COLORS.text, fontSize: 13, cursor: "pointer", textAlign: "left" }}>
@@ -1486,6 +1490,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
           )}
         </motion.div>
       )}
+      <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
     </>
   )
 }
@@ -1500,6 +1505,7 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
   const [busqueda, setBusqueda] = useState("")
   const [busquedaAsignar, setBusquedaAsignar] = useState("")
   const [rutinaEditando, setRutinaEditando] = useState(null)
+  const [confirmFn, setConfirmFn] = useState(null)
 
   const cargar = async () => {
     setCargando(true)
@@ -1651,7 +1657,7 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
                             style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "8px 0", color: COLORS.textSub, fontSize: 12, fontWeight: 500, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 5 }}>
                             <Icon name="download" size={13} color={COLORS.textSub} /> PDF
                           </button>
-                          <button onClick={() => eliminar(r.id)} disabled={eliminando === r.id}
+                          <button onClick={() => setConfirmFn(() => () => eliminar(r.id))} disabled={eliminando === r.id}
                             style={{ flex: 1, background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 10, padding: "8px 0", color: COLORS.red, fontSize: 12, fontWeight: 500, cursor: "pointer" }}>
                             {eliminando === r.id ? "Eliminando..." : "Eliminar"}
                           </button>
@@ -1712,9 +1718,11 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
             rutinaInicial={rutinaEditando}
             onEliminar={async () => {
               if (!rutinaEditando?.id) return
-              await eliminar(rutinaEditando.id)
-              setRutinaEditando(null)
-              setTab("lista")
+              setConfirmFn(() => async () => {
+                await eliminar(rutinaEditando.id)
+                setRutinaEditando(null)
+                setTab("lista")
+              })
             }}
             onGuardar={async (datos) => {
             if (rutinaEditando?.id) {
@@ -1728,6 +1736,7 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
           }} />
         </motion.div>
       )}
+      <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
     </>
   )
 }

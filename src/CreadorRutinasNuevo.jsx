@@ -1,5 +1,6 @@
 import { useState, useRef } from "react"
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion"
+import ConfirmModal from "./ConfirmModal"
 import { EJERCICIOS, MUSCULO_ALIASES } from "./ejercicios"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -558,6 +559,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
   const [guardando, setGuardando] = useState(false)
   const [biblioteca, setBiblioteca] = useState(false)
   const [aiPanel, setAiPanel] = useState(false)
+  const [confirmFn, setConfirmFn] = useState(null)
   const [ejerciciosCustom, setEjerciciosCustom] = useState({})
   const [tipoPicker, setTipoPicker] = useState(false)
   const tabsRef = useRef(null)
@@ -625,7 +627,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
         <div style={{ fontSize: 22, fontWeight: 700, color: C.text, letterSpacing: -0.5 }}>{esEdicion ? "Editar rutina" : "Crear rutina"}</div>
         <div style={{ display: "flex", gap: 8 }}>
           {esEdicion && (
-            <button onClick={onEliminar}
+            <button onClick={() => setConfirmFn(() => onEliminar)}
               style={{ height: 38, padding: "0 14px", background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 10, color: "#ef4444", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>
               Eliminar
             </button>
@@ -702,7 +704,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
           style={{ width: 38, height: 38, borderRadius: 10, background: C.surface, border: `1px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
           <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.textSub} strokeWidth="1.8" strokeLinecap="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
         </button>
-        <button onClick={eliminarDia} disabled={dias.length <= 1} title="Eliminar día"
+        <button onClick={() => dias.length > 1 && setConfirmFn(() => eliminarDia)} disabled={dias.length <= 1} title="Eliminar día"
           style={{ width: 38, height: 38, borderRadius: 10, background: dias.length > 1 ? "#2a0a0a" : "transparent", border: `1px solid ${dias.length > 1 ? C.red + "44" : C.border}`, cursor: dias.length > 1 ? "pointer" : "default", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: dias.length <= 1 ? 0.3 : 1 }}>
           <Ico d="M3 6h18M19 6l-1 14H6L5 6" size={14} color={C.red} />
         </button>
@@ -726,7 +728,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
         <AnimatePresence>
           {bloques.map((bloque, bIdx) => (
             <DraggableBloque key={bloque.id} bloque={bloque} bloqueIdx={bIdx}
-              onChange={nuevo => updateBloque(bIdx, nuevo)} onDelete={() => deleteBloque(bIdx)}
+              onChange={nuevo => updateBloque(bIdx, nuevo)} onDelete={() => setConfirmFn(() => () => deleteBloque(bIdx))}
               ejerciciosCustom={ejerciciosCustom} startCollapsed={esEdicion} />
           ))}
         </AnimatePresence>
@@ -799,6 +801,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
             onAgregarCustom={(m, ej) => setEjerciciosCustom(prev => ({ ...prev, [m]: [...(prev[m] || []), ej] }))} />
         )}
       </AnimatePresence>
+      <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
     </div>
   )
 }

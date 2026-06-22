@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
+import ConfirmModal from "./ConfirmModal"
 
 const C = {
   bg: "#111111", surface: "#191919", surface2: "#222222", surface3: "#2a2a2a",
@@ -358,6 +359,7 @@ export default function AgendaReal({ clientes = [] }) {
   const [mostrarForm, setMostrarForm] = useState(false)
   const [sesionEditando, setSesionEditando] = useState(null)
   const [guardando, setGuardando] = useState(false)
+  const [confirmFn, setConfirmFn] = useState(null)
 
   const lunesBase = lunesDe(hoy)
   const lunesSemana = addDays(lunesBase, semanaOffset * 7)
@@ -513,7 +515,7 @@ export default function AgendaReal({ clientes = [] }) {
       ) : vistaTab === "timeline" ? (
         sesionesDia.length === 0
           ? <div style={{ textAlign: "center", padding: "28px 0", color: C.textMuted, fontSize: 13 }}>Sin sesiones este día</div>
-          : <TimelineView sesiones={sesionesDia} clientes={clientes} onEditar={abrirEditar} onEliminar={eliminarSesion} onToggleAsistencia={toggleAsistencia} />
+          : <TimelineView sesiones={sesionesDia} clientes={clientes} onEditar={abrirEditar} onEliminar={id => setConfirmFn(() => () => eliminarSesion(id))} onToggleAsistencia={toggleAsistencia} />
       ) : (
         <AnimatePresence>
           {sesionesDia.length === 0 ? (
@@ -524,7 +526,7 @@ export default function AgendaReal({ clientes = [] }) {
             </div>
           ) : sesionesDia.map((s, i) => (
             <motion.div key={s.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ delay: i * 0.04 }}>
-              <SessionCard s={s} clientes={clientes} onEditar={abrirEditar} onEliminar={eliminarSesion} onToggleAsistencia={toggleAsistencia} />
+              <SessionCard s={s} clientes={clientes} onEditar={abrirEditar} onEliminar={id => setConfirmFn(() => () => eliminarSesion(id))} onToggleAsistencia={toggleAsistencia} />
             </motion.div>
           ))}
         </AnimatePresence>
@@ -544,6 +546,7 @@ export default function AgendaReal({ clientes = [] }) {
           />
         )}
       </AnimatePresence>
+      <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
     </div>
   )
 }
