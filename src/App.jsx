@@ -412,7 +412,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
     </a>
   ) : null
 
-  const TabContent = () => (
+  const tabContent = (
     <AnimatePresence mode="wait">
       <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.14 }}
         style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -716,7 +716,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
 
         {/* Content */}
         <div style={{ flex: 1, padding: "16px 16px 32px" }}>
-          <TabContent />
+          {tabContent}
         </div>
 
         <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
@@ -794,7 +794,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
 
       {/* Main content */}
       <div style={{ flex: 1, padding: "28px 28px 40px", overflowY: "auto" }}>
-        <TabContent />
+        {tabContent}
       </div>
 
       <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
