@@ -219,8 +219,8 @@ function EjercicioCard({ ej, onChange, onChangeBulk, onDelete, showDelete, tipoC
 }
 
 // ── BloqueCard ────────────────────────────────────────────────────────────────
-function BloqueCard({ bloque, bloqueIdx, onChange, onDelete, onDragHandlePointerDown, ejerciciosCustom }) {
-  const [expandedIdx, setExpandedIdx] = useState(bloque._expandIdx ?? 0)
+function BloqueCard({ bloque, bloqueIdx, onChange, onDelete, onDragHandlePointerDown, ejerciciosCustom, startCollapsed = false }) {
+  const [expandedIdx, setExpandedIdx] = useState(startCollapsed ? null : (bloque._expandIdx ?? 0))
   const tipo = TIPOS.find(t => t.id === bloque.tipo) || TIPOS[0]
   const maxEjs = TIPO_MAX[bloque.tipo]
   const puedeAgregarEj = bloque.ejercicios.length < maxEjs
@@ -727,7 +727,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
           {bloques.map((bloque, bIdx) => (
             <DraggableBloque key={bloque.id} bloque={bloque} bloqueIdx={bIdx}
               onChange={nuevo => updateBloque(bIdx, nuevo)} onDelete={() => deleteBloque(bIdx)}
-              ejerciciosCustom={ejerciciosCustom} />
+              ejerciciosCustom={ejerciciosCustom} startCollapsed={esEdicion} />
           ))}
         </AnimatePresence>
       </Reorder.Group>
