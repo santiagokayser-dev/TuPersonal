@@ -2639,10 +2639,10 @@ export default function App({ user: initialUser, onLogout }) {
                     <span style={{ fontSize: 14, color: COLORS.textSub }}>WhatsApp</span>
                   </a>
                   {/* Instagram */}
-                  <a href="https://instagram.com/tupersonal.ar" target="_blank" rel="noopener noreferrer"
+                  <a href="https://instagram.com/tupersonal.fit" target="_blank" rel="noopener noreferrer"
                     style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", borderRadius: 12, cursor: "pointer", textDecoration: "none" }}>
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="25%" stopColor="#e6683c"/><stop offset="50%" stopColor="#dc2743"/><stop offset="75%" stopColor="#cc2366"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><circle cx="12" cy="12" r="4" stroke="#fff" strokeWidth="1.8" fill="none"/><circle cx="17.5" cy="6.5" r="1.2" fill="#fff"/><rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" strokeWidth="1.8" fill="none"/></svg>
-                    <span style={{ fontSize: 14, color: COLORS.textSub }}>@tupersonal.ar</span>
+                    <span style={{ fontSize: 14, color: COLORS.textSub }}>@tupersonal.fit</span>
                   </a>
                   {/* Plan actual */}
                   <button onClick={() => { setDrawerAbierto(false); setPlanesAbierto(true) }}

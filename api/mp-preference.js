@@ -7,9 +7,7 @@ export default async function handler(req, res) {
   const { title, unit_price, currency_id, trainer_id } = req.body || {}
   if (!unit_price) return res.status(400).json({ error: "Falta unit_price" })
 
-  const backUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "https://tu-personal-dcef.vercel.app"
+  const backUrl = "https://tupersonal.fit"
 
   try {
     const response = await fetch("https://api.mercadopago.com/checkout/preferences", {
