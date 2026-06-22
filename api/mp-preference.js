@@ -4,7 +4,7 @@ export default async function handler(req, res) {
   const token = process.env.MP_ACCESS_TOKEN
   if (!token) return res.status(500).json({ error: "MP_ACCESS_TOKEN no configurado" })
 
-  const { title, unit_price, currency_id } = req.body || {}
+  const { title, unit_price, currency_id, trainer_id } = req.body || {}
   if (!unit_price) return res.status(400).json({ error: "Falta unit_price" })
 
   const backUrl = process.env.VERCEL_URL
@@ -25,6 +25,7 @@ export default async function handler(req, res) {
           unit_price: Number(unit_price),
           currency_id: currency_id || "ARS",
         }],
+        external_reference: trainer_id || "",
         back_urls: {
           success: backUrl,
           failure: backUrl,

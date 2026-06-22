@@ -596,7 +596,11 @@ function avatarColor(name) {
   return AVATAR_COLORS[(name || "?").charCodeAt(0) % AVATAR_COLORS.length]
 }
 
-function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCliente, user }) {
+const PLAN_LIMITES = { gratis: 3, pro: 20, elite: Infinity }
+
+function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCliente, onMejorarPlan, user, planActual = "gratis" }) {
+  const limiteClientes = PLAN_LIMITES[planActual] ?? 3
+  const limiteAlcanzado = clientes.length >= limiteClientes
   const [mostrarForm, setMostrarForm] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [linkCopiado, setLinkCopiado] = useState(false)
@@ -770,9 +774,9 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
                   style={{ background: linkCopiado === "error" ? COLORS.red+"22" : linkCopiado ? COLORS.green+"22" : COLORS.surface, border: `1px solid ${linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.border}`, borderRadius: 10, padding: "5px 9px", color: linkCopiado === "error" ? COLORS.red : linkCopiado ? COLORS.green : COLORS.textSub, fontSize: 11, fontWeight: 500, cursor: "pointer", whiteSpace: "nowrap" }}>
                   {linkCopiado === "error" ? "Error" : linkCopiado ? "✓ Listo" : "Compartir link"}
                 </motion.button>
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => setMostrarForm(!mostrarForm)}
-                  style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "5px 11px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: "none", whiteSpace: "nowrap" }}>
-                  + Agregar cliente
+                <motion.button whileTap={{ scale: 0.95 }} onClick={() => limiteAlcanzado ? onMejorarPlan?.() : setMostrarForm(!mostrarForm)}
+                  style={{ background: limiteAlcanzado ? COLORS.surface2 : COLORS.accent, border: `1px solid ${limiteAlcanzado ? COLORS.border : "transparent"}`, borderRadius: 10, padding: "5px 11px", color: limiteAlcanzado ? COLORS.textMuted : "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>
+                  {limiteAlcanzado ? `Límite ${limiteClientes} clientes` : "+ Agregar cliente"}
                 </motion.button>
               </>
             ) : (
@@ -1655,7 +1659,7 @@ const PLANES = [
   },
 ]
 
-function PlanesModal({ onClose }) {
+function PlanesModal({ onClose, trainerId }) {
   const [loading, setLoading] = useState(null)
   const [error, setError] = useState(null)
 
@@ -1671,6 +1675,7 @@ function PlanesModal({ onClose }) {
           title: `TuPersonal ${plan.nombre} — ${plan.precio}${plan.periodo}`,
           unit_price: plan.unitPrice,
           currency_id: "ARS",
+          trainer_id: trainerId,
         }),
       })
       const data = await res.json()
@@ -1882,6 +1887,7 @@ export default function App({ user: initialUser, onLogout }) {
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [chatbotAbierto, setChatbotAbierto] = useState(false)
   const [planesAbierto, setPlanesAbierto] = useState(false)
+  const [planActual, setPlanActual] = useState("gratis")
   const [installBanner, setInstallBanner] = useState(() => localStorage.getItem("pwa-banner-dismissed") !== "1")
   const [installOS, setInstallOS] = useState(null)
   const isMobile = useIsMobile()
@@ -1898,6 +1904,16 @@ export default function App({ user: initialUser, onLogout }) {
     }
     cargar()
   }, [])
+
+  useEffect(() => {
+    if (!user?.id) return
+    supabase.from("trainer_settings").select("plan, plan_expires_at").eq("trainer_id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (!data?.plan) return
+        const expirado = data.plan_expires_at && new Date(data.plan_expires_at) < new Date()
+        setPlanActual(expirado ? "gratis" : data.plan)
+      })
+  }, [user?.id])
 
   useEffect(() => {
     if (!user?.id) return
@@ -1956,9 +1972,11 @@ export default function App({ user: initialUser, onLogout }) {
       clientes: <Clientes
         clientes={clientes}
         user={user}
+        planActual={planActual}
         onVerPerfil={setClienteSeleccionado}
         onClienteAgregado={(c) => setClientes(prev => [...prev, c])}
         onEliminarCliente={(id) => setClientes(prev => prev.filter(c => c.id !== id))}
+        onMejorarPlan={() => setPlanesAbierto(true)}
       />,
       rutinas: <RutinasPage clientes={clientes} user={user} onGuardar={async ({ nombre, dias, clientesAsignados }) => {
         const { error } = await supabase.from("rutinas").insert({
@@ -2175,11 +2193,14 @@ export default function App({ user: initialUser, onLogout }) {
                     <svg width={20} height={20} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="ig" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="25%" stopColor="#e6683c"/><stop offset="50%" stopColor="#dc2743"/><stop offset="75%" stopColor="#cc2366"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig)"/><circle cx="12" cy="12" r="4" stroke="#fff" strokeWidth="1.8" fill="none"/><circle cx="17.5" cy="6.5" r="1.2" fill="#fff"/><rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" strokeWidth="1.8" fill="none"/></svg>
                     <span style={{ fontSize: 14, color: COLORS.textSub }}>@tupersonal.ar</span>
                   </a>
-                  {/* Mejorar plan */}
+                  {/* Plan actual */}
                   <button onClick={() => { setDrawerAbierto(false); setPlanesAbierto(true) }}
-                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", borderRadius: 12, cursor: "pointer", background: "linear-gradient(135deg, #f59e0b22, #f59e0b11)", border: `1px solid #f59e0b44`, marginBottom: 2 }}>
-                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: "#f59e0b" }}>Mejorar plan</span>
+                    style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", borderRadius: 12, cursor: "pointer", background: planActual === "gratis" ? "linear-gradient(135deg, #f59e0b22, #f59e0b11)" : `linear-gradient(135deg, ${COLORS.accent}22, ${COLORS.accent}11)`, border: `1px solid ${planActual === "gratis" ? "#f59e0b44" : COLORS.accent + "55"}`, marginBottom: 2 }}>
+                    <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={planActual === "gratis" ? "#f59e0b" : COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                    <div style={{ flex: 1, textAlign: "left" }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: planActual === "gratis" ? "#f59e0b" : COLORS.accent }}>Plan {planActual.charAt(0).toUpperCase() + planActual.slice(1)}</div>
+                      {planActual === "gratis" && <div style={{ fontSize: 11, color: COLORS.textMuted }}>Mejorar plan</div>}
+                    </div>
                   </button>
                   {/* Chatbot FAQ */}
                   <div style={{ height: 1, background: COLORS.border, margin: "8px 4px" }} />
@@ -2239,7 +2260,7 @@ export default function App({ user: initialUser, onLogout }) {
 
       {/* Planes */}
       <AnimatePresence>
-        {planesAbierto && <PlanesModal onClose={() => setPlanesAbierto(false)} />}
+        {planesAbierto && <PlanesModal trainerId={user?.id} onClose={() => setPlanesAbierto(false)} />}
       </AnimatePresence>
 
       {/* Overlay vista previa del cliente */}
