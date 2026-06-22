@@ -1236,15 +1236,17 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
         <div>
           <div style={{ ...T.label, marginBottom: 4 }}>{mesActual.charAt(0).toUpperCase() + mesActual.slice(1)}</div>
-          <div style={T.h1}>Finanzas</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={T.h1}>Finanzas</div>
+            {conPrecio.length > 0 && (
+              <button onClick={exportarPDF} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "5px 10px", color: COLORS.textSub, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+                <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                Informe
+              </button>
+            )}
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          {conPrecio.length > 0 && (
-            <button onClick={exportarPDF} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "6px 10px", color: COLORS.textSub, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
-              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-              PDF
-            </button>
-          )}
           {conPrecio.length > 0 && (
             <div style={{ textAlign: "right" }}>
               <div style={{ fontSize: 11, color: tasaCobranza >= 80 ? COLORS.green : COLORS.yellow, fontWeight: 600 }}>{tasaCobranza}% cobrado</div>
