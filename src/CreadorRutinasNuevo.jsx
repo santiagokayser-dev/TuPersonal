@@ -1,5 +1,5 @@
 import { useState, useRef } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion"
 import { EJERCICIOS, MUSCULO_ALIASES } from "./ejercicios"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
@@ -66,7 +66,7 @@ const TIPOS = [
 
 const TIPO_MAX = { normal: 1, biserie: 2, superserie: 6, circuito: 10 }
 
-const ejVacio = () => ({ nombre: "", series: "3", reps: "10", rir: "2", descanso: "90", aclaracion: "", video: "" })
+const ejVacio = () => ({ nombre: "", series: "3", reps: "10", peso: "", rir: "2", descanso: "90", aclaracion: "", video: "" })
 const bloqueVacio = (tipo = "normal") => ({
   id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
   tipo,
@@ -106,6 +106,24 @@ function IconChevronDown() {
 }
 function IconPlus({ color = C.accent }) {
   return <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+}
+
+function IconDrag({ color = C.textMuted }) {
+  return (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill={color}>
+      <circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/>
+      <circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/>
+      <circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/>
+    </svg>
+  )
+}
+
+function IconDuplicate({ color = C.textMuted }) {
+  return (
+    <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+    </svg>
+  )
 }
 
 // ── ExerciseField ────────────────────────────────────────────────────────────
@@ -165,6 +183,7 @@ function EjercicioCard({ ej, onChange, onChangeBulk, onDelete, showDelete, tipoC
           <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>
             {[
               ej.series && ej.reps ? `${ej.series}×${ej.reps}` : null,
+              ej.peso ? ej.peso : null,
               ej.rir ? `RIR ${ej.rir}` : null,
               ej.descanso ? `${ej.descanso}s` : null,
             ].filter(Boolean).join(" · ")}
@@ -240,10 +259,14 @@ function EjercicioCard({ ej, onChange, onChangeBulk, onDelete, showDelete, tipoC
         )}
       </div>
 
-      {/* Series / Reps / RIR / Descanso */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 6 }}>
+      {/* Series / Reps / Peso */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6 }}>
         <CampoEj label="Series" value={ej.series} onChange={v => onChange("series", v)} placeholder="3" center />
         <CampoEj label="Reps" value={ej.reps} onChange={v => onChange("reps", v)} placeholder="10" center />
+        <CampoEj label="Peso/carga" value={ej.peso} onChange={v => onChange("peso", v)} placeholder="kg/%" center />
+      </div>
+      {/* RIR / Descanso */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
         <CampoEj label="RIR" value={ej.rir} onChange={v => onChange("rir", v)} placeholder="2" center />
         <CampoEj label="Desc. (s)" value={ej.descanso} onChange={v => onChange("descanso", v)} placeholder="90" center />
       </div>
@@ -283,7 +306,7 @@ function EjercicioCard({ ej, onChange, onChangeBulk, onDelete, showDelete, tipoC
 
 // ── BloqueCard ───────────────────────────────────────────────────────────────
 
-function BloqueCard({ bloque, bloqueIdx, totalBloques, onChange, onDelete, onMover, todosEjercicios }) {
+function BloqueCard({ bloque, bloqueIdx, onChange, onDelete, todosEjercicios, onDragHandlePointerDown }) {
   const [expandedIdx, setExpandedIdx] = useState(bloque._expandIdx ?? null)
   const tipo = TIPOS.find(t => t.id === bloque.tipo) || TIPOS[0]
   const maxEjs = TIPO_MAX[bloque.tipo]
@@ -332,8 +355,13 @@ function BloqueCard({ bloque, bloqueIdx, totalBloques, onChange, onDelete, onMov
 
       {/* Header del bloque */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 12px", borderBottom: `0.5px solid ${tipo.color ? tipo.color + "33" : C.border}`, background: tipo.color ? tipo.color + "0d" : C.surface2 }}>
+        {/* Drag handle */}
+        <div onPointerDown={onDragHandlePointerDown} style={{ cursor: "grab", touchAction: "none", display: "flex", alignItems: "center", paddingRight: 2, flexShrink: 0 }}>
+          <IconDrag />
+        </div>
+
         {/* Número */}
-        <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, width: 18, flexShrink: 0 }}>{bloqueIdx + 1}</div>
+        <div style={{ fontSize: 11, fontWeight: 700, color: C.textMuted, width: 16, flexShrink: 0 }}>{bloqueIdx + 1}</div>
 
         {/* Selector de tipo */}
         <div style={{ display: "flex", gap: 4, flex: 1, overflowX: "auto", scrollbarWidth: "none" }}>
@@ -352,21 +380,11 @@ function BloqueCard({ bloque, bloqueIdx, totalBloques, onChange, onDelete, onMov
           ))}
         </div>
 
-        {/* Mover + borrar */}
-        <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
-          <button onClick={() => onMover(-1)} disabled={bloqueIdx === 0}
-            style={{ background: C.surface2, border: `0.5px solid ${C.border}`, borderRadius: 6, width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: bloqueIdx === 0 ? 0.3 : 1 }}>
-            <IconChevronUp />
-          </button>
-          <button onClick={() => onMover(1)} disabled={bloqueIdx === totalBloques - 1}
-            style={{ background: C.surface2, border: `0.5px solid ${C.border}`, borderRadius: 6, width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", opacity: bloqueIdx === totalBloques - 1 ? 0.3 : 1 }}>
-            <IconChevronDown />
-          </button>
-          <button onClick={onDelete}
-            style={{ background: "#3a1a1a", border: "0.5px solid #ef444433", borderRadius: 6, width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <IconTrash />
-          </button>
-        </div>
+        {/* Borrar */}
+        <button onClick={onDelete}
+          style={{ background: "#3a1a1a", border: "0.5px solid #ef444433", borderRadius: 6, width: 24, height: 24, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <IconTrash />
+        </button>
       </div>
 
       {/* Ejercicios */}
@@ -407,6 +425,28 @@ function BloqueCard({ bloque, bloqueIdx, totalBloques, onChange, onDelete, onMov
         )}
       </div>
     </motion.div>
+  )
+}
+
+// ── DraggableBloque ──────────────────────────────────────────────────────────
+
+function DraggableBloque({ bloque, bloqueIdx, onChange, onDelete, todosEjercicios }) {
+  const controls = useDragControls()
+  return (
+    <Reorder.Item value={bloque} dragControls={controls} dragListener={false}
+      style={{ listStyle: "none" }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.97 }}>
+      <BloqueCard
+        bloque={bloque}
+        bloqueIdx={bloqueIdx}
+        onChange={onChange}
+        onDelete={onDelete}
+        todosEjercicios={todosEjercicios}
+        onDragHandlePointerDown={(e) => controls.start(e)}
+      />
+    </Reorder.Item>
   )
 }
 
@@ -720,6 +760,7 @@ function generarPDF(nombre, dias) {
         e.nombre || "-",
         e.series || "-",
         e.reps || "-",
+        e.peso || "-",
         e.rir !== "" ? e.rir : "-",
         e.descanso ? `${e.descanso}s` : "-",
         e.aclaracion || "",
@@ -727,7 +768,7 @@ function generarPDF(nombre, dias) {
 
       autoTable(doc, {
         startY: y,
-        head: [["#", "Ejercicio", "Series", "Reps", "RIR", "Desc.", "Aclaración"]],
+        head: [["#", "Ejercicio", "Series", "Reps", "Peso", "RIR", "Desc.", "Aclaración"]],
         body: rows,
         styles: { fontSize: 9, cellPadding: 3, textColor: [40, 40, 40] },
         headStyles: {
@@ -857,6 +898,21 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar }) {
     }, 50)
   }
 
+  const duplicarDia = () => {
+    const copia = JSON.parse(JSON.stringify(dias[diaActivo]))
+    copia.nombre = `${copia.nombre} (copia)`
+    copia.bloques = copia.bloques.map(b => ({ ...b, id: Math.random().toString(36).slice(2) }))
+    const nuevos = [...dias.slice(0, diaActivo + 1), copia, ...dias.slice(diaActivo + 1)]
+    setDias(nuevos)
+    setDiaActivo(diaActivo + 1)
+  }
+
+  const eliminarDia = () => {
+    if (dias.length <= 1) return
+    setDias(prev => prev.filter((_, i) => i !== diaActivo))
+    setDiaActivo(Math.max(0, diaActivo - 1))
+  }
+
   const renombrarDia = (val) => {
     setDias(prev => prev.map((d, i) => i === diaActivo ? { ...d, nombre: val } : d))
   }
@@ -918,13 +974,23 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar }) {
         </button>
       </div>
 
-      {/* Nombre del día editable */}
-      <input
-        value={diaActual.nombre}
-        onChange={e => renombrarDia(e.target.value)}
-        style={{ ...inp, fontSize: 13, padding: "9px 12px", borderRadius: 12 }}
-        placeholder="Nombre del día..."
-      />
+      {/* Nombre del día + acciones */}
+      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+        <input
+          value={diaActual.nombre}
+          onChange={e => renombrarDia(e.target.value)}
+          style={{ ...inp, fontSize: 13, padding: "9px 12px", borderRadius: 12, flex: 1 }}
+          placeholder="Nombre del día..."
+        />
+        <button onClick={duplicarDia} title="Duplicar día"
+          style={{ width: 36, height: 36, borderRadius: 10, background: C.surface, border: `0.5px solid ${C.border}`, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <IconDuplicate color={C.textSub} />
+        </button>
+        <button onClick={eliminarDia} disabled={dias.length <= 1} title="Eliminar día"
+          style={{ width: 36, height: 36, borderRadius: 10, background: dias.length <= 1 ? "transparent" : "#3a1a1a", border: `0.5px solid ${dias.length <= 1 ? C.border : "#ef444433"}`, cursor: dias.length <= 1 ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: dias.length <= 1 ? 0.3 : 1 }}>
+          <IconTrash color={C.red} />
+        </button>
+      </div>
 
       {/* Bloques */}
       <AnimatePresence>
@@ -937,20 +1003,22 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar }) {
         )}
       </AnimatePresence>
 
-      <AnimatePresence>
-        {bloques.map((bloque, bIdx) => (
-          <BloqueCard
-            key={bloque.id}
-            bloque={bloque}
-            bloqueIdx={bIdx}
-            totalBloques={bloques.length}
-            onChange={(nuevo) => updateBloque(bIdx, nuevo)}
-            onDelete={() => deleteBloque(bIdx)}
-            onMover={(dir) => moverBloque(bIdx, dir)}
-            todosEjercicios={[...Object.values(EJERCICIOS).flat(), ...Object.values(ejerciciosCustom).flat()]}
-          />
-        ))}
-      </AnimatePresence>
+      <Reorder.Group axis="y" values={bloques}
+        onReorder={(nuevos) => setDias(prev => prev.map((d, i) => i !== diaActivo ? d : { ...d, bloques: nuevos }))}
+        style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+        <AnimatePresence>
+          {bloques.map((bloque, bIdx) => (
+            <DraggableBloque
+              key={bloque.id}
+              bloque={bloque}
+              bloqueIdx={bIdx}
+              onChange={(nuevo) => updateBloque(bIdx, nuevo)}
+              onDelete={() => deleteBloque(bIdx)}
+              todosEjercicios={[...Object.values(EJERCICIOS).flat(), ...Object.values(ejerciciosCustom).flat()]}
+            />
+          ))}
+        </AnimatePresence>
+      </Reorder.Group>
 
       {/* Botones agregar */}
       <div style={{ display: "flex", gap: 6 }}>
