@@ -262,6 +262,7 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
 }
 
 function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, planActual = "gratis", onMejorarPlan }) {
+  const isMobile = useIsMobile()
   const [tab, setTab] = useState("info")
   const [editando, setEditando] = useState(false)
   const [datos, setDatos] = useState(cliente)
@@ -269,9 +270,12 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
   const [eliminando, setEliminando] = useState(false)
   const [confirmFn, setConfirmFn] = useState(null)
   const [rutinas, setRutinas] = useState([])
+  const [todasRutinas, setTodasRutinas] = useState([])
   const [cargandoRutinas, setCargandoRutinas] = useState(false)
   const [iaResultado, setIaResultado] = useState({})
   const [iaLoading, setIaLoading] = useState({})
+  const [sesionesCliente, setSesionesCliente] = useState([])
+  const [cargandoSesiones, setCargandoSesiones] = useState(false)
 
   const inputStyle = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
@@ -296,8 +300,6 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
     onBack()
   }
 
-  const [todasRutinas, setTodasRutinas] = useState([])
-
   const cargarRutinas = async () => {
     if (!cliente.id) return
     setCargandoRutinas(true)
@@ -313,6 +315,14 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
     })
     setRutinas(filtradas)
     setCargandoRutinas(false)
+  }
+
+  const cargarSesiones = async () => {
+    if (!cliente.id) return
+    setCargandoSesiones(true)
+    const { data } = await supabase.from("sesiones").select("*").eq("cliente_id", cliente.id).order("fecha", { ascending: false })
+    setSesionesCliente(data || [])
+    setCargandoSesiones(false)
   }
 
   const toggleAsignarRutina = async (rutina) => {
@@ -372,155 +382,134 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
     doc.save(`${rutina.nombre} - ${datos.nombre}.pdf`)
   }
 
-  return (
-    <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 30 }} transition={{ duration: 0.22 }}
-      style={{ display: "flex", flexDirection: "column", gap: 14, padding: 20 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <button onClick={onBack} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "8px 12px", cursor: "pointer", display: "flex" }}>
-          <Icon name="arrowLeft" size={16} color={COLORS.text} />
-        </button>
-        <div style={T.h3}>Perfil</div>
-        <div style={{ marginLeft: "auto", display: "flex", gap: 8 }}>
-          <button onClick={() => setEditando(!editando)}
-            style={{ background: editando ? COLORS.accent : COLORS.surface, border: `1px solid ${editando ? COLORS.accent : COLORS.border}`, borderRadius: 6, padding: "8px 14px", color: editando ? "#fff" : COLORS.textSub, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
-            {editando ? "Cancelar" : "Editar"}
-          </button>
-          <button onClick={() => setConfirmFn(() => eliminarCliente)} disabled={eliminando}
-            style={{ background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 6, padding: "8px 14px", color: COLORS.red, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>
-            {eliminando ? "..." : "Eliminar"}
-          </button>
-        </div>
-      </div>
+  const handleTabChange = (t) => {
+    setTab(t)
+    if (t === "rutinas") cargarRutinas()
+    if (t === "agenda") cargarSesiones()
+  }
 
-      <div style={{ display: "flex", alignItems: "center", gap: 14, paddingBottom: 16, borderBottom: `1px solid ${COLORS.border}` }}>
-        <div style={{ width: 44, height: 44, borderRadius: 8, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 600, color: COLORS.textSub, flexShrink: 0 }}>{datos.ini}</div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={T.h2}>{datos.nombre}</div>
-          <div style={{ ...T.body, marginTop: 2 }}>{datos.objetivo}{datos.telefono ? ` · ${datos.telefono}` : ""}</div>
-        </div>
-        <span style={{ fontSize: 11, fontWeight: 500, color: datos.estadoColor || COLORS.green }}>{datos.estado || "Al día"}</span>
-        {waUrl && (
-          <a href={waUrl} target="_blank" rel="noopener noreferrer"
-            style={{ width: 36, height: 36, borderRadius: 6, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
-            <svg width={18} height={18} viewBox="0 0 24 24" fill="#22c55e">
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-            </svg>
-          </a>
-        )}
-      </div>
+  const tabs = [
+    { id: "info", label: "Info" },
+    { id: "progreso", label: "Progreso" },
+    { id: "rutinas", label: "Rutinas" },
+    { id: "agenda", label: "Agenda" },
+  ]
 
-      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${COLORS.border}` }}>
-        {["info", "progreso", "pagos", "rutinas"].map(t => (
-          <button key={t} onClick={() => { setTab(t); if (t === "rutinas") cargarRutinas() }}
-            style={{ flex: 1, padding: "10px 0", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, background: "transparent", color: tab === t ? COLORS.text : COLORS.textMuted, borderBottom: tab === t ? `2px solid ${COLORS.accent}` : "2px solid transparent", transition: "all 0.15s", marginBottom: -1 }}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-      </div>
+  const TIPO_COLOR = { entrenamiento: COLORS.accent, cardio: "#06b6d4", flexibilidad: "#8b5cf6", evaluacion: "#f59e0b", otro: COLORS.textSub }
+  const TIPO_LABEL = { entrenamiento: "Entreno", cardio: "Cardio", flexibilidad: "Flex", evaluacion: "Evaluación", otro: "Otro" }
 
-      <AnimatePresence mode="wait">
-        <motion.div key={tab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.16 }}
-          style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          {tab === "info" && (
+  const hoy = new Date().toISOString().split("T")[0]
+  const sesionesProximas = sesionesCliente.filter(s => s.fecha >= hoy).sort((a, b) => a.fecha.localeCompare(b.fecha))
+  const sesionesPasadas = sesionesCliente.filter(s => s.fecha < hoy).sort((a, b) => b.fecha.localeCompare(a.fecha))
+
+  const WaButton = () => waUrl ? (
+    <a href={waUrl} target="_blank" rel="noopener noreferrer"
+      style={{ display: "flex", alignItems: "center", gap: 8, background: "#16a34a22", border: "1px solid #16a34a44", borderRadius: 10, padding: "9px 14px", textDecoration: "none", color: "#22c55e", fontSize: 13, fontWeight: 600, justifyContent: "center" }}>
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="#22c55e">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+      </svg>
+      WhatsApp
+    </a>
+  ) : null
+
+  const TabContent = () => (
+    <AnimatePresence mode="wait">
+      <motion.div key={tab} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.14 }}
+        style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+
+        {tab === "info" && (
+          editando ? (
             <>
-              {editando ? (
-                <>
-                  <input placeholder="Nombre" value={datos.nombre} onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-                    <input placeholder="Peso (kg)" value={datos.peso} onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-                    <input placeholder="Altura (cm)" value={datos.altura} onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-                    <input placeholder="Edad" value={datos.edad} onChange={e => setDatos(p => ({ ...p, edad: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-                    <input placeholder="Precio/mes" value={datos.precio} onChange={e => setDatos(p => ({ ...p, precio: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-                  </div>
-                  <input placeholder="Objetivo" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
-                  <input placeholder="Teléfono (ej: 1134567890)" value={datos.telefono || ""} onChange={e => setDatos(p => ({ ...p, telefono: e.target.value }))} style={inputStyle} type="tel" />
-                  <button onClick={guardarCambios} disabled={guardando}
-                    style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.5 : 1 }}>
-                    {guardando ? "Guardando..." : "Guardar cambios"}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-                    {[{ l: "Peso", v: `${datos.peso || "-"} kg` }, { l: "Altura", v: `${datos.altura || "-"} cm` }, { l: "Edad", v: `${datos.edad || "-"} años` }, { l: "Precio", v: `$${datos.precio || "-"}/mes` }, { l: "Objetivo", v: datos.objetivo || "Sin objetivo" }].map((m, i, arr) => (
-                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
-                        <span style={T.label}>{m.l}</span>
-                        <span style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{m.v}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </>
-          )}
-          {tab === "progreso" && (
-            <>
-              <div style={{ display: "flex", gap: 32, paddingBottom: 16, borderBottom: `1px solid ${COLORS.border}` }}>
-                <div>
-                  <div style={T.label}>Peso actual</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{datos.peso ? `${datos.peso} kg` : "—"}</div>
-                </div>
-                <div>
-                  <div style={T.label}>Registros</div>
-                  <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{(datos.peso_historial || []).length}</div>
-                </div>
+              <input placeholder="Nombre" value={datos.nombre} onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                <input placeholder="Peso (kg)" value={datos.peso} onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
+                <input placeholder="Altura (cm)" value={datos.altura} onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
               </div>
-              {(datos.peso_historial || []).length > 0 && (
-                <div style={{ marginTop: 8 }}>
-                  <div style={{ ...T.label, marginBottom: 10 }}>Historial de peso</div>
-                  {[...(datos.peso_historial || [])].reverse().slice(0, 6).map((h, i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: i < 5 ? `1px solid ${COLORS.border}` : "none" }}>
-                      <span style={{ color: COLORS.textSub }}>{h.fecha}</span>
-                      <span style={{ fontWeight: 600, color: COLORS.text }}>{h.peso} kg</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {Object.keys(datos.cargas || {}).length > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <div style={{ ...T.label, marginBottom: 10 }}>Cargas registradas</div>
-                  {Object.entries(datos.cargas || {}).map(([nombre, carga], i, arr) => (
-                    <div key={nombre} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
-                      <span style={{ color: COLORS.textSub }}>{nombre}</span>
-                      <span style={{ fontWeight: 600, color: COLORS.text }}>{carga}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {(datos.peso_historial || []).length === 0 && Object.keys(datos.cargas || {}).length === 0 && (
-                <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, marginTop: 24 }}>
-                  El cliente aún no registró progreso
-                </div>
-              )}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+                <input placeholder="Edad" value={datos.edad} onChange={e => setDatos(p => ({ ...p, edad: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
+                <input placeholder="Precio/mes" value={datos.precio} onChange={e => setDatos(p => ({ ...p, precio: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
+              </div>
+              <input placeholder="Objetivo" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
+              <input placeholder="Teléfono (ej: 1134567890)" value={datos.telefono || ""} onChange={e => setDatos(p => ({ ...p, telefono: e.target.value }))} style={inputStyle} type="tel" />
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setEditando(false)}
+                  style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>
+                  Cancelar
+                </button>
+                <button onClick={guardarCambios} disabled={guardando}
+                  style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.5 : 1 }}>
+                  {guardando ? "Guardando..." : "Guardar cambios"}
+                </button>
+              </div>
             </>
-          )}
-          {tab === "pagos" && (
-            <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, marginTop: 24 }}>
-              Gestioná los pagos desde la sección Finanzas
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {[{ l: "Peso", v: datos.peso ? `${datos.peso} kg` : "—" }, { l: "Altura", v: datos.altura ? `${datos.altura} cm` : "—" }, { l: "Edad", v: datos.edad ? `${datos.edad} años` : "—" }, { l: "Precio", v: datos.precio ? `$${Number(datos.precio).toLocaleString("es-AR")}/mes` : "—" }, { l: "Objetivo", v: datos.objetivo || "Sin objetivo" }, { l: "Teléfono", v: datos.telefono || "—" }].map((m, i, arr) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "11px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+                  <span style={T.label}>{m.l}</span>
+                  <span style={{ fontSize: 14, fontWeight: 500, color: COLORS.text }}>{m.v}</span>
+                </div>
+              ))}
+              {waUrl && <div style={{ marginTop: 14 }}><WaButton /></div>}
             </div>
-          )}
-          {tab === "rutinas" && (
-            <>
-              {cargandoRutinas ? (
-                <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14 }}>Cargando...</div>
-              ) : (
-                <>
-                {rutinas.length === 0 && (
-                  <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, marginTop: 24 }}>
-                    Sin rutinas asignadas todavía
+          )
+        )}
+
+        {tab === "progreso" && (
+          <>
+            <div style={{ display: "flex", gap: 32, paddingBottom: 16, borderBottom: `1px solid ${COLORS.border}` }}>
+              <div>
+                <div style={T.label}>Peso actual</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{datos.peso ? `${datos.peso} kg` : "—"}</div>
+              </div>
+              <div>
+                <div style={T.label}>Registros</div>
+                <div style={{ fontSize: 22, fontWeight: 700, color: COLORS.text, marginTop: 4 }}>{(datos.peso_historial || []).length}</div>
+              </div>
+            </div>
+            {(datos.peso_historial || []).length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ ...T.label, marginBottom: 10 }}>Historial de peso</div>
+                {[...(datos.peso_historial || [])].reverse().slice(0, 6).map((h, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: i < 5 ? `1px solid ${COLORS.border}` : "none" }}>
+                    <span style={{ color: COLORS.textSub }}>{h.fecha}</span>
+                    <span style={{ fontWeight: 600, color: COLORS.text }}>{h.peso} kg</span>
                   </div>
-                )}
-                {rutinas.map((r) => {
+                ))}
+              </div>
+            )}
+            {Object.keys(datos.cargas || {}).length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <div style={{ ...T.label, marginBottom: 10 }}>Cargas registradas</div>
+                {Object.entries(datos.cargas || {}).map(([nombre, carga], i, arr) => (
+                  <div key={nombre} style={{ display: "flex", justifyContent: "space-between", fontSize: 13, padding: "6px 0", borderBottom: i < arr.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+                    <span style={{ color: COLORS.textSub }}>{nombre}</span>
+                    <span style={{ fontWeight: 600, color: COLORS.text }}>{carga}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            {(datos.peso_historial || []).length === 0 && Object.keys(datos.cargas || {}).length === 0 && (
+              <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, marginTop: 24 }}>El cliente aún no registró progreso</div>
+            )}
+          </>
+        )}
+
+        {tab === "rutinas" && (
+          cargandoRutinas ? (
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, padding: "24px 0" }}>Cargando...</div>
+          ) : (
+            <>
+              {rutinas.length === 0 && (
+                <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, marginTop: 16 }}>Sin rutinas asignadas todavía</div>
+              )}
+              {rutinas.map((r) => {
                 const dias = typeof r.dias === "string" ? (() => { try { return JSON.parse(r.dias) } catch { return [] } })() : (r.dias || [])
                 return (
                   <div key={r.id} style={{ paddingBottom: 14, borderBottom: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 10 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <div>
-                        <div style={T.h3}>{r.nombre}</div>
-                        <div style={{ ...T.body, marginTop: 2 }}>{dias.length} {dias.length === 1 ? "día" : "días"}</div>
-                      </div>
+                    <div>
+                      <div style={T.h3}>{r.nombre}</div>
+                      <div style={{ ...T.body, marginTop: 2 }}>{dias.length} {dias.length === 1 ? "día" : "días"}</div>
                     </div>
                     <div style={{ display: "flex", gap: 8 }}>
                       {planActual === "gratis" ? (
@@ -529,11 +518,11 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
                           🔒 Ajustar con IA <span style={{ fontSize: 10, background: "#f59e0b22", color: "#f59e0b", borderRadius: 4, padding: "1px 5px", marginLeft: 2 }}>Pro</span>
                         </motion.button>
                       ) : (
-                      <motion.button whileTap={{ scale: 0.96 }} onClick={() => ajustarConIA(r)} disabled={iaLoading[r.id]}
-                        style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.accentSub, border: `1px solid ${COLORS.accent}44`, borderRadius: 10, padding: "9px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: iaLoading[r.id] ? 0.6 : 1 }}>
-                        <Icon name="sparkle" size={13} color={COLORS.accent} />
-                        {iaLoading[r.id] ? "Analizando..." : "Ajustar con IA"}
-                      </motion.button>
+                        <motion.button whileTap={{ scale: 0.96 }} onClick={() => ajustarConIA(r)} disabled={iaLoading[r.id]}
+                          style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.accentSub, border: `1px solid ${COLORS.accent}44`, borderRadius: 10, padding: "9px 0", color: COLORS.accent, fontSize: 12, fontWeight: 600, cursor: "pointer", opacity: iaLoading[r.id] ? 0.6 : 1 }}>
+                          <Icon name="sparkle" size={13} color={COLORS.accent} />
+                          {iaLoading[r.id] ? "Analizando..." : "Ajustar con IA"}
+                        </motion.button>
                       )}
                       <motion.button whileTap={{ scale: 0.96 }} onClick={() => exportarPDF(r)}
                         style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 6, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "9px 0", color: COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
@@ -543,8 +532,7 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
                     </div>
                     <AnimatePresence>
                       {iaResultado[r.id] && (
-                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                          style={{ overflow: "hidden" }}>
+                        <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} style={{ overflow: "hidden" }}>
                           <div style={{ background: COLORS.accentSub + "44", border: `1px solid ${COLORS.accent}44`, borderRadius: 6, padding: "12px 14px" }}>
                             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
                               <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.accent }}>Sugerencia IA</div>
@@ -559,41 +547,256 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
                   </div>
                 )
               })}
-                {/* Rutinas no asignadas */}
-                {(() => {
-                  const noAsignadas = todasRutinas.filter(r => {
-                    let asignados = r.clientes_asignados
-                    if (typeof asignados === "string") { try { asignados = JSON.parse(asignados) } catch { asignados = [] } }
-                    if (!Array.isArray(asignados)) asignados = []
-                    return !asignados.some(id => String(id) === String(cliente.id))
-                  })
-                  if (noAsignadas.length === 0) return null
-                  return (
-                    <>
-                      <div style={{ fontSize: 11, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: 8 }}>Asignar rutina</div>
-                      {noAsignadas.map(r => (
-                        <div key={r.id} style={{ background: COLORS.surface, borderRadius: 8, padding: "12px 14px", border: `0.5px dashed ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                          <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.textSub }}>{r.nombre}</div>
-                            <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>
-                              {(() => { try { const d = typeof r.dias === "string" ? JSON.parse(r.dias) : (r.dias || []); return `${d.length} ${d.length === 1 ? "día" : "días"}` } catch { return "" } })()}
-                            </div>
+              {(() => {
+                const noAsignadas = todasRutinas.filter(r => {
+                  let asignados = r.clientes_asignados
+                  if (typeof asignados === "string") { try { asignados = JSON.parse(asignados) } catch { asignados = [] } }
+                  if (!Array.isArray(asignados)) asignados = []
+                  return !asignados.some(id => String(id) === String(cliente.id))
+                })
+                if (noAsignadas.length === 0) return null
+                return (
+                  <>
+                    <div style={{ fontSize: 11, fontWeight: 500, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: 8 }}>Asignar rutina</div>
+                    {noAsignadas.map(r => (
+                      <div key={r.id} style={{ background: COLORS.surface, borderRadius: 8, padding: "12px 14px", border: `0.5px dashed ${COLORS.border}`, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <div>
+                          <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.textSub }}>{r.nombre}</div>
+                          <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>
+                            {(() => { try { const d = typeof r.dias === "string" ? JSON.parse(r.dias) : (r.dias || []); return `${d.length} ${d.length === 1 ? "día" : "días"}` } catch { return "" } })()}
                           </div>
-                          <motion.button whileTap={{ scale: 0.95 }} onClick={() => toggleAsignarRutina(r)}
-                            style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "7px 14px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                            Asignar
-                          </motion.button>
                         </div>
-                      ))}
-                    </>
-                  )
-                })()}
-              </>
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => toggleAsignarRutina(r)}
+                          style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "7px 14px", color: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                          Asignar
+                        </motion.button>
+                      </div>
+                    ))}
+                  </>
+                )
+              })()}
+            </>
+          )
+        )}
+
+        {tab === "agenda" && (
+          cargandoSesiones ? (
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 14, padding: "24px 0" }}>Cargando...</div>
+          ) : sesionesCliente.length === 0 ? (
+            <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, marginTop: 24, lineHeight: 1.6 }}>
+              No hay sesiones registradas para {datos.nombre}.<br />
+              <span style={{ fontSize: 12 }}>Creá sesiones desde la sección Agenda.</span>
+            </div>
+          ) : (
+            <>
+              {sesionesProximas.length > 0 && (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4 }}>Próximas</div>
+                  {sesionesProximas.map(s => (
+                    <div key={s.id} style={{ background: `${COLORS.accent}0d`, border: `1px solid ${COLORS.accent}33`, borderRadius: 10, padding: "12px 14px" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>
+                            {new Date(s.fecha + "T12:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "short" })}
+                            {s.hora ? ` · ${s.hora.slice(0, 5)}` : ""}
+                          </div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 5 }}>
+                            <span style={{ fontSize: 11, background: `${TIPO_COLOR[s.tipo] || COLORS.textSub}22`, color: TIPO_COLOR[s.tipo] || COLORS.textSub, borderRadius: 4, padding: "2px 7px", fontWeight: 600 }}>
+                              {TIPO_LABEL[s.tipo] || s.tipo || "Sesión"}
+                            </span>
+                            {s.duracion && <span style={{ fontSize: 11, color: COLORS.textMuted, alignSelf: "center" }}>{s.duracion} min</span>}
+                          </div>
+                        </div>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.accent, background: `${COLORS.accent}22`, borderRadius: 6, padding: "3px 8px", flexShrink: 0 }}>Próxima</span>
+                      </div>
+                      {s.notas && <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 8, lineHeight: 1.5 }}>{s.notas}</div>}
+                    </div>
+                  ))}
+                </>
+              )}
+              {sesionesPasadas.length > 0 && (
+                <>
+                  <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 1, marginTop: sesionesProximas.length > 0 ? 12 : 0, marginBottom: 4 }}>Historial</div>
+                  {sesionesPasadas.slice(0, 12).map(s => (
+                    <div key={s.id} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "11px 14px", opacity: s.asistio === false ? 0.55 : 1 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.textSub }}>
+                            {new Date(s.fecha + "T12:00:00").toLocaleDateString("es-AR", { weekday: "short", day: "numeric", month: "short" })}
+                            {s.hora ? ` · ${s.hora.slice(0, 5)}` : ""}
+                          </div>
+                          <div style={{ display: "flex", gap: 6, marginTop: 5 }}>
+                            <span style={{ fontSize: 11, background: `${TIPO_COLOR[s.tipo] || COLORS.textSub}18`, color: TIPO_COLOR[s.tipo] || COLORS.textSub, borderRadius: 4, padding: "2px 7px", fontWeight: 600 }}>
+                              {TIPO_LABEL[s.tipo] || s.tipo || "Sesión"}
+                            </span>
+                            {s.duracion && <span style={{ fontSize: 11, color: COLORS.textMuted, alignSelf: "center" }}>{s.duracion} min</span>}
+                          </div>
+                        </div>
+                        {s.asistio === true && <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.green, background: `${COLORS.green}18`, borderRadius: 6, padding: "3px 8px", flexShrink: 0 }}>✓ Asistió</span>}
+                        {s.asistio === false && <span style={{ fontSize: 11, fontWeight: 700, color: COLORS.red, background: `${COLORS.red}18`, borderRadius: 6, padding: "3px 8px", flexShrink: 0 }}>✗ Faltó</span>}
+                        {s.asistio == null && <span style={{ fontSize: 11, color: COLORS.textMuted, flexShrink: 0 }}>Sin confirmar</span>}
+                      </div>
+                      {s.notas && <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 6, lineHeight: 1.5 }}>{s.notas}</div>}
+                    </div>
+                  ))}
+                </>
               )}
             </>
+          )
+        )}
+      </motion.div>
+    </AnimatePresence>
+  )
+
+  if (isMobile) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+        style={{ display: "flex", flexDirection: "column", minHeight: "100%" }}>
+
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px 10px", flexShrink: 0 }}>
+          <button onClick={onBack}
+            style={{ width: 34, height: 34, background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+            <Icon name="arrowLeft" size={16} color={COLORS.text} />
+          </button>
+          <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: COLORS.text }}>Perfil del cliente</span>
+          <button onClick={() => setEditando(v => !v)}
+            style={{ padding: "6px 12px", background: editando ? COLORS.accent : COLORS.surface, border: `1px solid ${editando ? COLORS.accent : COLORS.border}`, borderRadius: 8, color: editando ? "#fff" : COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            {editando ? "Cancelar" : "Editar"}
+          </button>
+          <button onClick={() => setConfirmFn(() => eliminarCliente)} disabled={eliminando}
+            style={{ width: 34, height: 34, background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+            <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={COLORS.red} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+            </svg>
+          </button>
+        </div>
+
+        {/* Client card */}
+        <div style={{ margin: "0 16px 0", background: COLORS.surface, borderRadius: 14, border: `1px solid ${COLORS.border}`, padding: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <div style={{ width: 52, height: 52, borderRadius: 14, background: avatarColor(datos.nombre), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, fontWeight: 700, color: "#fff", flexShrink: 0 }}>
+              {datos.ini}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{datos.nombre}</div>
+              <div style={{ fontSize: 12, fontWeight: 600, color: datos.estadoColor || COLORS.green, marginTop: 2 }}>{datos.estado || "Al día"}</div>
+              {datos.objetivo && <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{datos.objetivo}</div>}
+            </div>
+            {waUrl && (
+              <a href={waUrl} target="_blank" rel="noopener noreferrer"
+                style={{ width: 38, height: 38, borderRadius: 10, background: "#16a34a22", border: "1px solid #16a34a44", display: "flex", alignItems: "center", justifyContent: "center", textDecoration: "none", flexShrink: 0 }}>
+                <svg width={18} height={18} viewBox="0 0 24 24" fill="#22c55e">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+              </a>
+            )}
+          </div>
+          {(datos.peso || datos.altura || datos.edad || datos.precio) && (
+            <div style={{ display: "flex", gap: 0, marginTop: 14, paddingTop: 14, borderTop: `1px solid ${COLORS.border}` }}>
+              {[{ l: "Peso", v: datos.peso ? `${datos.peso}kg` : null }, { l: "Altura", v: datos.altura ? `${datos.altura}cm` : null }, { l: "Edad", v: datos.edad ? `${datos.edad}a` : null }, { l: "Precio", v: datos.precio ? `$${Number(datos.precio).toLocaleString("es-AR")}` : null }].filter(m => m.v).map((m, i, arr) => (
+                <div key={i} style={{ flex: 1, textAlign: "center", borderRight: i < arr.length - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, marginBottom: 2 }}>{m.l}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text }}>{m.v}</div>
+                </div>
+              ))}
+            </div>
           )}
-        </motion.div>
-      </AnimatePresence>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: "flex", overflowX: "auto", scrollbarWidth: "none", padding: "12px 16px 0", gap: 0, borderBottom: `1px solid ${COLORS.border}`, flexShrink: 0 }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => handleTabChange(t.id)}
+              style={{ flexShrink: 0, padding: "8px 16px", border: "none", background: "transparent", color: tab === t.id ? COLORS.text : COLORS.textMuted, fontSize: 13, fontWeight: tab === t.id ? 600 : 400, cursor: "pointer", borderBottom: tab === t.id ? `2px solid ${COLORS.accent}` : "2px solid transparent", marginBottom: -1, whiteSpace: "nowrap" }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, padding: "16px 16px 32px" }}>
+          <TabContent />
+        </div>
+
+        <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
+      </motion.div>
+    )
+  }
+
+  // Desktop: sidebar + content
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+      style={{ display: "flex", minHeight: "100%" }}>
+
+      {/* Sidebar */}
+      <div style={{ width: 230, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", flexShrink: 0, alignSelf: "flex-start", position: "sticky", top: 0 }}>
+
+        {/* Back */}
+        <div style={{ padding: "16px 16px 14px", borderBottom: `1px solid ${COLORS.border}` }}>
+          <button onClick={onBack}
+            style={{ display: "flex", alignItems: "center", gap: 8, background: "none", border: "none", color: COLORS.textSub, fontSize: 13, fontWeight: 500, cursor: "pointer", padding: 0 }}>
+            <Icon name="arrowLeft" size={15} color={COLORS.textSub} />
+            Volver
+          </button>
+        </div>
+
+        {/* Avatar + name */}
+        <div style={{ padding: "20px 16px", borderBottom: `1px solid ${COLORS.border}`, textAlign: "center" }}>
+          <div style={{ width: 68, height: 68, borderRadius: 18, background: avatarColor(datos.nombre), display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, fontWeight: 700, color: "#fff", margin: "0 auto 12px" }}>
+            {datos.ini}
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text, lineHeight: 1.3 }}>{datos.nombre}</div>
+          <div style={{ fontSize: 11, fontWeight: 600, color: datos.estadoColor || COLORS.green, marginTop: 4 }}>{datos.estado || "Al día"}</div>
+          {datos.objetivo && <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 4, lineHeight: 1.4 }}>{datos.objetivo}</div>}
+        </div>
+
+        {/* Stats */}
+        <div style={{ padding: "12px 16px", borderBottom: `1px solid ${COLORS.border}` }}>
+          {[{ l: "Peso", v: datos.peso ? `${datos.peso} kg` : "—" }, { l: "Altura", v: datos.altura ? `${datos.altura} cm` : "—" }, { l: "Edad", v: datos.edad ? `${datos.edad} años` : "—" }, { l: "Precio", v: datos.precio ? `$${Number(datos.precio).toLocaleString("es-AR")}` : "—" }].map(({ l, v }) => (
+            <div key={l} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0" }}>
+              <span style={{ fontSize: 11, color: COLORS.textMuted }}>{l}</span>
+              <span style={{ fontSize: 12, fontWeight: 600, color: COLORS.text }}>{v}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* WA */}
+        {waUrl && (
+          <div style={{ padding: "12px 16px", borderBottom: `1px solid ${COLORS.border}` }}>
+            <WaButton />
+          </div>
+        )}
+
+        {/* Nav */}
+        <div style={{ flex: 1, padding: "8px" }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => handleTabChange(t.id)}
+              style={{ width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 12px", background: tab === t.id ? `${COLORS.accent}1a` : "none", border: "none", borderRadius: 8, color: tab === t.id ? COLORS.text : COLORS.textSub, fontSize: 13, fontWeight: tab === t.id ? 600 : 400, cursor: "pointer", textAlign: "left" }}>
+              <span style={{ width: 6, height: 6, borderRadius: "50%", background: tab === t.id ? COLORS.accent : "transparent", flexShrink: 0 }} />
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Edit / Delete */}
+        <div style={{ padding: "12px 16px", borderTop: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", gap: 8 }}>
+          <button onClick={() => setEditando(v => !v)}
+            style={{ width: "100%", padding: "9px 0", background: editando ? COLORS.accent : COLORS.surface2, border: `1px solid ${editando ? COLORS.accent : COLORS.border}`, borderRadius: 8, color: editando ? "#fff" : COLORS.textSub, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+            {editando ? "Cancelar edición" : "Editar cliente"}
+          </button>
+          <button onClick={() => setConfirmFn(() => eliminarCliente)} disabled={eliminando}
+            style={{ width: "100%", padding: "9px 0", background: "#3a1a1a", border: "1px solid #ef444433", borderRadius: 8, color: COLORS.red, fontSize: 13, fontWeight: 600, cursor: "pointer", opacity: eliminando ? 0.5 : 1 }}>
+            {eliminando ? "Eliminando..." : "Eliminar cliente"}
+          </button>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div style={{ flex: 1, padding: "28px 28px 40px", overflowY: "auto" }}>
+        <TabContent />
+      </div>
+
       <ConfirmModal open={!!confirmFn} onConfirm={() => { confirmFn?.(); setConfirmFn(null) }} onCancel={() => setConfirmFn(null)} />
     </motion.div>
   )
