@@ -881,84 +881,93 @@ function Clientes({ onVerPerfil, clientes = [], onClienteAgregado, onEliminarCli
       {/* ===== TAB: CLIENTES ===== */}
       {tab === "clientes" && (
         <>
-          {/* Form agregar */}
+          {/* Form agregar — bottom sheet modal */}
           <AnimatePresence>
             {mostrarForm && (
-              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
-                style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.accent}44`, overflow: "hidden" }}>
-                <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
-                  {[["buscar", "@ Buscar usuario"], ["manual", "+ Agregar manual"]].map(([m, label]) => (
-                    <button key={m} onClick={() => { setModoAgregar(m); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") }}
-                      style={{ flex: 1, background: modoAgregar === m ? COLORS.accent : COLORS.surface2, border: `1px solid ${modoAgregar === m ? COLORS.accent : COLORS.border2}`, borderRadius: 10, padding: "8px 0", color: modoAgregar === m ? "#fff" : COLORS.textSub, fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.6)" }}
+                onClick={e => { if (e.target === e.currentTarget) { setMostrarForm(false); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") } }}>
+                <motion.div initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }} transition={{ type: "spring", damping: 30, stiffness: 280 }}
+                  style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: COLORS.surface, borderRadius: "20px 20px 0 0", padding: "20px 16px", paddingBottom: "calc(20px + env(safe-area-inset-bottom))" }}>
+                  {/* Handle */}
+                  <div style={{ width: 36, height: 4, borderRadius: 2, background: COLORS.border2, margin: "0 auto 18px" }} />
+                  <div style={{ fontSize: 16, fontWeight: 700, color: COLORS.text, marginBottom: 16 }}>Agregar cliente</div>
 
-                {modoAgregar === "buscar" ? (
-                  <>
-                    <input placeholder="Nombre de usuario (sin @)" value={usernameBusq}
-                      onChange={e => { setUsernameBusq(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase()); setClienteEncontrado(null); setBusqError("") }}
-                      onKeyDown={e => e.key === "Enter" && buscarPorUsername()}
-                      style={inputStyle} autoFocus />
-                    <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
-                      <button onClick={() => { setMostrarForm(false); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") }}
-                        style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-                      <motion.button whileTap={{ scale: 0.97 }} onClick={buscarPorUsername} disabled={buscando || !usernameBusq.trim()}
-                        style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: buscando || !usernameBusq.trim() ? 0.5 : 1 }}>
-                        {buscando ? "Buscando..." : "Buscar"}
-                      </motion.button>
-                    </div>
-                    {busqError && (
-                      <div style={{ fontSize: 12, color: COLORS.red, background: COLORS.red + "11", borderRadius: 8, padding: "8px 12px", marginBottom: 8 }}>{busqError}</div>
-                    )}
-                    {clienteEncontrado === false && !busqError && (
-                      <div style={{ fontSize: 13, color: COLORS.textMuted, textAlign: "center", padding: "4px 0", lineHeight: 1.5 }}>
-                        No se encontró @{usernameBusq}.<br/>
-                        <span style={{ fontSize: 12 }}>Si el usuario existe, puede ser un problema de permisos — aplicá el SQL de políticas RLS en Supabase.</span>
-                      </div>
-                    )}
-                    {clienteEncontrado && clienteEncontrado.trainer_id !== null && (
-                      <div style={{ fontSize: 13, color: COLORS.yellow, textAlign: "center", padding: "4px 0" }}>
-                        Este usuario ya tiene un entrenador asignado.
-                      </div>
-                    )}
-                    {clienteEncontrado && clienteEncontrado.trainer_id === null && (
-                      <>
-                        <div style={{ background: COLORS.surface2, borderRadius: 6, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-                          {clienteEncontrado.avatar_url
-                            ? <img src={clienteEncontrado.avatar_url} style={{ width: 44, height: 44, borderRadius: 6, objectFit: "cover" }} />
-                            : <div style={{ width: 44, height: 44, borderRadius: 6, background: COLORS.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: COLORS.accent }}>
-                                {(clienteEncontrado.nombre || "?")[0].toUpperCase()}
-                              </div>
-                          }
-                          <div>
-                            <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{clienteEncontrado.nombre || "Sin nombre"}</div>
-                            <div style={{ fontSize: 12, color: COLORS.textMuted }}>@{clienteEncontrado.username}</div>
-                          </div>
-                        </div>
-                        <motion.button whileTap={{ scale: 0.97 }} onClick={vincularCliente} disabled={cargando}
-                          style={{ background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", opacity: cargando ? 0.5 : 1 }}>
-                          {cargando ? "Agregando..." : "Agregar como mi cliente"}
+                  {/* Tabs */}
+                  <div style={{ display: "flex", gap: 6, marginBottom: 16 }}>
+                    {[["buscar", "@ Buscar usuario"], ["manual", "+ Agregar manual"]].map(([m, label]) => (
+                      <button key={m} onClick={() => { setModoAgregar(m); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") }}
+                        style={{ flex: 1, background: modoAgregar === m ? COLORS.accent : COLORS.surface2, border: `1px solid ${modoAgregar === m ? COLORS.accent : COLORS.border2}`, borderRadius: 10, padding: "9px 0", color: modoAgregar === m ? "#fff" : COLORS.textSub, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {modoAgregar === "buscar" ? (
+                    <>
+                      <input placeholder="Nombre de usuario (sin @)" value={usernameBusq}
+                        onChange={e => { setUsernameBusq(e.target.value.replace(/[^a-zA-Z0-9_]/g, "").toLowerCase()); setClienteEncontrado(null); setBusqError("") }}
+                        onKeyDown={e => e.key === "Enter" && buscarPorUsername()}
+                        style={inputStyle} autoFocus />
+                      <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
+                        <button onClick={() => { setMostrarForm(false); setClienteEncontrado(null); setUsernameBusq(""); setBusqError("") }}
+                          style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "13px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+                        <motion.button whileTap={{ scale: 0.97 }} onClick={buscarPorUsername} disabled={buscando || !usernameBusq.trim()}
+                          style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 10, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: buscando || !usernameBusq.trim() ? 0.5 : 1 }}>
+                          {buscando ? "Buscando..." : "Buscar"}
                         </motion.button>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>El cliente completa sus datos al crear su cuenta.</div>
-                    <input placeholder="Nombre *" value={nuevo.nombre} onChange={e => setNuevo(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} autoFocus />
-                    <input placeholder="Email" value={nuevo.email} onChange={e => setNuevo(p => ({ ...p, email: e.target.value }))} style={inputStyle} type="email" />
-                    <input placeholder="Precio/mes ($)" value={nuevo.precio} onChange={e => setNuevo(p => ({ ...p, precio: e.target.value }))} style={inputStyle} type="number" />
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button onClick={() => setMostrarForm(false)} style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
-                      <motion.button whileTap={{ scale: 0.97 }} onClick={agregarCliente} disabled={cargando || !nuevo.nombre.trim()}
-                        style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: cargando ? 0.5 : 1 }}>
-                        {cargando ? "Guardando..." : "Agregar cliente"}
-                      </motion.button>
-                    </div>
-                  </>
-                )}
+                      </div>
+                      {busqError && (
+                        <div style={{ fontSize: 12, color: COLORS.red, background: COLORS.red + "11", borderRadius: 8, padding: "8px 12px", marginBottom: 8 }}>{busqError}</div>
+                      )}
+                      {clienteEncontrado === false && !busqError && (
+                        <div style={{ fontSize: 13, color: COLORS.textMuted, textAlign: "center", padding: "8px 0", lineHeight: 1.5 }}>
+                          No se encontró @{usernameBusq}.<br/>
+                          <span style={{ fontSize: 12 }}>Si el usuario existe, puede ser un problema de permisos.</span>
+                        </div>
+                      )}
+                      {clienteEncontrado && clienteEncontrado.trainer_id !== null && (
+                        <div style={{ fontSize: 13, color: COLORS.yellow, textAlign: "center", padding: "8px 0" }}>
+                          Este usuario ya tiene un entrenador asignado.
+                        </div>
+                      )}
+                      {clienteEncontrado && clienteEncontrado.trainer_id === null && (
+                        <>
+                          <div style={{ background: COLORS.surface2, borderRadius: 10, padding: "12px 14px", display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                            {clienteEncontrado.avatar_url
+                              ? <img src={clienteEncontrado.avatar_url} style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover" }} />
+                              : <div style={{ width: 44, height: 44, borderRadius: 8, background: COLORS.accent + "33", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 700, color: COLORS.accent }}>
+                                  {(clienteEncontrado.nombre || "?")[0].toUpperCase()}
+                                </div>
+                            }
+                            <div>
+                              <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{clienteEncontrado.nombre || "Sin nombre"}</div>
+                              <div style={{ fontSize: 12, color: COLORS.textMuted }}>@{clienteEncontrado.username}</div>
+                            </div>
+                          </div>
+                          <motion.button whileTap={{ scale: 0.97 }} onClick={vincularCliente} disabled={cargando}
+                            style={{ background: COLORS.accent, border: "none", borderRadius: 10, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", width: "100%", opacity: cargando ? 0.5 : 1 }}>
+                            {cargando ? "Agregando..." : "Agregar como mi cliente"}
+                          </motion.button>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>El cliente completa sus datos al crear su cuenta.</div>
+                      <input placeholder="Nombre *" value={nuevo.nombre} onChange={e => setNuevo(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} autoFocus />
+                      <input placeholder="Email" value={nuevo.email} onChange={e => setNuevo(p => ({ ...p, email: e.target.value }))} style={inputStyle} type="email" />
+                      <input placeholder="Precio/mes ($)" value={nuevo.precio} onChange={e => setNuevo(p => ({ ...p, precio: e.target.value }))} style={inputStyle} type="number" />
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button onClick={() => setMostrarForm(false)} style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 10, padding: "13px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>Cancelar</button>
+                        <motion.button whileTap={{ scale: 0.97 }} onClick={agregarCliente} disabled={cargando || !nuevo.nombre.trim()}
+                          style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 10, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: cargando ? 0.5 : 1 }}>
+                          {cargando ? "Guardando..." : "Agregar cliente"}
+                        </motion.button>
+                      </div>
+                    </>
+                  )}
+                </motion.div>
               </motion.div>
             )}
           </AnimatePresence>
