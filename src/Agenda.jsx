@@ -87,13 +87,13 @@ function SessionForm({ sesion, dia, clientes, onSave, onClose, guardando }) {
 
         {/* Hora + Duración */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 5 }}>Hora</div>
-            <input type="time" value={form.hora} onChange={e => setForm(p => ({ ...p, hora: e.target.value }))} style={INPUT} />
+            <input type="time" value={form.hora} onChange={e => setForm(p => ({ ...p, hora: e.target.value }))} style={{ ...INPUT, width: "100%", minWidth: 0 }} />
           </div>
-          <div>
+          <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 11, color: C.textMuted, marginBottom: 5 }}>Duración</div>
-            <select value={form.duracion} onChange={e => setForm(p => ({ ...p, duracion: Number(e.target.value) }))} style={{ ...INPUT, appearance: "none" }}>
+            <select value={form.duracion} onChange={e => setForm(p => ({ ...p, duracion: Number(e.target.value) }))} style={{ ...INPUT, appearance: "none", width: "100%", minWidth: 0 }}>
               {[30,45,60,75,90,120].map(d => <option key={d} value={d}>{d < 60 ? `${d} min` : d === 60 ? "1 hora" : d === 90 ? "1h 30min" : "2 horas"}</option>)}
             </select>
           </div>
