@@ -1095,6 +1095,10 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
   const [guardandoSettings, setGuardandoSettings] = useState(false)
   const [settingsOk, setSettingsOk] = useState(false)
   const [actualizando, setActualizando] = useState(null)
+  const [historial, setHistorial] = useState([])
+  const [cargandoHistorial, setCargandoHistorial] = useState(false)
+  const [editandoVenc, setEditandoVenc] = useState(null)
+  const [diaInput, setDiaInput] = useState("")
 
   useEffect(() => { setClientesLocal(clientes) }, [clientes])
 
@@ -1103,6 +1107,17 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
     supabase.from("trainer_settings").select("*").eq("trainer_id", user.id).maybeSingle()
       .then(({ data }) => { if (data) setMpSettings({ alias: data.mp_alias || "", access_token: data.mp_access_token || "" }) })
   }, [user?.id])
+
+  useEffect(() => {
+    if (tab === "historial" && user?.id) cargarHistorial()
+  }, [tab, user?.id])
+
+  const cargarHistorial = async () => {
+    setCargandoHistorial(true)
+    const { data } = await supabase.from("pagos_historial").select("*").eq("trainer_id", user.id).order("fecha", { ascending: false }).limit(100)
+    setHistorial(data || [])
+    setCargandoHistorial(false)
+  }
 
   const guardarSettings = async () => {
     if (!user?.id) return
@@ -1113,15 +1128,85 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
     setTimeout(() => setSettingsOk(false), 2500)
   }
 
-  const toggleDeuda = async (c) => {
+  const cambiarDeuda = async (c, delta) => {
+    const anterior = c.meses_deuda || 0
+    const nueva = Math.max(0, anterior + delta)
     setActualizando(c.id)
-    const nuevaDeuda = (c.meses_deuda || 0) === 0 ? 1 : 0
-    await supabase.from("clientes").update({ meses_deuda: nuevaDeuda }).eq("id", c.id)
-    setClientesLocal(prev => prev.map(x => x.id === c.id ? normCliente({ ...x, meses_deuda: nuevaDeuda }) : x))
+    await supabase.from("clientes").update({ meses_deuda: nueva }).eq("id", c.id)
+    // Registrar pago en historial cuando se marca como cobrado
+    if (nueva === 0 && anterior > 0) {
+      await supabase.from("pagos_historial").insert({
+        trainer_id: user.id, cliente_id: c.id, cliente_nombre: c.nombre,
+        monto: Number(c.precio) * anterior, meses: anterior, fecha: new Date().toISOString(),
+      }).then(() => { if (tab === "historial") cargarHistorial() })
+    }
+    setClientesLocal(prev => prev.map(x => x.id === c.id ? normCliente({ ...x, meses_deuda: nueva }) : x))
     setActualizando(null)
   }
 
-  // Métricas reales
+  const enviarRecordatorio = (c) => {
+    const meses = c.meses_deuda || 1
+    const total = Number(c.precio) * meses
+    const msg = `Hola ${c.nombre}! 👋 Te paso un recordatorio de que tenés ${meses} mes${meses > 1 ? "es" : ""} de entrenamiento pendiente de pago, por un total de $${total.toLocaleString("es-AR")}. ¡Cualquier consulta avisame! 💪`
+    const tel = (c.telefono || "").replace(/\D/g, "")
+    window.open(`https://wa.me/${tel ? `54${tel}` : ""}?text=${encodeURIComponent(msg)}`, "_blank")
+  }
+
+  const guardarDiaVencimiento = async (c, dia) => {
+    const n = parseInt(dia)
+    if (!n || n < 1 || n > 31) return
+    await supabase.from("clientes").update({ dia_vencimiento: n }).eq("id", c.id)
+    setClientesLocal(prev => prev.map(x => x.id === c.id ? { ...x, dia_vencimiento: n } : x))
+    setEditandoVenc(null)
+  }
+
+  const diasHastaVenc = (dia) => {
+    if (!dia) return null
+    const hoy = new Date(); hoy.setHours(0,0,0,0)
+    const anio = hoy.getFullYear(); const mes = hoy.getMonth()
+    let venc = new Date(anio, mes, dia)
+    if (venc <= hoy) venc = new Date(anio, mes + 1, dia)
+    return Math.ceil((venc - hoy) / 86400000)
+  }
+
+  const exportarPDF = () => {
+    const doc = new jsPDF()
+    const mes = new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })
+    doc.setFontSize(20); doc.setTextColor(232, 113, 74)
+    doc.text("TuPersonal — Resumen Financiero", 14, 18)
+    doc.setFontSize(11); doc.setTextColor(120, 120, 120)
+    doc.text(mes.charAt(0).toUpperCase() + mes.slice(1), 14, 26)
+    autoTable(doc, {
+      startY: 33,
+      head: [["Métrica", "Valor"]],
+      body: [
+        ["Cobrado este mes", `$${cobrado.toLocaleString("es-AR")}`],
+        ["Pendiente", `$${pendiente.toLocaleString("es-AR")}`],
+        ["Ingreso mensual potencial", `$${ingresoMensual.toLocaleString("es-AR")}`],
+        ["Tasa de cobranza", `${tasaCobranza}%`],
+        ["Ticket promedio", `$${ticketPromedio.toLocaleString("es-AR")}`],
+      ],
+      headStyles: { fillColor: [232, 113, 74] },
+    })
+    if (alDia.length > 0) {
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 8,
+        head: [["Cliente al día", "Precio/mes"]],
+        body: alDia.map(c => [c.nombre, `$${Number(c.precio).toLocaleString("es-AR")}`]),
+        headStyles: { fillColor: [34, 197, 94] },
+      })
+    }
+    if (conDeuda.length > 0) {
+      autoTable(doc, {
+        startY: doc.lastAutoTable.finalY + 8,
+        head: [["Cliente con deuda", "Precio/mes", "Meses", "Total"]],
+        body: conDeuda.map(c => [c.nombre, `$${Number(c.precio).toLocaleString("es-AR")}`, c.meses_deuda, `$${(Number(c.precio) * c.meses_deuda).toLocaleString("es-AR")}`]),
+        headStyles: { fillColor: [239, 68, 68] },
+      })
+    }
+    doc.save(`finanzas-${new Date().toISOString().slice(0, 7)}.pdf`)
+  }
+
   const conPrecio = clientesLocal.filter(c => Number(c.precio) > 0)
   const alDia = conPrecio.filter(c => !c.meses_deuda || c.meses_deuda === 0)
   const conDeuda = conPrecio.filter(c => c.meses_deuda > 0)
@@ -1131,10 +1216,20 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
   const tasaCobranza = total > 0 ? Math.round((cobrado / total) * 100) : 100
   const ticketPromedio = conPrecio.length > 0 ? Math.round(conPrecio.reduce((s, c) => s + Number(c.precio), 0) / conPrecio.length) : 0
   const ingresoMensual = conPrecio.reduce((s, c) => s + Number(c.precio), 0)
-
   const mesActual = new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })
-
   const inputS = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 10 }
+
+  // Historial agrupado por mes
+  const historialAgrupado = historial.reduce((acc, p) => {
+    const k = new Date(p.fecha).toLocaleDateString("es-AR", { month: "long", year: "numeric" })
+    if (!acc[k]) acc[k] = []
+    acc[k].push(p)
+    return acc
+  }, {})
+
+  // Vencimientos ordenados por días restantes
+  const conVencimiento = [...clientesLocal].filter(c => c.dia_vencimiento).sort((a, b) => (diasHastaVenc(a.dia_vencimiento) || 99) - (diasHastaVenc(b.dia_vencimiento) || 99))
+  const sinVencimiento = clientesLocal.filter(c => !c.dia_vencimiento)
 
   return (
     <>
@@ -1143,12 +1238,20 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
           <div style={{ ...T.label, marginBottom: 4 }}>{mesActual.charAt(0).toUpperCase() + mesActual.slice(1)}</div>
           <div style={T.h1}>Finanzas</div>
         </div>
-        {conPrecio.length > 0 && (
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 11, color: tasaCobranza >= 80 ? COLORS.green : COLORS.yellow, fontWeight: 600 }}>{tasaCobranza}% cobrado</div>
-            <SparkLine data={conPrecio.map(c => Number(c.precio))} />
-          </div>
-        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {conPrecio.length > 0 && (
+            <button onClick={exportarPDF} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "6px 10px", color: COLORS.textSub, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              PDF
+            </button>
+          )}
+          {conPrecio.length > 0 && (
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 11, color: tasaCobranza >= 80 ? COLORS.green : COLORS.yellow, fontWeight: 600 }}>{tasaCobranza}% cobrado</div>
+              <SparkLine data={conPrecio.map(c => Number(c.precio))} />
+            </div>
+          )}
+        </div>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
@@ -1181,10 +1284,11 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
         </div>
       )}
 
-      <div style={{ display: "flex", gap: 0, borderBottom: `1px solid ${COLORS.border}` }}>
-        {[["resumen", "Clientes"], ["cobros", "Cobros"]].map(([id, label]) => (
+      {/* Tabs */}
+      <div style={{ display: "flex", overflowX: "auto", gap: 0, borderBottom: `1px solid ${COLORS.border}`, scrollbarWidth: "none" }}>
+        {[["resumen", "Clientes"], ["historial", "Historial"], ["vencimientos", "Fechas"], ["cobros", "Cobros"]].map(([id, label]) => (
           <button key={id} onClick={() => setTab(id)}
-            style={{ flex: 1, padding: "8px 0", borderRadius: 11, border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, background: tab === id ? COLORS.accent : "transparent", color: tab === id ? "#fff" : COLORS.textSub, transition: "all 0.2s" }}>
+            style={{ flexShrink: 0, padding: "8px 14px", border: "none", cursor: "pointer", fontSize: 12, fontWeight: 500, background: "transparent", color: tab === id ? COLORS.accent : COLORS.textSub, borderBottom: tab === id ? `2px solid ${COLORS.accent}` : "2px solid transparent", transition: "all 0.2s" }}>
             {label}
           </button>
         ))}
@@ -1192,26 +1296,41 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
 
       {/* Tab: Clientes */}
       {tab === "resumen" && (
-        <motion.div key="resumen" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {clientesLocal.length === 0 && (
+        <motion.div key="resumen" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {conPrecio.length === 0 && (
             <div style={{ background: COLORS.surface, borderRadius: 8, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
               Agregá clientes con precio/mes para ver el seguimiento de cobros.
             </div>
           )}
-          {clientesLocal.filter(c => Number(c.precio) > 0).map((c, i) => (
-            <motion.div key={c.id || i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-              style={{ background: COLORS.surface, borderRadius: 8, padding: "12px 14px", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
-              <div onClick={() => onVerPerfil?.(c)} style={{ width: 36, height: 36, borderRadius: 11, background: c.estadoColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: c.estadoColor, flexShrink: 0, cursor: onVerPerfil ? "pointer" : "default" }}>{c.ini}</div>
-              <div onClick={() => onVerPerfil?.(c)} style={{ flex: 1, minWidth: 0, cursor: onVerPerfil ? "pointer" : "default" }}>
-                <div style={{ fontSize: 13, fontWeight: 500, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</div>
-                <div style={{ fontSize: 11, color: c.estadoColor, marginTop: 2 }}>{c.estado}</div>
+          {conPrecio.map((c, i) => (
+            <motion.div key={c.id || i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
+              style={{ background: COLORS.surface, borderRadius: 10, padding: "12px 14px", border: `1px solid ${COLORS.border}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div onClick={() => onVerPerfil?.(c)} style={{ width: 36, height: 36, borderRadius: 10, background: c.estadoColor + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: c.estadoColor, flexShrink: 0, cursor: "pointer" }}>{c.ini}</div>
+                <div onClick={() => onVerPerfil?.(c)} style={{ flex: 1, minWidth: 0, cursor: "pointer" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</div>
+                  <div style={{ fontSize: 11, color: c.estadoColor, marginTop: 1 }}>{c.estado}</div>
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, flexShrink: 0 }}>${(Number(c.precio) / 1000).toFixed(0)}K</div>
               </div>
-              <div style={{ fontSize: 13, fontWeight: 700, color: COLORS.text, flexShrink: 0 }}>${(Number(c.precio) / 1000).toFixed(0)}K</div>
-              <button onClick={() => toggleDeuda(c)} disabled={actualizando === c.id}
-                style={{ background: (c.meses_deuda || 0) === 0 ? "#3a1a1a" : "#1a3a1a", border: `1px solid ${(c.meses_deuda || 0) === 0 ? COLORS.red + "44" : COLORS.green + "44"}`, borderRadius: 10, padding: "5px 10px", cursor: "pointer", fontSize: 11, fontWeight: 600, color: (c.meses_deuda || 0) === 0 ? COLORS.red : COLORS.green, flexShrink: 0 }}>
-                {actualizando === c.id ? "..." : (c.meses_deuda || 0) === 0 ? "Debe" : "Cobrado"}
-              </button>
+              {/* Controles de deuda */}
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 10 }}>
+                {(c.meses_deuda || 0) > 0 && (
+                  <button onClick={() => enviarRecordatorio(c)} title="Recordatorio por WhatsApp"
+                    style={{ background: "#25D36611", border: `1px solid #25D36644`, borderRadius: 8, padding: "5px 8px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: "#25D366", fontSize: 11, fontWeight: 600 }}>
+                    <svg width={13} height={13} viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.136.565 4.13 1.538 5.858L0 24l6.335-1.502A11.944 11.944 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.8 9.8 0 01-4.964-1.349l-.355-.213-3.76.892.944-3.663-.234-.377A9.786 9.786 0 012.182 12C2.182 6.57 6.57 2.182 12 2.182c5.43 0 9.818 4.388 9.818 9.818 0 5.43-4.388 9.818-9.818 9.818z"/></svg>
+                    WA
+                  </button>
+                )}
+                <div style={{ flex: 1 }} />
+                <button onClick={() => cambiarDeuda(c, -1)} disabled={actualizando === c.id || (c.meses_deuda || 0) === 0}
+                  style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${COLORS.border2}`, background: COLORS.surface2, color: COLORS.text, fontSize: 16, cursor: (c.meses_deuda || 0) === 0 ? "default" : "pointer", opacity: (c.meses_deuda || 0) === 0 ? 0.3 : 1, display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                <div style={{ minWidth: 60, textAlign: "center", fontSize: 12, fontWeight: 600, color: (c.meses_deuda || 0) === 0 ? COLORS.green : COLORS.red }}>
+                  {actualizando === c.id ? "..." : (c.meses_deuda || 0) === 0 ? "Al día" : `${c.meses_deuda} mes${c.meses_deuda > 1 ? "es" : ""}`}
+                </div>
+                <button onClick={() => cambiarDeuda(c, 1)} disabled={actualizando === c.id}
+                  style={{ width: 30, height: 30, borderRadius: 8, border: `1px solid ${COLORS.border2}`, background: COLORS.surface2, color: COLORS.text, fontSize: 16, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+              </div>
             </motion.div>
           ))}
           {clientesLocal.filter(c => !Number(c.precio)).length > 0 && (
@@ -1222,14 +1341,108 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
         </motion.div>
       )}
 
-      {/* Tab: Configuración cobros */}
+      {/* Tab: Historial */}
+      {tab === "historial" && (
+        <motion.div key="historial" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {cargandoHistorial && <div style={{ color: COLORS.textMuted, fontSize: 13, textAlign: "center", padding: 20 }}>Cargando...</div>}
+          {!cargandoHistorial && historial.length === 0 && (
+            <div style={{ background: COLORS.surface, borderRadius: 8, padding: 20, border: `0.5px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
+              Acá vas a ver el historial de cobros registrados.{"\n"}Marcá un cliente como "al día" para registrar su pago.
+            </div>
+          )}
+          {Object.entries(historialAgrupado).map(([mes, pagos]) => (
+            <div key={mes}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>{mes.charAt(0).toUpperCase() + mes.slice(1)}</div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {pagos.map((p, i) => (
+                  <div key={i} style={{ background: COLORS.surface, borderRadius: 8, padding: "10px 14px", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: 8, background: COLORS.green + "22", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={COLORS.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>{p.cliente_nombre}</div>
+                      <div style={{ fontSize: 11, color: COLORS.textMuted }}>{new Date(p.fecha).toLocaleDateString("es-AR")} · {p.meses} mes{p.meses > 1 ? "es" : ""}</div>
+                    </div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: COLORS.green }}>${(p.monto / 1000).toFixed(0)}K</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      )}
+
+      {/* Tab: Vencimientos */}
+      {tab === "vencimientos" && (
+        <motion.div key="vencimientos" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ fontSize: 12, color: COLORS.textMuted }}>Asigná el día del mes en que vence el pago de cada cliente.</div>
+          {conVencimiento.map((c, i) => {
+            const dias = diasHastaVenc(c.dia_vencimiento)
+            const urgente = dias !== null && dias <= 3
+            return (
+              <div key={c.id} style={{ background: COLORS.surface, borderRadius: 10, padding: "12px 14px", border: `1px solid ${urgente ? COLORS.yellow + "55" : COLORS.border}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.accent, flexShrink: 0 }}>{c.ini}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
+                    <div style={{ fontSize: 11, color: urgente ? COLORS.yellow : COLORS.textMuted, marginTop: 1 }}>
+                      Día {c.dia_vencimiento} · {dias === 0 ? "Vence hoy" : dias === 1 ? "Mañana" : `En ${dias} días`}
+                    </div>
+                  </div>
+                  <button onClick={() => { setEditandoVenc(c.id); setDiaInput(String(c.dia_vencimiento)) }}
+                    style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "5px 10px", fontSize: 12, color: COLORS.textSub, cursor: "pointer" }}>
+                    Editar
+                  </button>
+                </div>
+                {editandoVenc === c.id && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                    <input type="number" min="1" max="31" value={diaInput} onChange={e => setDiaInput(e.target.value)} placeholder="Día (1-31)"
+                      style={{ ...inputS, marginBottom: 0, flex: 1 }} autoFocus />
+                    <button onClick={() => guardarDiaVencimiento(c, diaInput)} style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "0 14px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>OK</button>
+                    <button onClick={() => setEditandoVenc(null)} style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "0 10px", color: COLORS.textSub, fontSize: 13, cursor: "pointer" }}>✕</button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+          {sinVencimiento.length > 0 && (
+            <>
+              {conVencimiento.length > 0 && <div style={{ height: 1, background: COLORS.border, margin: "4px 0" }} />}
+              {sinVencimiento.map((c, i) => (
+                <div key={c.id} style={{ background: COLORS.surface, borderRadius: 10, padding: "12px 14px", border: `1px solid ${COLORS.border}` }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: COLORS.textMuted, flexShrink: 0 }}>{c.ini}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>{c.nombre}</div>
+                      <div style={{ fontSize: 11, color: COLORS.textMuted }}>Sin fecha asignada</div>
+                    </div>
+                    <button onClick={() => { setEditandoVenc(c.id); setDiaInput("") }}
+                      style={{ background: COLORS.accent + "22", border: `1px solid ${COLORS.accent}44`, borderRadius: 8, padding: "5px 10px", fontSize: 12, color: COLORS.accent, cursor: "pointer", fontWeight: 600 }}>
+                      + Fecha
+                    </button>
+                  </div>
+                  {editandoVenc === c.id && (
+                    <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
+                      <input type="number" min="1" max="31" value={diaInput} onChange={e => setDiaInput(e.target.value)} placeholder="Día (1-31)"
+                        style={{ ...inputS, marginBottom: 0, flex: 1 }} autoFocus />
+                      <button onClick={() => guardarDiaVencimiento(c, diaInput)} style={{ background: COLORS.accent, border: "none", borderRadius: 8, padding: "0 14px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>OK</button>
+                      <button onClick={() => setEditandoVenc(null)} style={{ background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "0 10px", color: COLORS.textSub, fontSize: 13, cursor: "pointer" }}>✕</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
+        </motion.div>
+      )}
+
+      {/* Tab: Cobros */}
       {tab === "cobros" && (
-        <motion.div key="cobros" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        <motion.div key="cobros" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.border}` }}>
             <div style={{ ...T.label, marginBottom: 4 }}>Usuario de Mercado Pago</div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
-              Ingresá tu usuario de MP (lo encontrás en tu perfil de la app). Tus clientes podrán hacerte click para pagarte.{" "}
+              Ingresá tu usuario de MP para que tus clientes puedan pagarte.{" "}
               <span style={{ color: COLORS.accent }}>Ej: si tu link es mercadopago.com.ar/juantrainer → ponés "juantrainer".</span>
             </div>
             <input placeholder="Ej: juantrainer" value={mpSettings.alias} onChange={e => setMpSettings(p => ({ ...p, alias: e.target.value.trim() }))} style={inputS} />
@@ -1239,7 +1452,6 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
               </div>
             )}
           </div>
-
           <div style={{ background: COLORS.surface, borderRadius: 8, padding: 16, border: `1px solid ${COLORS.border}` }}>
             <div style={{ ...T.label, marginBottom: 4 }}>Access Token (API avanzada)</div>
             <div style={{ fontSize: 12, color: COLORS.textMuted, marginBottom: 12 }}>
@@ -1248,15 +1460,13 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
             </div>
             <input placeholder="APP_USR-..." value={mpSettings.access_token} onChange={e => setMpSettings(p => ({ ...p, access_token: e.target.value }))} style={{ ...inputS, fontFamily: "monospace", fontSize: 12 }} />
             <div style={{ fontSize: 11, color: COLORS.yellow, background: COLORS.yellow + "11", borderRadius: 8, padding: "8px 12px" }}>
-              ⚠ No compartas este token. Si lo perdés podés revocarlo desde el panel de MP.
+              ⚠ No compartas este token. Podés revocarlo desde el panel de MP.
             </div>
           </div>
-
           <motion.button whileTap={{ scale: 0.97 }} onClick={guardarSettings} disabled={guardandoSettings}
             style={{ background: settingsOk ? COLORS.green : COLORS.accent, border: "none", borderRadius: 8, padding: "13px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardandoSettings ? 0.6 : 1, transition: "background 0.3s" }}>
             {guardandoSettings ? "Guardando..." : settingsOk ? "✓ Guardado" : "Guardar configuración"}
           </motion.button>
-
           {(mpSettings.alias || mpSettings.access_token) && (
             <div style={{ background: COLORS.surface, borderRadius: 8, padding: 14, border: `1px solid ${COLORS.green}33` }}>
               <div style={{ fontSize: 12, color: COLORS.green, fontWeight: 600, marginBottom: 4 }}>✓ Cobros configurados</div>
