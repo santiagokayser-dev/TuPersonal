@@ -1313,6 +1313,7 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
   const [cargandoHistorial, setCargandoHistorial] = useState(false)
   const [editandoVenc, setEditandoVenc] = useState(null)
   const [diaInput, setDiaInput] = useState("")
+  const [confirmFn, setConfirmFn] = useState(null)
 
   useEffect(() => { setClientesLocal(clientes) }, [clientes])
 
