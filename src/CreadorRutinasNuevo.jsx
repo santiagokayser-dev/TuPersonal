@@ -421,9 +421,11 @@ function Biblioteca({ onAgregar, onCerrar, ejerciciosCustom, onAgregarCustom }) 
 // ── AI Generator ──────────────────────────────────────────────────────────────
 function GeneradorAI({ onRutinaGenerada, clientes, onCerrar }) {
   const [prompt, setPrompt] = useState("")
-  const [clienteSel, setClienteSel] = useState("")
+  const [clienteSelId, setClienteSelId] = useState("")
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState("")
+
+  const clienteSel = clientes.find(c => c.id === clienteSelId)
 
   const generar = async () => {
     if (!prompt.trim()) return
@@ -431,7 +433,7 @@ function GeneradorAI({ onRutinaGenerada, clientes, onCerrar }) {
     try {
       const texto = await askClaude({
         max_tokens: 4000,
-        messages: [{ role: "user", content: `Sos un personal trainer experto. Generá una rutina de entrenamiento basada en esto: "${prompt}"${clienteSel ? ` para el cliente ${clienteSel}` : ""}.\nRespondé SOLO con JSON válido, sin texto extra, con este formato exacto:\n{"nombre":"nombre de la rutina","dias":[{"nombre":"Día A - Pecho y Tríceps","ejercicios":[{"nombre":"Press de banca","series":"4","reps":"8-10","peso":"80kg","rir":"2","descanso":"120","aclaracion":""}]}]}` }]
+        messages: [{ role: "user", content: `Sos un personal trainer experto. Generá una rutina de entrenamiento basada en esto: "${prompt}"${clienteSel ? ` para el cliente ${clienteSel.nombre}` : ""}.\nRespondé SOLO con JSON válido, sin texto extra, con este formato exacto:\n{"nombre":"nombre de la rutina","dias":[{"nombre":"Día A - Pecho y Tríceps","ejercicios":[{"nombre":"Press de banca","series":"4","reps":"8-10","peso":"80kg","rir":"2","descanso":"120","aclaracion":""}]}]}` }]
       })
       if (!texto) { setError("La IA no devolvió respuesta."); setCargando(false); return }
       const rutina = JSON.parse(texto.replace(/```json|```/g, "").trim())
@@ -442,7 +444,7 @@ function GeneradorAI({ onRutinaGenerada, clientes, onCerrar }) {
           ejercicios: [{ nombre: ej.nombre || "", series: String(ej.series || "3"), reps: String(ej.reps || "10"), peso: String(ej.peso || ""), rir: String(ej.rir || "2"), descanso: String(ej.descanso || "90"), aclaracion: ej.aclaracion || "", video: "" }]
         }))
       }))
-      onRutinaGenerada(rutina.nombre, dias)
+      onRutinaGenerada(rutina.nombre, dias, clienteSelId || null)
     } catch (e) {
       setError(e.message?.includes("401") ? "API key inválida." : `Error: ${e.message}`)
     }
@@ -463,10 +465,10 @@ function GeneradorAI({ onRutinaGenerada, clientes, onCerrar }) {
       </div>
       <div style={{ padding: "12px 16px", display: "flex", flexDirection: "column", gap: 10 }}>
         {clientes.length > 0 && (
-          <select value={clienteSel} onChange={e => setClienteSel(e.target.value)}
-            style={{ ...inp, color: clienteSel ? C.text : C.textMuted }}>
+          <select value={clienteSelId} onChange={e => setClienteSelId(e.target.value)}
+            style={{ ...inp, color: clienteSelId ? C.text : C.textMuted }}>
             <option value="">Seleccionar cliente (opcional)</option>
-            {clientes.map((c, i) => <option key={i} value={c.nombre}>{c.nombre}</option>)}
+            {clientes.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </select>
         )}
         <textarea value={prompt} onChange={e => setPrompt(e.target.value)}
@@ -559,6 +561,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
   const [guardando, setGuardando] = useState(false)
   const [biblioteca, setBiblioteca] = useState(false)
   const [aiPanel, setAiPanel] = useState(false)
+  const [aiGenerado, setAiGenerado] = useState(false)
   const [confirmFn, setConfirmFn] = useState(null)
   const [ejerciciosCustom, setEjerciciosCustom] = useState({})
   const [tipoPicker, setTipoPicker] = useState(false)
@@ -608,8 +611,13 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
     setBiblioteca(false)
   }
 
-  const handleRutinaAI = (nombreRutina, diasGenerados) => {
-    setNombre(nombreRutina); setDias(diasGenerados); setDiaActivo(0); setAiPanel(false)
+  const handleRutinaAI = (nombreRutina, diasGenerados, clienteId) => {
+    setNombre(nombreRutina)
+    setDias(diasGenerados)
+    setDiaActivo(0)
+    setAiPanel(false)
+    setAiGenerado(true)
+    if (clienteId) setClientesAsignados(prev => prev.includes(clienteId) ? prev : [...prev, clienteId])
   }
 
   const handleGuardar = async () => {
@@ -729,7 +737,7 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
           {bloques.map((bloque, bIdx) => (
             <DraggableBloque key={bloque.id} bloque={bloque} bloqueIdx={bIdx}
               onChange={nuevo => updateBloque(bIdx, nuevo)} onDelete={() => setConfirmFn(() => () => deleteBloque(bIdx))}
-              ejerciciosCustom={ejerciciosCustom} startCollapsed={esEdicion} />
+              ejerciciosCustom={ejerciciosCustom} startCollapsed={esEdicion || aiGenerado} />
           ))}
         </AnimatePresence>
       </Reorder.Group>
