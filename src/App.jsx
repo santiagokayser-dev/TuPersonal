@@ -261,6 +261,36 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
   )
 }
 
+const CLIENTE_INPUT_STYLE = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
+
+function ClienteEditForm({ datos, setDatos, guardando, onGuardar, onCancelar }) {
+  return (
+    <>
+      <input placeholder="Nombre" value={datos.nombre || ""} onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={CLIENTE_INPUT_STYLE} />
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        <input placeholder="Peso (kg)" value={datos.peso || ""} onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...CLIENTE_INPUT_STYLE, marginBottom: 0 }} />
+        <input placeholder="Altura (cm)" value={datos.altura || ""} onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...CLIENTE_INPUT_STYLE, marginBottom: 0 }} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        <input placeholder="Edad" value={datos.edad || ""} onChange={e => setDatos(p => ({ ...p, edad: e.target.value }))} style={{ ...CLIENTE_INPUT_STYLE, marginBottom: 0 }} />
+        <input placeholder="Precio/mes" value={datos.precio || ""} onChange={e => setDatos(p => ({ ...p, precio: e.target.value }))} style={{ ...CLIENTE_INPUT_STYLE, marginBottom: 0 }} />
+      </div>
+      <input placeholder="Objetivo" value={datos.objetivo || ""} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={CLIENTE_INPUT_STYLE} />
+      <input placeholder="Teléfono (ej: 1134567890)" value={datos.telefono || ""} onChange={e => setDatos(p => ({ ...p, telefono: e.target.value }))} style={CLIENTE_INPUT_STYLE} type="tel" />
+      <div style={{ display: "flex", gap: 8 }}>
+        <button onClick={onCancelar}
+          style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>
+          Cancelar
+        </button>
+        <button onClick={onGuardar} disabled={guardando}
+          style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.5 : 1 }}>
+          {guardando ? "Guardando..." : "Guardar cambios"}
+        </button>
+      </div>
+    </>
+  )
+}
+
 function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, planActual = "gratis", onMejorarPlan }) {
   const isMobile = useIsMobile()
   const [tab, setTab] = useState("info")
@@ -419,29 +449,13 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
 
         {tab === "info" && (
           editando ? (
-            <>
-              <input placeholder="Nombre" value={datos.nombre} onChange={e => setDatos(p => ({ ...p, nombre: e.target.value }))} style={inputStyle} />
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-                <input placeholder="Peso (kg)" value={datos.peso} onChange={e => setDatos(p => ({ ...p, peso: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-                <input placeholder="Altura (cm)" value={datos.altura} onChange={e => setDatos(p => ({ ...p, altura: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
-                <input placeholder="Edad" value={datos.edad} onChange={e => setDatos(p => ({ ...p, edad: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-                <input placeholder="Precio/mes" value={datos.precio} onChange={e => setDatos(p => ({ ...p, precio: e.target.value }))} style={{ ...inputStyle, marginBottom: 0 }} />
-              </div>
-              <input placeholder="Objetivo" value={datos.objetivo} onChange={e => setDatos(p => ({ ...p, objetivo: e.target.value }))} style={inputStyle} />
-              <input placeholder="Teléfono (ej: 1134567890)" value={datos.telefono || ""} onChange={e => setDatos(p => ({ ...p, telefono: e.target.value }))} style={inputStyle} type="tel" />
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => setEditando(false)}
-                  style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 6, padding: "12px 0", color: COLORS.textSub, fontSize: 14, cursor: "pointer" }}>
-                  Cancelar
-                </button>
-                <button onClick={guardarCambios} disabled={guardando}
-                  style={{ flex: 2, background: COLORS.accent, border: "none", borderRadius: 6, padding: "12px 0", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", opacity: guardando ? 0.5 : 1 }}>
-                  {guardando ? "Guardando..." : "Guardar cambios"}
-                </button>
-              </div>
-            </>
+            <ClienteEditForm
+              datos={datos}
+              setDatos={setDatos}
+              guardando={guardando}
+              onGuardar={guardarCambios}
+              onCancelar={() => setEditando(false)}
+            />
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {[{ l: "Peso", v: datos.peso ? `${datos.peso} kg` : "—" }, { l: "Altura", v: datos.altura ? `${datos.altura} cm` : "—" }, { l: "Edad", v: datos.edad ? `${datos.edad} años` : "—" }, { l: "Precio", v: datos.precio ? `$${Number(datos.precio).toLocaleString("es-AR")}/mes` : "—" }, { l: "Objetivo", v: datos.objetivo || "Sin objetivo" }, { l: "Teléfono", v: datos.telefono || "—" }].map((m, i, arr) => (
