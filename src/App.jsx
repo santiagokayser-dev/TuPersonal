@@ -2455,28 +2455,27 @@ export default function App({ user: initialUser, onLogout }) {
     <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", fontFamily }}>
       {/* Sidebar — solo desktop */}
       {!isMobile && (
-        <div style={{ width: 220, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0 }}>
-          <div style={{ padding: "20px 16px 16px" }}>
-            <div style={{ marginBottom: 14, padding: "0 4px" }}>
-              <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 90, width: "auto", display: "block", cursor: "pointer" }} />
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ width: 26, height: 26, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: "#fff" }}>
-                {(nombreTrainer || "E").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
-              </div>
-              <div style={{ fontSize: 12, color: COLORS.textSub, fontWeight: 500 }}>{nombreTrainer}</div>
-            </div>
+        <div style={{ width: 76, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0, alignItems: "center" }}>
+          <div style={{ padding: "16px 0 8px" }}>
+            <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 36, width: "auto", cursor: "pointer", display: "block" }} />
           </div>
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 2, padding: "0 8px" }}>
+          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 1, padding: "8px 6px", width: "100%" }}>
             {navItems.map(item => {
               const activo = activePage === item.id && !clienteSeleccionado
+              const esPerfil = item.id === "perfil"
+              const avatarUrl = user?.user_metadata?.avatar_url
               return (
                 <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null) }}
-                  style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", background: activo ? `${COLORS.accent}22` : "none", border: "none", borderRadius: 10, color: activo ? "#fff" : COLORS.textSub, fontSize: 14, fontWeight: activo ? 600 : 400, cursor: "pointer", textAlign: "left", fontFamily, position: "relative" }}>
-                  <Icon name={item.icon} size={18} color={activo ? COLORS.accentLight : COLORS.textMuted} />
-                  {item.label}
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "9px 0", background: activo ? `${COLORS.accent}22` : "none", border: "none", borderRadius: 10, cursor: "pointer", width: "100%", position: "relative" }}>
+                  {esPerfil && avatarUrl
+                    ? <div style={{ width: 22, height: 22, borderRadius: 6, overflow: "hidden", border: `2px solid ${activo ? COLORS.accent : "transparent"}` }}>
+                        <img src={avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      </div>
+                    : <Icon name={item.icon} size={22} color={activo ? COLORS.accent : COLORS.textMuted} />
+                  }
+                  <span style={{ fontSize: 10, fontWeight: 500, color: activo ? COLORS.accent : COLORS.textMuted, lineHeight: 1 }}>{item.label}</span>
                   {item.id === "chat" && chatNoLeidos > 0 && (
-                    <span style={{ marginLeft: "auto", minWidth: 18, height: 18, borderRadius: 9, background: COLORS.accent, fontSize: 10, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>
+                    <span style={{ position: "absolute", top: 5, right: 8, minWidth: 16, height: 16, borderRadius: 8, background: COLORS.accent, fontSize: 9, fontWeight: 700, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 4px" }}>
                       {chatNoLeidos > 99 ? "99+" : chatNoLeidos}
                     </span>
                   )}
@@ -2484,11 +2483,11 @@ export default function App({ user: initialUser, onLogout }) {
               )
             })}
           </div>
-          <div style={{ padding: "16px 20px" }}>
+          <div style={{ padding: "12px 6px 20px", width: "100%" }}>
             <button onClick={onLogout}
-              style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily, padding: 0 }}>
-              <Icon name="logout" size={16} color={COLORS.textMuted} />
-              Cerrar sesión
+              style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, background: "none", border: "none", cursor: "pointer", width: "100%", padding: "8px 0", borderRadius: 10 }}>
+              <Icon name="logout" size={20} color={COLORS.textMuted} />
+              <span style={{ fontSize: 10, fontWeight: 500, color: COLORS.textMuted }}>Salir</span>
             </button>
           </div>
         </div>
