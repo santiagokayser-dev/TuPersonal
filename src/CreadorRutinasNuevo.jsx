@@ -55,6 +55,37 @@ const TIPOS = [
 const TIPO_MAX = { normal: 1, biserie: 2, superserie: 6, circuito: 10 }
 
 const ejVacio = () => ({ nombre: "", series: "3", reps: "10", peso: "", rir: "2", descanso: "90", aclaracion: "", video: "" })
+
+function normalizarDias(dias) {
+  if (!Array.isArray(dias)) return []
+  return dias.map(d => {
+    const nombre = d.nombre || "Día"
+    if (Array.isArray(d.bloques)) {
+      return {
+        nombre,
+        bloques: d.bloques.map(b => ({
+          id: b.id || Math.random().toString(36).slice(2),
+          tipo: b.tipo || "normal",
+          ejercicios: Array.isArray(b.ejercicios) && b.ejercicios.length > 0
+            ? b.ejercicios.map(e => ({ ...ejVacio(), ...e }))
+            : [ejVacio()],
+        }))
+      }
+    }
+    // Formato viejo: ejercicios directamente en el día
+    if (Array.isArray(d.ejercicios) && d.ejercicios.length > 0) {
+      return {
+        nombre,
+        bloques: d.ejercicios.map(e => ({
+          id: Math.random().toString(36).slice(2),
+          tipo: "normal",
+          ejercicios: [{ ...ejVacio(), ...e }],
+        }))
+      }
+    }
+    return { nombre, bloques: [] }
+  })
+}
 const bloqueVacio = (tipo = "normal") => ({
   id: Math.random().toString(36).slice(2),
   tipo,
@@ -514,7 +545,11 @@ export default function CreadorRutinasNuevo({ clientes = [], onGuardar, planActu
   const esEdicion = !!rutinaInicial?.id
   const diasIniciales = (() => {
     if (!rutinaInicial) return [{ nombre: "Día A", bloques: [] }, { nombre: "Día B", bloques: [] }, { nombre: "Día C", bloques: [] }]
-    try { return typeof rutinaInicial.dias === "string" ? JSON.parse(rutinaInicial.dias) : (rutinaInicial.dias || []) } catch { return [] }
+    try {
+      const raw = typeof rutinaInicial.dias === "string" ? JSON.parse(rutinaInicial.dias) : (rutinaInicial.dias || [])
+      const norm = normalizarDias(raw)
+      return norm.length > 0 ? norm : [{ nombre: "Día A", bloques: [] }]
+    } catch { return [{ nombre: "Día A", bloques: [] }] }
   })()
   const [nombre, setNombre] = useState(rutinaInicial?.nombre || "")
   const [dias, setDias] = useState(diasIniciales)
