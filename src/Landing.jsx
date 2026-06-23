@@ -105,8 +105,8 @@ const PLANS = [
   },
   {
     name: "Pro",
-    price: "9.99",
-    currency: "USD",
+    price: "14.000",
+    currency: "ARS",
     period: "mes",
     desc: "Para entrenadores en crecimiento",
     features: ["Hasta 20 clientes", "Todo lo de Gratis", "Generación de rutinas con IA", "Sugerencias de progresión con IA", "Chat con IA ilimitado", "Exportar PDF"],
@@ -115,8 +115,8 @@ const PLANS = [
   },
   {
     name: "Elite",
-    price: "19.99",
-    currency: "USD",
+    price: "24.000",
+    currency: "ARS",
     period: "mes",
     desc: "Para entrenadores establecidos",
     features: ["Clientes ilimitados", "Todo lo de Pro", "Portal del atleta", "Soporte prioritario"],
@@ -132,7 +132,7 @@ const PASOS = [
   { n: "04", title: "Gestioná todo desde el celular", desc: "Instalá la app en tu teléfono y trabajá desde donde estés." },
 ]
 
-export default function Landing({ onEntrar }) {
+export default function Landing({ onEmpezar, onLogin }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   const scrollTo = (id) => {
@@ -146,7 +146,7 @@ export default function Landing({ onEntrar }) {
       {/* NAV */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: C.bg + "e8", backdropFilter: "blur(16px)", borderBottom: `1px solid ${C.border}` }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <img src="/logo-white.png" alt="TuPersonal" style={{ height: 28, objectFit: "contain" }} />
+          <img src="/logo-white.png" alt="TuPersonal" style={{ height: 44, objectFit: "contain" }} />
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => scrollTo("features")}
               style={{ display: window.innerWidth < 640 ? "none" : "block", background: "none", border: "none", color: C.textSub, fontSize: 13, cursor: "pointer", padding: "6px 12px" }}>
@@ -156,11 +156,11 @@ export default function Landing({ onEntrar }) {
               style={{ display: window.innerWidth < 640 ? "none" : "block", background: "none", border: "none", color: C.textSub, fontSize: 13, cursor: "pointer", padding: "6px 12px" }}>
               Planes
             </button>
-            <button onClick={onEntrar}
+            <button onClick={onLogin}
               style={{ background: "none", border: `1px solid ${C.border2}`, borderRadius: 6, padding: "7px 14px", color: C.text, fontSize: 13, cursor: "pointer" }}>
               Iniciar sesión
             </button>
-            <button onClick={onEntrar}
+            <button onClick={onEmpezar}
               style={{ background: C.accent, border: "none", borderRadius: 6, padding: "7px 16px", color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
               Empezar gratis
             </button>
@@ -191,7 +191,7 @@ export default function Landing({ onEntrar }) {
         </FadeIn>
         <FadeIn delay={0.15}>
           <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={onEntrar}
+            <button onClick={onEmpezar}
               style={{ background: C.accent, border: "none", borderRadius: 8, padding: "13px 28px", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 8 }}>
               Empezar gratis
               <Icon name="arrow" size={16} color="#fff" />
@@ -204,6 +204,7 @@ export default function Landing({ onEntrar }) {
           <p style={{ fontSize: 12, color: C.textMuted, marginTop: 16 }}>Sin tarjeta de crédito · Hasta 3 clientes gratis</p>
         </FadeIn>
 
+        {/* App preview mockup */}
         <FadeIn delay={0.2} y={40}>
           <div style={{ marginTop: 56, position: "relative", display: "inline-block" }}>
             <div style={{
@@ -266,6 +267,7 @@ export default function Landing({ onEntrar }) {
         </FadeIn>
       </section>
 
+      {/* SOCIAL PROOF */}
       <FadeIn>
         <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "20px 20px" }}>
           <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
@@ -279,6 +281,7 @@ export default function Landing({ onEntrar }) {
         </section>
       </FadeIn>
 
+      {/* FEATURES */}
       <section id="features" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px" }}>
         <FadeIn>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -302,6 +305,7 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
+      {/* HOW IT WORKS */}
       <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px 20px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
@@ -324,6 +328,7 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
+      {/* AI SPOTLIGHT */}
       <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 40, alignItems: "center" }}>
           <FadeIn>
@@ -338,7 +343,7 @@ export default function Landing({ onEntrar }) {
               <p style={{ fontSize: 14, color: C.textSub, lineHeight: 1.7, marginBottom: 24 }}>
                 Describí el objetivo de tu cliente y la IA genera una rutina completa en segundos:
                 días, bloques, ejercicios, series, reps y tiempos de descanso. Podés editarla
-                como querás antes de asignarla.
+                como quieras antes de asignarla.
               </p>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -355,7 +360,7 @@ export default function Landing({ onEntrar }) {
                   </li>
                 ))}
               </ul>
-              <button onClick={onEntrar}
+              <button onClick={onEmpezar}
                 style={{ background: "#a855f7", border: "none", borderRadius: 8, padding: "11px 22px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
                 Probar con IA
               </button>
@@ -386,6 +391,7 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
+      {/* EXTRA HIGHLIGHTS */}
       <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "64px 20px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 }}>
@@ -411,6 +417,7 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
+      {/* PRICING */}
       <section id="planes" style={{ maxWidth: 1000, margin: "0 auto", padding: "80px 20px" }}>
         <FadeIn>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -436,7 +443,7 @@ export default function Landing({ onEntrar }) {
                 <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{plan.name}</div>
                 <div style={{ fontSize: 12, color: C.textSub, marginBottom: 20 }}>{plan.desc}</div>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 24 }}>
-                  {plan.currency && <span style={{ fontSize: 14, color: C.textSub }}>USD</span>}
+                  {plan.currency && <span style={{ fontSize: 14, color: C.textSub }}>{plan.currency}</span>}
                   <span style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.03em" }}>${plan.price}</span>
                   <span style={{ fontSize: 13, color: C.textMuted }}>/ {plan.period}</span>
                 </div>
@@ -448,7 +455,7 @@ export default function Landing({ onEntrar }) {
                     </li>
                   ))}
                 </ul>
-                <button onClick={onEntrar} style={{
+                <button onClick={onEmpezar} style={{
                   width: "100%", border: "none", borderRadius: 8, padding: "11px 0",
                   background: plan.highlighted ? C.accent : C.surface2,
                   color: plan.highlighted ? "#fff" : C.text,
@@ -463,6 +470,7 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
+      {/* FINAL CTA */}
       <section style={{ padding: "0 20px 80px" }}>
         <FadeIn>
           <div style={{
@@ -478,23 +486,24 @@ export default function Landing({ onEntrar }) {
               Unite a los entrenadores que ya usan TuPersonal para gestionar su negocio de forma profesional.
               Sin tarjeta de crédito, sin compromisos.
             </p>
-            <button onClick={onEntrar}
+            <button onClick={onEmpezar}
               style={{ background: C.accent, border: "none", borderRadius: 8, padding: "13px 32px", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
               Crear cuenta gratis
               <Icon name="arrow" size={16} color="#fff" />
             </button>
-            <p style={{ fontSize: 12, color: C.textMuted, marginTop: 14 }}>¿Ya tenés cuenta? <span onClick={onEntrar} style={{ color: C.accent, cursor: "pointer" }}>Iniciá sesión</span></p>
+            <p style={{ fontSize: 12, color: C.textMuted, marginTop: 14 }}>¿Ya tenés cuenta? <span onClick={onLogin} style={{ color: C.accent, cursor: "pointer" }}>Iniciá sesión</span></p>
           </div>
         </FadeIn>
       </section>
 
+      {/* FOOTER */}
       <footer style={{ borderTop: `1px solid ${C.border}`, padding: "28px 20px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <img src="/logo-white.png" alt="TuPersonal" style={{ height: 22, objectFit: "contain" }} />
           <div style={{ fontSize: 12, color: C.textMuted }}>© {new Date().getFullYear()} TuPersonal · Hecho en Argentina</div>
           <div style={{ display: "flex", gap: 20 }}>
             {["Funciones", "Planes", "Iniciar sesión"].map(l => (
-              <span key={l} onClick={l === "Iniciar sesión" ? onEntrar : () => scrollTo(l === "Funciones" ? "features" : "planes")}
+              <span key={l} onClick={l === "Iniciar sesión" ? onLogin : () => scrollTo(l === "Funciones" ? "features" : "planes")}
                 style={{ fontSize: 12, color: C.textSub, cursor: "pointer" }}>
                 {l}
               </span>

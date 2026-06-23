@@ -60,11 +60,11 @@ function RolSelector({ rol, onChange }) {
   )
 }
 
-export default function Auth() {
+export default function Auth({ initialModo = "login" }) {
   const params = new URLSearchParams(window.location.search)
   const inviteTrainerId = params.get("invite")
 
-  const [modo, setModo] = useState(inviteTrainerId ? "registro" : "login")
+  const [modo, setModo] = useState(inviteTrainerId ? "registro" : initialModo)
   const [rol, setRol] = useState(inviteTrainerId ? "cliente" : "trainer")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
