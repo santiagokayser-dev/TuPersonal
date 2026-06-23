@@ -69,6 +69,7 @@ function Root() {
   const [loading, setLoading] = useState(true)
   const [rol, setRol] = useState(null)
   const [showAuth, setShowAuth] = useState(false)
+  const [authMode, setAuthMode] = useState("login")
 
   useEffect(() => {
     const handleInviteLink = async (user) => {
@@ -109,7 +110,7 @@ function Root() {
   }
 
   if (loading) return null
-  if (!session) return showAuth ? <Auth /> : <Landing onEntrar={() => setShowAuth(true)} />
+  if (!session) return showAuth ? <Auth initialModo={authMode} /> : <Landing onEmpezar={() => { setAuthMode("registro"); setShowAuth(true) }} onLogin={() => { setAuthMode("login"); setShowAuth(true) }} />
   if (!rol) return <ElegirRol onElegir={setRol} />
   if (rol === "cliente") return <ClientePanel user={session.user} onLogout={handleLogout} />
   return <App user={session.user} onLogout={handleLogout} />
