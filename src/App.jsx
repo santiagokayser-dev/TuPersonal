@@ -2470,7 +2470,7 @@ export default function App({ user: initialUser, onLogout }) {
     <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", display: "flex", fontFamily }}>
       {/* Sidebar — solo desktop */}
       {!isMobile && (
-        <div style={{ width: 76, background: COLORS.surface, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0, alignItems: "center" }}>
+        <div style={{ width: 76, background: COLORS.bg, borderRight: `1px solid ${COLORS.border}`, display: "flex", flexDirection: "column", height: "var(--app-height, 100dvh)", position: "sticky", top: 0, flexShrink: 0, alignItems: "center" }}>
           <div style={{ padding: "16px 0 8px" }}>
             <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 36, width: "auto", cursor: "pointer", display: "block" }} />
           </div>
@@ -2481,7 +2481,7 @@ export default function App({ user: initialUser, onLogout }) {
               const avatarUrl = user?.user_metadata?.avatar_url
               return (
                 <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null) }}
-                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, padding: "9px 0", background: activo ? `${COLORS.accent}22` : "none", border: "none", borderRadius: 10, cursor: "pointer", width: "100%", position: "relative" }}>
+                  style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "9px 0", background: "none", border: "none", cursor: "pointer", width: "100%", position: "relative" }}>
                   {esPerfil && avatarUrl
                     ? <div style={{ width: 22, height: 22, borderRadius: 6, overflow: "hidden", border: `2px solid ${activo ? COLORS.accent : "transparent"}` }}>
                         <img src={avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
