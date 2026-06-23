@@ -123,11 +123,11 @@ function useAnimatedNumber(target, duration = 900) {
 }
 
 function LineChart({ data, labels, color = COLORS.accent }) {
-  const W = 280, H = 72
+  const W = 500, H = 110
   const max = Math.max(...data)
   const min = Math.min(...data)
   const range = max - min || 1
-  const pad = { l: 4, r: 4, t: 8, b: 20 }
+  const pad = { l: 6, r: 6, t: 12, b: 26 }
   const pts = data.map((v, i) => [
     pad.l + (i / (data.length - 1)) * (W - pad.l - pad.r),
     pad.t + (1 - (v - min) / range) * (H - pad.t - pad.b),
@@ -136,27 +136,27 @@ function LineChart({ data, labels, color = COLORS.accent }) {
   const fillD = `${pathD} L${pts[pts.length - 1][0]},${H - pad.b} L${pts[0][0]},${H - pad.b} Z`
   const gradId = "lg1"
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible", display: "block" }}>
       <defs>
         <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.18" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.15" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
       {[0.25, 0.5, 0.75].map(t => {
         const y = pad.t + t * (H - pad.t - pad.b)
-        return <line key={t} x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke={COLORS.border} strokeWidth="0.5" strokeDasharray="3,3" />
+        return <line key={t} x1={pad.l} x2={W - pad.r} y1={y} y2={y} stroke={COLORS.border} strokeWidth="1" strokeDasharray="4,4" />
       })}
       <motion.path d={fillD} fill={`url(#${gradId})`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} />
-      <motion.path d={pathD} fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+      <motion.path d={pathD} fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
         initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1, ease: "easeOut" }} />
       {pts.map((p, i) => (
-        <motion.circle key={i} cx={p[0]} cy={p[1]} r={i === data.length - 1 ? 3.5 : 2.5}
-          fill={i === data.length - 1 ? color : COLORS.bg} stroke={color} strokeWidth={1.5}
-          initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8 + i * 0.04 }} />
+        <motion.circle key={i} cx={p[0]} cy={p[1]} r={i === data.length - 1 ? 5 : 3.5}
+          fill={i === data.length - 1 ? color : COLORS.bg} stroke={color} strokeWidth="2"
+          initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8 + i * 0.05 }} />
       ))}
       {labels.map((l, i) => (
-        <text key={i} x={pts[i][0]} y={H - 4} textAnchor="middle" fontSize="9" fill={COLORS.textMuted} fontFamily="-apple-system,sans-serif">{l}</text>
+        <text key={i} x={pts[i][0]} y={H - 6} textAnchor="middle" fontSize="13" fill={COLORS.textMuted} fontFamily="-apple-system,sans-serif">{l}</text>
       ))}
     </svg>
   )
@@ -216,11 +216,13 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
 
       {/* Gráfico */}
       <div style={{ paddingBottom: 20, borderBottom: `1px solid ${COLORS.border}`, marginTop: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-          <div style={T.label}>Ingresos — 6 meses</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>${barData[barData.length - 1]}K</div>
+        <div style={{ background: COLORS.surface, borderRadius: 14, border: `1px solid ${COLORS.border}`, padding: "16px 20px 12px", maxWidth: 620 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+            <div style={T.label}>Ingresos — 6 meses</div>
+            <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text }}>${barData[barData.length - 1]}K</div>
+          </div>
+          <LineChart data={barData} labels={barLabels} />
         </div>
-        <LineChart data={barData} labels={barLabels} />
       </div>
 
       {/* Clientes */}
