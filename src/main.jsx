@@ -5,6 +5,7 @@ import { supabase } from './supabase'
 import App from './App.jsx'
 import Auth from './Auth.jsx'
 import ClientePanel from './ClientePanel.jsx'
+import Landing from './Landing.jsx'
 import './index.css'
 
 const COLORS = { bg: "#060A10", surface: "#0C1220", border: "#1E2D4A", accent: "#2563EB", accentSub: "#1E3A8A", text: "#fff", textMuted: "#94A3B8" }
@@ -67,6 +68,7 @@ function Root() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [rol, setRol] = useState(null)
+  const [showAuth, setShowAuth] = useState(false)
 
   useEffect(() => {
     const handleInviteLink = async (user) => {
@@ -107,7 +109,7 @@ function Root() {
   }
 
   if (loading) return null
-  if (!session) return <Auth />
+  if (!session) return showAuth ? <Auth /> : <Landing onEntrar={() => setShowAuth(true)} />
   if (!rol) return <ElegirRol onElegir={setRol} />
   if (rol === "cliente") return <ClientePanel user={session.user} onLogout={handleLogout} />
   return <App user={session.user} onLogout={handleLogout} />
