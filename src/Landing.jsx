@@ -141,7 +141,7 @@ export default function Landing({ onEmpezar, onLogin }) {
   }
 
   return (
-    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", color: C.text, overflow: "hidden", position: "relative" }}>
+    <div style={{ background: C.bg, minHeight: "100vh", fontFamily: "'Styrene A', -apple-system, BlinkMacSystemFont, sans-serif", color: C.text, overflowX: "hidden", position: "relative" }}>
 
       {/* Background ambient glows */}
       <div aria-hidden="true" style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
