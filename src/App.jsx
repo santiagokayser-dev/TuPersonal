@@ -2081,7 +2081,7 @@ const PLANES = [
   {
     id: "pro",
     nombre: "Pro",
-    precio: "$9.999",
+    precio: "$14.000",
     periodo: "/mes",
     descripcion: "Para crecer",
     color: COLORS.accent,
@@ -2098,12 +2098,12 @@ const PLANES = [
     ],
     cta: "Elegir Pro",
     ctaDisabled: false,
-    unitPrice: 9999,
+    unitPrice: 14000,
   },
   {
     id: "elite",
     nombre: "Elite",
-    precio: "$19.999",
+    precio: "$24.000",
     periodo: "/mes",
     descripcion: "Sin límites",
     color: "#f59e0b",
@@ -2119,7 +2119,7 @@ const PLANES = [
     ],
     cta: "Elegir Elite",
     ctaDisabled: false,
-    unitPrice: 19999,
+    unitPrice: 24000,
   },
 ]
 
