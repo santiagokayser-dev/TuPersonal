@@ -212,7 +212,6 @@ export default function Landing({ onEntrar }) {
               padding: 24, maxWidth: 680, margin: "0 auto", textAlign: "left",
               boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)",
             }}>
-              {/* Fake top bar */}
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                 <div>
                   <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>Buenos días, Santiago</div>
@@ -220,7 +219,6 @@ export default function Landing({ onEntrar }) {
                 </div>
                 <div style={{ background: C.accent, borderRadius: 6, padding: "7px 14px", color: "#fff", fontSize: 12, fontWeight: 600 }}>+ Nuevo cliente</div>
               </div>
-              {/* Stats row */}
               <div style={{ display: "flex", gap: 32, paddingBottom: 20, borderBottom: `1px solid ${C.border}`, marginBottom: 20 }}>
                 {[
                   { label: "Facturación", value: "$180K" },
@@ -233,7 +231,6 @@ export default function Landing({ onEntrar }) {
                   </div>
                 ))}
               </div>
-              {/* Client list */}
               {[
                 { ini: "MG", nombre: "Martín González", objetivo: "Hipertrofia", precio: "$15.000", estado: "Al día", color: C.green },
                 { ini: "LF", nombre: "Laura Fernández", objetivo: "Pérdida de peso", precio: "$12.000", estado: "Debe 1 mes", color: C.yellow },
@@ -252,7 +249,6 @@ export default function Landing({ onEntrar }) {
                 </div>
               ))}
             </div>
-            {/* Floating badge */}
             <div style={{
               position: "absolute", bottom: -16, right: -16,
               background: "#1a1a1a", border: `1px solid ${C.border2}`, borderRadius: 12,
@@ -271,7 +267,7 @@ export default function Landing({ onEntrar }) {
         </FadeIn>
       </section>
 
-      {/* LOGOS / SOCIAL PROOF */}
+      {/* SOCIAL PROOF */}
       <FadeIn>
         <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "20px 20px" }}>
           <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
@@ -332,7 +328,7 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
-      {/* AI FEATURE SPOTLIGHT */}
+      {/* AI SPOTLIGHT */}
       <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 40, alignItems: "center" }}>
           <FadeIn>
