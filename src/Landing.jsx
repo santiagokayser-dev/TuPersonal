@@ -204,7 +204,6 @@ export default function Landing({ onEntrar }) {
           <p style={{ fontSize: 12, color: C.textMuted, marginTop: 16 }}>Sin tarjeta de crédito · Hasta 3 clientes gratis</p>
         </FadeIn>
 
-        {/* App preview mockup */}
         <FadeIn delay={0.2} y={40}>
           <div style={{ marginTop: 56, position: "relative", display: "inline-block" }}>
             <div style={{
@@ -267,7 +266,6 @@ export default function Landing({ onEntrar }) {
         </FadeIn>
       </section>
 
-      {/* SOCIAL PROOF */}
       <FadeIn>
         <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "20px 20px" }}>
           <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
@@ -281,7 +279,6 @@ export default function Landing({ onEntrar }) {
         </section>
       </FadeIn>
 
-      {/* FEATURES */}
       <section id="features" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px" }}>
         <FadeIn>
           <div style={{ textAlign: "center", marginBottom: 56 }}>
@@ -305,7 +302,6 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
       <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px 20px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <FadeIn>
@@ -328,7 +324,6 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
-      {/* AI SPOTLIGHT */}
       <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px" }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 40, alignItems: "center" }}>
           <FadeIn>
@@ -343,7 +338,7 @@ export default function Landing({ onEntrar }) {
               <p style={{ fontSize: 14, color: C.textSub, lineHeight: 1.7, marginBottom: 24 }}>
                 Describí el objetivo de tu cliente y la IA genera una rutina completa en segundos:
                 días, bloques, ejercicios, series, reps y tiempos de descanso. Podés editarla
-                como quieras antes de asignarla.
+                como querás antes de asignarla.
               </p>
               <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
                 {[
@@ -391,7 +386,6 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
-      {/* EXTRA HIGHLIGHTS */}
       <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "64px 20px" }}>
         <div style={{ maxWidth: 1000, margin: "0 auto" }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 }}>
@@ -417,7 +411,6 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
-      {/* PRICING */}
       <section id="planes" style={{ maxWidth: 1000, margin: "0 auto", padding: "80px 20px" }}>
         <FadeIn>
           <div style={{ textAlign: "center", marginBottom: 48 }}>
@@ -470,7 +463,6 @@ export default function Landing({ onEntrar }) {
         </div>
       </section>
 
-      {/* FINAL CTA */}
       <section style={{ padding: "0 20px 80px" }}>
         <FadeIn>
           <div style={{
@@ -496,7 +488,6 @@ export default function Landing({ onEntrar }) {
         </FadeIn>
       </section>
 
-      {/* FOOTER */}
       <footer style={{ borderTop: `1px solid ${C.border}`, padding: "28px 20px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
           <img src="/logo-white.png" alt="TuPersonal" style={{ height: 22, objectFit: "contain" }} />
