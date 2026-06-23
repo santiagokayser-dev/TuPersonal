@@ -257,3 +257,268 @@ export default function Landing({ onEmpezar, onLogin }) {
                 </div>
               ))}
             </div>
+            <div style={{
+              position: "absolute", bottom: -16, right: -16,
+              background: "#1a1a1a", border: `1px solid ${C.border2}`, borderRadius: 12,
+              padding: "10px 16px", display: "flex", alignItems: "center", gap: 10,
+              boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+            }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: "#a855f722", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name="sparkles" size={16} color="#a855f7" />
+              </div>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600 }}>IA generó tu rutina</div>
+                <div style={{ fontSize: 11, color: C.textMuted }}>Lista en 3 segundos</div>
+              </div>
+            </div>
+          </div>
+        </FadeIn>
+      </section>
+
+      {/* SOCIAL PROOF */}
+      <FadeIn>
+        <section style={{ borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "20px 20px", position: "relative", zIndex: 1 }}>
+          <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
+            <p style={{ fontSize: 13, color: C.textMuted, marginBottom: 16 }}>Confiado por entrenadores personales de toda Argentina</p>
+            <div style={{ display: "flex", gap: 32, justifyContent: "center", flexWrap: "wrap" }}>
+              {["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "Mar del Plata"].map(c => (
+                <span key={c} style={{ fontSize: 13, color: C.textSub, fontWeight: 500 }}>{c}</span>
+              ))}
+            </div>
+          </div>
+        </section>
+      </FadeIn>
+
+      {/* FEATURES */}
+      <section id="features" style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px", position: "relative", zIndex: 1 }}>
+        <FadeIn>
+          <div style={{ textAlign: "center", marginBottom: 56 }}>
+            <div style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Funciones</div>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 42px)", fontWeight: 700, letterSpacing: "-0.025em", margin: "0 0 14px" }}>Todo lo que necesitás,<br />en un solo lugar</h2>
+            <p style={{ fontSize: 15, color: C.textSub, maxWidth: 480, margin: "0 auto" }}>Diseñado específicamente para entrenadores personales independientes que quieren trabajar de forma profesional.</p>
+          </div>
+        </FadeIn>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 16 }}>
+          {FEATURES.map((f, i) => (
+            <FadeIn key={f.title} delay={i * 0.05}>
+              <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, padding: "24px", height: "100%", boxSizing: "border-box" }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: f.color + "18", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 16 }}>
+                  <Icon name={f.icon} size={20} color={f.color} />
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em", marginBottom: 8 }}>{f.title}</div>
+                <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>{f.desc}</div>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "80px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <FadeIn>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <div style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Cómo funciona</div>
+              <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-0.025em", margin: 0 }}>En marcha en minutos</h2>
+            </div>
+          </FadeIn>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 24 }}>
+            {PASOS.map((p, i) => (
+              <FadeIn key={p.n} delay={i * 0.08}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: C.accent, letterSpacing: "0.08em", marginBottom: 12 }}>{p.n}</div>
+                  <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>{p.title}</div>
+                  <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.6 }}>{p.desc}</div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* AI SPOTLIGHT */}
+      <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 40, alignItems: "center" }}>
+          <FadeIn>
+            <div>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#a855f718", border: "1px solid #a855f733", borderRadius: 999, padding: "5px 14px", marginBottom: 20 }}>
+                <Icon name="sparkles" size={14} color="#a855f7" />
+                <span style={{ fontSize: 12, color: "#c084fc", fontWeight: 500 }}>Inteligencia Artificial</span>
+              </div>
+              <h2 style={{ fontSize: "clamp(26px, 4vw, 38px)", fontWeight: 700, letterSpacing: "-0.025em", lineHeight: 1.15, margin: "0 0 16px" }}>
+                Rutinas personalizadas<br />generadas por IA
+              </h2>
+              <p style={{ fontSize: 14, color: C.textSub, lineHeight: 1.7, marginBottom: 24 }}>
+                Describí el objetivo de tu cliente y la IA genera una rutina completa en segundos:
+                días, bloques, ejercicios, series, reps y tiempos de descanso. Podés editarla
+                como quieras antes de asignarla.
+              </p>
+              <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+                {[
+                  "Rutinas estructuradas por días y bloques",
+                  "Progresión de cargas sugerida por IA",
+                  "Ajuste según datos físicos del cliente",
+                  "Lista para usar o personalizar",
+                ].map(item => (
+                  <li key={item} style={{ display: "flex", alignItems: "flex-start", gap: 10, fontSize: 14, color: C.textSub }}>
+                    <div style={{ marginTop: 2, flexShrink: 0, width: 16, height: 16, borderRadius: 999, background: C.green + "22", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Icon name="check" size={10} color={C.green} />
+                    </div>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <button onClick={onEmpezar}
+                style={{ background: "#a855f7", border: "none", borderRadius: 8, padding: "11px 22px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+                Probar con IA
+              </button>
+            </div>
+          </FadeIn>
+          <FadeIn delay={0.1} y={24}>
+            <div style={{ background: C.surface, border: `1px solid ${C.border2}`, borderRadius: 16, padding: 20, boxShadow: "0 20px 60px rgba(0,0,0,0.4)" }}>
+              <div style={{ fontSize: 12, color: C.textMuted, marginBottom: 12 }}>Prompt</div>
+              <div style={{ background: C.surface2, borderRadius: 8, padding: "12px 14px", fontSize: 13, color: C.textSub, lineHeight: 1.5, marginBottom: 16 }}>
+                "Rutina de 4 días para Martín, objetivo hipertrofia, nivel intermedio, sin acceso a peso libre los jueves"
+              </div>
+              <div style={{ fontSize: 12, color: "#a855f7", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="sparkles" size={12} color="#a855f7" />
+                Rutina generada
+              </div>
+              {["Lunes · Pecho y tríceps", "Martes · Espalda y bíceps", "Jueves · Máquinas — piernas", "Viernes · Hombros y core"].map((dia, i) => (
+                <div key={dia} style={{ background: C.surface2, borderRadius: 8, padding: "10px 14px", marginBottom: 8, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{dia}</span>
+                  <span style={{ fontSize: 11, color: C.textMuted }}>{[6, 6, 5, 5][i]} ejercicios</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                <div style={{ flex: 1, background: C.accent + "22", border: `1px solid ${C.accent}44`, borderRadius: 6, padding: "8px 0", textAlign: "center", fontSize: 12, color: C.accent, fontWeight: 500 }}>Asignar a Martín</div>
+                <div style={{ flex: 1, background: C.surface2, border: `1px solid ${C.border}`, borderRadius: 6, padding: "8px 0", textAlign: "center", fontSize: 12, color: C.textSub }}>Editar rutina</div>
+              </div>
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* EXTRA HIGHLIGHTS */}
+      <section style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}`, padding: "64px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 24 }}>
+            {[
+              { icon: "phone", color: "#3b82f6", title: "PWA instalable", desc: "Agregá la app a tu pantalla de inicio. Funciona como una app nativa sin pasar por ninguna tienda." },
+              { icon: "pdf", color: C.accent, title: "Exportar a PDF", desc: "Generá un PDF profesional de cualquier rutina para compartirla con tus clientes." },
+              { icon: "trending", color: C.green, title: "Progreso del cliente", desc: "Registrá el peso y las cargas de tus clientes a lo largo del tiempo y mostráles su evolución." },
+              { icon: "lock", color: C.yellow, title: "Datos seguros", desc: "Toda la información se guarda de forma segura en Supabase con autenticación de doble factor." },
+            ].map((h, i) => (
+              <FadeIn key={h.title} delay={i * 0.06}>
+                <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 8, background: h.color + "18", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <Icon name={h.icon} size={18} color={h.color} />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4 }}>{h.title}</div>
+                    <div style={{ fontSize: 13, color: C.textSub, lineHeight: 1.55 }}>{h.desc}</div>
+                  </div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PRICING */}
+      <section id="planes" style={{ maxWidth: 1000, margin: "0 auto", padding: "80px 20px", position: "relative", zIndex: 1 }}>
+        <FadeIn>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div style={{ fontSize: 12, color: C.accent, fontWeight: 600, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}>Planes</div>
+            <h2 style={{ fontSize: "clamp(26px, 4vw, 40px)", fontWeight: 700, letterSpacing: "-0.025em", margin: "0 0 14px" }}>Precio justo para cada etapa</h2>
+            <p style={{ fontSize: 14, color: C.textSub }}>Empezá gratis y escalá cuando lo necesites</p>
+          </div>
+        </FadeIn>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16 }}>
+          {PLANS.map((plan, i) => (
+            <FadeIn key={plan.name} delay={i * 0.07}>
+              <div style={{
+                background: plan.highlighted ? C.accentSub : C.surface,
+                border: `1.5px solid ${plan.highlighted ? C.accent : C.border}`,
+                borderRadius: 16, padding: "28px 24px",
+                position: "relative", height: "100%", boxSizing: "border-box",
+              }}>
+                {plan.highlighted && (
+                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: C.accent, borderRadius: 999, padding: "3px 14px", fontSize: 11, fontWeight: 700, color: "#fff", whiteSpace: "nowrap" }}>
+                    Más popular
+                  </div>
+                )}
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 6 }}>{plan.name}</div>
+                <div style={{ fontSize: 12, color: C.textSub, marginBottom: 20 }}>{plan.desc}</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 24 }}>
+                  {plan.currency && <span style={{ fontSize: 14, color: C.textSub }}>{plan.currency}</span>}
+                  <span style={{ fontSize: 36, fontWeight: 700, letterSpacing: "-0.03em" }}>${plan.price}</span>
+                  <span style={{ fontSize: 13, color: C.textMuted }}>/ {plan.period}</span>
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 24px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {plan.features.map(f => (
+                    <li key={f} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, color: plan.highlighted ? C.text : C.textSub }}>
+                      <Icon name="check" size={14} color={plan.highlighted ? C.accent : C.green} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={onEmpezar} style={{
+                  width: "100%", border: "none", borderRadius: 8, padding: "11px 0",
+                  background: plan.highlighted ? C.accent : C.surface2,
+                  color: plan.highlighted ? "#fff" : C.text,
+                  fontSize: 13, fontWeight: 600, cursor: "pointer",
+                  boxSizing: "border-box",
+                }}>
+                  {plan.cta}
+                </button>
+              </div>
+            </FadeIn>
+          ))}
+        </div>
+      </section>
+
+      {/* FINAL CTA */}
+      <section style={{ padding: "0 20px 80px", position: "relative", zIndex: 1 }}>
+        <FadeIn>
+          <div style={{
+            maxWidth: 700, margin: "0 auto", background: C.surface, border: `1px solid ${C.border2}`,
+            borderRadius: 20, padding: "56px 32px", textAlign: "center",
+            boxShadow: "0 0 0 1px rgba(255,255,255,0.04) inset",
+          }}>
+            <div style={{ width: 48, height: 48, borderRadius: 14, background: C.accentSub, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px" }}>
+              <Icon name="dumbbell" size={22} color={C.accent} />
+            </div>
+            <h2 style={{ fontSize: "clamp(22px, 4vw, 34px)", fontWeight: 700, letterSpacing: "-0.025em", margin: "0 0 12px" }}>Empezá hoy, es gratis</h2>
+            <p style={{ fontSize: 14, color: C.textSub, lineHeight: 1.65, maxWidth: 440, margin: "0 auto 28px" }}>
+              Unite a los entrenadores que ya usan TuPersonal para gestionar su negocio de forma profesional.
+              Sin tarjeta de crédito, sin compromisos.
+            </p>
+            <button onClick={onEmpezar}
+              style={{ background: C.accent, border: "none", borderRadius: 8, padding: "13px 32px", color: "#fff", fontSize: 15, fontWeight: 600, cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 8 }}>
+              Crear cuenta gratis
+              <Icon name="arrow" size={16} color="#fff" />
+            </button>
+            <p style={{ fontSize: 12, color: C.textMuted, marginTop: 14 }}>¿Ya tenés cuenta? <span onClick={onLogin} style={{ color: C.accent, cursor: "pointer" }}>Iniciá sesión</span></p>
+          </div>
+        </FadeIn>
+      </section>
+
+      {/* FOOTER */}
+      <footer style={{ borderTop: `1px solid ${C.border}`, padding: "28px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 12 }}>
+          <img src="/logo-white.png" alt="TuPersonal" style={{ height: 22, objectFit: "contain" }} />
+          <div style={{ fontSize: 12, color: C.textMuted }}>© {new Date().getFullYear()} TuPersonal · Hecho en Argentina</div>
+          <div style={{ display: "flex", gap: 20 }}>
+            {["Funciones", "Planes", "Iniciar sesión"].map(l => (
+              <span key={l} onClick={l === "Iniciar sesión" ? onLogin : () => scrollTo(l === "Funciones" ? "features" : "planes")}
+                style={{ fontSize: 12, color: C.textSub, cursor: "pointer" }}>
+                {l}
+              </span>
+            ))}
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}
