@@ -222,7 +222,7 @@ export default function Landing({ onEmpezar, onLogin }) {
             }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
                 <div>
-                  <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em" }}>Buenos días, Santiago</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: C.text }}>Buenos días, Santiago</div>
                   <div style={{ fontSize: 13, color: C.textSub, marginTop: 2 }}>12 clientes activos</div>
                 </div>
                 <div style={{ background: C.accent, borderRadius: 6, padding: "7px 14px", color: "#fff", fontSize: 12, fontWeight: 600 }}>+ Nuevo cliente</div>
@@ -234,8 +234,8 @@ export default function Landing({ onEmpezar, onLogin }) {
                   { label: "Pendientes", value: "2" },
                 ].map(s => (
                   <div key={s.label}>
-                    <div style={{ fontSize: 11, color: C.textMuted, fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>{s.label}</div>
-                    <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", marginTop: 4 }}>{s.value}</div>
+                    <div style={{ fontSize: 11, color: C.textSub, fontWeight: 500, letterSpacing: "0.05em", textTransform: "uppercase" }}>{s.label}</div>
+                    <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: "-0.03em", marginTop: 4, color: C.text }}>{s.value}</div>
                   </div>
                 ))}
               </div>
@@ -247,7 +247,7 @@ export default function Landing({ onEmpezar, onLogin }) {
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 0", borderBottom: i < 2 ? `1px solid ${C.border}` : "none" }}>
                   <div style={{ width: 30, height: 30, borderRadius: 8, background: C.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 700, color: C.textSub }}>{c.ini}</div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 14, fontWeight: 500 }}>{c.nombre}</div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: C.text }}>{c.nombre}</div>
                     <div style={{ fontSize: 12, color: C.textMuted }}>{c.objetivo}</div>
                   </div>
                   <div style={{ textAlign: "right" }}>
