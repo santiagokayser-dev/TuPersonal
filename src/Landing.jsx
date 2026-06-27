@@ -154,7 +154,7 @@ export default function Landing({ onEmpezar, onLogin }) {
       {/* NAV */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: C.bg + "cc", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}`, isolation: "isolate" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <img src="/logo.svg" alt="TuPersonal" style={{ height: 44, objectFit: "contain" }} />
+          <img src="/icon-512.png" alt="TuPersonal" style={{ height: 40, objectFit: "contain" }} />
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => scrollTo("features")}
               style={{ display: window.innerWidth < 640 ? "none" : "block", background: "none", border: "none", color: C.textSub, fontSize: 13, cursor: "pointer", padding: "6px 12px" }}>
