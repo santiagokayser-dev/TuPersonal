@@ -48,6 +48,7 @@ const Icon = ({ name, size = 20, color = "#888888" }) => {
     chat: <><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></>,
     sparkle: <><path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/></>,
     download: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></>,
+    activity: <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeLinecap="round" strokeLinejoin="round"/>,
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
 }
@@ -93,11 +94,25 @@ function normCliente(c) {
   }
 }
 
+// Avatar palette helpers
+const AVATAR_PALETTES = [
+  { bg: "#1a2a40", border: "#3b82f628", text: "#60a5fa" },
+  { bg: "#221630", border: "#a855f728", text: "#c084fc" },
+  { bg: "#0d2018", border: "#10b98128", text: "#34d399" },
+  { bg: "#221806", border: "#f59e0b28", text: "#fbbf24" },
+  { bg: "#221320", border: "#ec489828", text: "#f472b6" },
+  { bg: "#0a1e24", border: "#06b6d428", text: "#22d3ee" },
+]
+function getAvatarPalette(nombre) {
+  const hash = (nombre || "").split("").reduce((a, c) => a + c.charCodeAt(0), 0)
+  return AVATAR_PALETTES[hash % AVATAR_PALETTES.length]
+}
+
 const navItems = [
   { id: "inicio", icon: "home", label: "Inicio" },
   { id: "clientes", icon: "users", label: "Clientes" },
   { id: "chat", icon: "chat", label: "Chat" },
-  { id: "rutinas", icon: "dumbbell", label: "Rutinas" },
+  { id: "rutinas", icon: "activity", label: "Rutinas" },
   { id: "agenda", icon: "calendar", label: "Agenda" },
   { id: "pagos", icon: "wallet", label: "Finanzas" },
   { id: "perfil", icon: "user", label: "Perfil" },
@@ -193,24 +208,28 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
         </button>
       </div>
 
-      {/* Métricas inline */}
-      <div style={{ display: "flex", gap: 32, marginTop: 24, paddingBottom: 20, borderBottom: `1px solid ${COLORS.border}` }}>
-        <div>
-          <div style={T.label}>Facturación</div>
-          <div style={{ ...T.num, marginTop: 4 }}>
+      {/* Métricas — tarjetas */}
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginTop: 20, paddingBottom: 20, borderBottom: `1px solid ${COLORS.border}` }}>
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: "13px 12px" }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Facturación</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
             {totalMensual > 0 ? `$${totalMensual >= 1000 ? (totalMensual / 1000).toFixed(0) + "K" : totalMensual.toLocaleString("es-AR")}` : "—"}
           </div>
-          {cobrado > 0 && cobrado < totalMensual && (
-            <div style={{ fontSize: 12, color: COLORS.green, marginTop: 2 }}>${(cobrado / 1000).toFixed(0)}K cobrado</div>
-          )}
+          <div style={{ fontSize: 11, color: COLORS.green, fontWeight: 600, marginTop: 6 }}>mes actual</div>
         </div>
-        <div>
-          <div style={T.label}>Al día</div>
-          <div style={{ ...T.num, marginTop: 4 }}>{alDia}<span style={{ fontSize: 14, fontWeight: 400, color: COLORS.textMuted, marginLeft: 4 }}>/ {clientes.length}</span></div>
+        <div style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 14, padding: "13px 12px" }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Al día</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.04em", lineHeight: 1 }}>
+            {alDia}<span style={{ fontSize: 13, fontWeight: 400, color: COLORS.textMuted }}>/{clientes.length}</span>
+          </div>
+          <div style={{ fontSize: 11, color: COLORS.textMuted, marginTop: 6 }}>clientes</div>
         </div>
-        <div>
-          <div style={T.label}>Pendientes</div>
-          <div style={{ ...T.num, marginTop: 4, color: pendientes > 0 ? COLORS.yellow : COLORS.textMuted }}>{pendientes}</div>
+        <div style={{ background: pendientes > 0 ? "#1c1608" : COLORS.surface, border: `1px solid ${pendientes > 0 ? "#e5a60c28" : COLORS.border}`, borderRadius: 14, padding: "13px 12px" }}>
+          <div style={{ fontSize: 10, fontWeight: 600, color: pendientes > 0 ? COLORS.yellow : COLORS.textMuted, textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>Pendientes</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.04em", lineHeight: 1 }}>{pendientes}</div>
+          <div style={{ fontSize: 11, color: pendientes > 0 ? COLORS.yellow : COLORS.textMuted, fontWeight: pendientes > 0 ? 600 : 400, marginTop: 6 }}>
+            {pendientes > 0 ? "cobrar" : "al día"}
+          </div>
         </div>
       </div>
 
@@ -232,20 +251,23 @@ function Inicio({ clientes = [], nombreTrainer = "", onVerPerfil, onNuevoCliente
             <div style={T.label}>Clientes recientes</div>
             <button onClick={onNuevoCliente} style={{ background: "none", border: "none", color: COLORS.textSub, fontSize: 12, cursor: "pointer", padding: 0 }}>Ver todos</button>
           </div>
-          {clientes.slice(0, 5).map((c, i) => (
-            <div key={c.id || i} onClick={() => onVerPerfil?.(c)}
-              style={{ padding: "10px 0", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderBottom: i < Math.min(clientes.length, 5) - 1 ? `1px solid ${COLORS.border}` : "none" }}>
-              <div style={{ width: 28, height: 28, borderRadius: 6, background: COLORS.surface2, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, fontWeight: 600, color: COLORS.textSub, flexShrink: 0 }}>{c.ini}</div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</div>
-                {c.objetivo && <div style={{ fontSize: 12, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 1 }}>{c.objetivo}</div>}
+          {clientes.slice(0, 5).map((c, i) => {
+            const pal = getAvatarPalette(c.nombre)
+            return (
+              <div key={c.id || i} onClick={() => onVerPerfil?.(c)}
+                style={{ padding: "11px 0", display: "flex", alignItems: "center", gap: 12, cursor: "pointer", borderBottom: i < Math.min(clientes.length, 5) - 1 ? `1px solid ${COLORS.border}` : "none" }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: pal.bg, border: `1px solid ${pal.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 700, color: pal.text, flexShrink: 0 }}>{c.ini}</div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{c.nombre}</div>
+                  {c.objetivo && <div style={{ fontSize: 12, color: COLORS.textMuted, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>{c.objetivo}</div>}
+                </div>
+                <div style={{ flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
+                  {c.precio && <div style={{ fontSize: 12, color: COLORS.textSub, fontWeight: 500 }}>${(Number(c.precio)/1000).toFixed(0)}K</div>}
+                  <div style={{ background: c.estadoColor === COLORS.green ? "#0d2416" : c.estadoColor === COLORS.yellow ? "#241a07" : "#220e0f", border: `1px solid ${c.estadoColor}28`, borderRadius: 100, padding: "2px 8px", fontSize: 11, fontWeight: 600, color: c.estadoColor, whiteSpace: "nowrap" }}>{c.estado}</div>
+                </div>
               </div>
-              <div style={{ flexShrink: 0, textAlign: "right" }}>
-                {c.precio && <div style={{ fontSize: 13, color: COLORS.textSub, fontWeight: 500 }}>${Number(c.precio).toLocaleString("es-AR")}</div>}
-                <div style={{ fontSize: 11, fontWeight: 500, color: c.estadoColor }}>{c.estado}</div>
-              </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -2512,13 +2534,15 @@ export default function App({ user: initialUser, onLogout }) {
         {isMobile && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "calc(10px + env(safe-area-inset-top))", paddingLeft: 16, paddingRight: 16, paddingBottom: 8, flexShrink: 0 }}>
             <button onClick={() => setDrawerAbierto(true)}
-              style={{ width: 36, height: 36, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, padding: 4, flexShrink: 0 }}>
-              <span style={{ display: "block", width: 22, height: 2, borderRadius: 2, background: COLORS.text }} />
-              <span style={{ display: "block", width: 22, height: 2, borderRadius: 2, background: COLORS.text }} />
-              <span style={{ display: "block", width: 22, height: 2, borderRadius: 2, background: COLORS.text }} />
+              style={{ width: 38, height: 38, background: COLORS.surface, border: `1px solid ${COLORS.border2}`, borderRadius: 10, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={COLORS.textSub} strokeWidth="1.8" strokeLinecap="round">
+                <path d="M4 6h16M4 12h10M4 18h16"/>
+              </svg>
             </button>
-            <img src="/logo-white.png" alt="TuPersonal" onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }} style={{ height: 28, width: "auto", cursor: "pointer", position: "absolute", left: "50%", transform: "translateX(-50%)" }} />
-            <div style={{ width: 36 }} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }} onClick={() => { setActivePage("inicio"); setClienteSeleccionado(null) }}>
+              <img src="/icon-512.png" alt="TuPersonal" style={{ height: 30, width: 30, borderRadius: 8, objectFit: "contain", display: "block" }} />
+              <span style={{ fontSize: 17, fontWeight: 800, color: COLORS.text, letterSpacing: "-0.025em", lineHeight: 1 }}>TuPersonal</span>
+            </div>
           </div>
         )}
 
@@ -2699,16 +2723,28 @@ export default function App({ user: initialUser, onLogout }) {
               const avatarUrl = user?.user_metadata?.avatar_url
               return (
                 <button key={item.id} onClick={() => setActivePage(item.id)}
-                  style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "0", position: "relative" }}>
-                  <div style={{ position: "relative" }}>
-                    {esPerfil && avatarUrl
-                      ? <div style={{ width: 24, height: 24, borderRadius: 8, overflow: "hidden", border: `2px solid ${activo ? COLORS.accent : "transparent"}` }}>
-                          <img src={avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                        </div>
-                      : <Icon name={item.icon} size={22} color={activo ? COLORS.accent : COLORS.textMuted} />
-                    }
-                  </div>
-                  <span className="nav-label" style={{ fontSize: 10, fontWeight: 500, color: activo ? COLORS.accent : COLORS.textMuted }}>{item.label}</span>
+                  style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", padding: "0" }}>
+                  {activo ? (
+                    <div style={{ background: `${COLORS.accent}18`, border: `1px solid ${COLORS.accent}28`, borderRadius: 100, padding: "4px 12px 5px", display: "flex", flexDirection: "column", alignItems: "center", gap: 2 }}>
+                      {esPerfil && avatarUrl
+                        ? <div style={{ width: 20, height: 20, borderRadius: 6, overflow: "hidden", border: `2px solid ${COLORS.accent}` }}>
+                            <img src={avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        : <Icon name={item.icon} size={20} color={COLORS.accent} />
+                      }
+                      <span style={{ fontSize: 10, fontWeight: 600, color: COLORS.accent, lineHeight: 1 }}>{item.label}</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, paddingTop: 4 }}>
+                      {esPerfil && avatarUrl
+                        ? <div style={{ width: 22, height: 22, borderRadius: 7, overflow: "hidden", opacity: 0.6 }}>
+                            <img src={avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                          </div>
+                        : <Icon name={item.icon} size={20} color="#555" />
+                      }
+                      <span style={{ fontSize: 10, fontWeight: 500, color: "#444", lineHeight: 1 }}>{item.label}</span>
+                    </div>
+                  )}
                 </button>
               )
             })}
