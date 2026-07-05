@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react"
+import { useRef } from "react"
 import { motion, useInView } from "framer-motion"
 
 const C = {
@@ -133,11 +133,8 @@ const PASOS = [
 ]
 
 export default function Landing({ onEmpezar, onLogin }) {
-  const [menuOpen, setMenuOpen] = useState(false)
-
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
-    setMenuOpen(false)
   }
 
   return (
@@ -154,7 +151,7 @@ export default function Landing({ onEmpezar, onLogin }) {
       {/* NAV */}
       <nav style={{ position: "sticky", top: 0, zIndex: 100, background: C.bg + "cc", backdropFilter: "blur(20px)", borderBottom: `1px solid ${C.border}`, isolation: "isolate" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px", height: 60, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <img src="/icon-512.png" alt="TuPersonal" style={{ height: 40, objectFit: "contain" }} />
+          <img src="/icon-192.png" alt="TuPersonal" width={40} height={40} style={{ height: 40, width: 40, objectFit: "contain" }} />
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <button onClick={() => scrollTo("features")}
               style={{ display: window.innerWidth < 640 ? "none" : "block", background: "none", border: "none", color: C.textSub, fontSize: 13, cursor: "pointer", padding: "6px 12px" }}>
@@ -220,12 +217,12 @@ export default function Landing({ onEmpezar, onLogin }) {
               padding: 24, maxWidth: 680, margin: "0 auto", textAlign: "left",
               boxShadow: "0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), 0 0 120px rgba(232,113,74,0.08)",
             }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <div>
-                  <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: C.text }}>Buenos días, Santiago</div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 24 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: "-0.02em", color: C.text, whiteSpace: "nowrap" }}>Buenos días, Santiago</div>
                   <div style={{ fontSize: 13, color: C.textSub, marginTop: 2 }}>12 clientes activos</div>
                 </div>
-                <div style={{ background: C.accent, borderRadius: 6, padding: "7px 14px", color: "#fff", fontSize: 12, fontWeight: 600 }}>+ Nuevo cliente</div>
+                <div style={{ background: C.accent, borderRadius: 6, padding: "7px 14px", color: "#fff", fontSize: 12, fontWeight: 600, flexShrink: 0, whiteSpace: "nowrap" }}>+ Nuevo cliente</div>
               </div>
               <div style={{ display: "flex", gap: 32, paddingBottom: 20, borderBottom: `1px solid ${C.border}`, marginBottom: 20 }}>
                 {[

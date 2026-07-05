@@ -7,9 +7,16 @@ import { askClaude } from "./ai"
 import CreadorRutinasNuevo from "./CreadorRutinasNuevo"
 import ClientePanel from "./ClientePanel"
 import Chat from "./Chat"
-import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
 import ConfirmModal from "./ConfirmModal"
+
+// jsPDF se carga bajo demanda al exportar — mantiene ~380KB fuera del bundle inicial
+const loadPdf = async () => {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ])
+  return { jsPDF, autoTable }
+}
 
 const AI_KEY = import.meta.env.VITE_ANTHROPIC_KEY
 
@@ -406,7 +413,8 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
     setIaLoading(prev => ({ ...prev, [rutina.id]: false }))
   }
 
-  const exportarPDF = (rutina) => {
+  const exportarPDF = async (rutina) => {
+    const { jsPDF, autoTable } = await loadPdf()
     const doc = new jsPDF()
     const dias = typeof rutina.dias === "string" ? JSON.parse(rutina.dias) : (rutina.dias || [])
     doc.setFontSize(18)
@@ -1422,7 +1430,8 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
     return Math.ceil((venc - hoy) / 86400000)
   }
 
-  const exportarPDF = () => {
+  const exportarPDF = async () => {
+    const { jsPDF, autoTable } = await loadPdf()
     const doc = new jsPDF()
     const mes = new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })
     doc.setFontSize(20); doc.setTextColor(232, 113, 74)
@@ -1772,7 +1781,8 @@ function RutinasPage({ clientes, user, onGuardar, planActual = "gratis", onMejor
     setRutinas(prev => prev.map(r => r.id === rutinaId ? { ...r, clientes_asignados: nuevos } : r))
   }
 
-  const exportarPDF = (r) => {
+  const exportarPDF = async (r) => {
+    const { jsPDF, autoTable } = await loadPdf()
     const doc = new jsPDF()
     const dias = (() => { try { return typeof r.dias === "string" ? JSON.parse(r.dias) : (r.dias || []) } catch { return [] } })()
     const asignadosArr = Array.isArray(r.clientes_asignados) ? r.clientes_asignados :
@@ -2634,7 +2644,7 @@ export default function App({ user: initialUser, onLogout }) {
                 style={{ position: "fixed", top: 0, left: 0, bottom: 0, width: 280, background: COLORS.surface, zIndex: 201, display: "flex", flexDirection: "column", boxShadow: "4px 0 24px rgba(0,0,0,0.4)" }}>
                 {/* Perfil */}
                 <button onClick={() => { setActivePage("perfil"); setClienteSeleccionado(null); setDrawerAbierto(false) }}
-                  style={{ padding: "calc(20px + env(safe-area-inset-top)) 20px 20px", borderBottom: `1px solid ${COLORS.border}`, background: "none", border: "none", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", width: "100%", textAlign: "left" }}>
+                  style={{ padding: "calc(20px + env(safe-area-inset-top)) 20px 20px", background: "none", border: "none", borderBottom: `1px solid ${COLORS.border}`, cursor: "pointer", width: "100%", textAlign: "left" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <div style={{ width: 52, height: 52, borderRadius: 18, background: user?.user_metadata?.avatar_url ? "none" : COLORS.accent, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 17, fontWeight: 800, color: "#fff", flexShrink: 0 }}>
                       {user?.user_metadata?.avatar_url
