@@ -1,14 +1,44 @@
-import { StrictMode, useState, useEffect } from 'react'
+import { StrictMode, useState, useEffect, lazy, Suspense, Component } from 'react'
 import { createRoot } from 'react-dom/client'
 import { motion } from 'framer-motion'
 import { supabase } from './supabase'
-import App from './App.jsx'
-import Auth from './Auth.jsx'
-import ClientePanel from './ClientePanel.jsx'
-import Landing from './Landing.jsx'
 import './index.css'
 
-const COLORS = { bg: "#060A10", surface: "#0C1220", border: "#1E2D4A", accent: "#2563EB", accentSub: "#1E3A8A", text: "#fff", textMuted: "#94A3B8" }
+// Cada rama se carga solo cuando se necesita: un visitante baja solo la Landing,
+// un atleta solo su panel, un entrenador solo la app de gestión.
+const App = lazy(() => import('./App.jsx'))
+const Auth = lazy(() => import('./Auth.jsx'))
+const ClientePanel = lazy(() => import('./ClientePanel.jsx'))
+const Landing = lazy(() => import('./Landing.jsx'))
+
+function Cargando() {
+  return (
+    <div style={{ background: "#111111", height: "var(--app-height, 100dvh)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+      <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.4 }}
+        style={{ fontSize: 13, color: "#555", fontFamily: "-apple-system, sans-serif" }}>Cargando...</motion.div>
+    </div>
+  )
+}
+
+class ErrorBoundary extends Component {
+  state = { error: null }
+  static getDerivedStateFromError(error) { return { error } }
+  render() {
+    if (!this.state.error) return this.props.children
+    return (
+      <div style={{ background: "#111111", height: "var(--app-height, 100dvh)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, padding: 24, fontFamily: "-apple-system, sans-serif", textAlign: "center" }}>
+        <div style={{ fontSize: 17, fontWeight: 700, color: "#efefef" }}>Algo salió mal</div>
+        <div style={{ fontSize: 13, color: "#999", maxWidth: 320, lineHeight: 1.5 }}>Ocurrió un error inesperado. Recargá la app para continuar — tus datos están guardados.</div>
+        <button onClick={() => window.location.reload()}
+          style={{ background: "#E8714A", border: "none", borderRadius: 10, padding: "11px 28px", color: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+          Recargar
+        </button>
+      </div>
+    )
+  }
+}
+
+const COLORS = { bg: "#111111", surface: "#191919", border: "#2a2a2a", accent: "#E8714A", accentSub: "#2a1a12", text: "#fff", textMuted: "#999999" }
 
 function ElegirRol({ onElegir }) {
   const [eligiendo, setEligiendo] = useState(false)
@@ -109,7 +139,7 @@ function Root() {
     setRol(null)
   }
 
-  if (loading) return null
+  if (loading) return <Cargando />
   if (!session) return showAuth ? <Auth initialModo={authMode} /> : <Landing onEmpezar={() => { setAuthMode("registro"); setShowAuth(true) }} onLogin={() => { setAuthMode("login"); setShowAuth(true) }} />
   if (!rol) return <ElegirRol onElegir={setRol} />
   if (rol === "cliente") return <ClientePanel user={session.user} onLogout={handleLogout} />
@@ -124,6 +154,10 @@ window.addEventListener('resize', setAppHeight)
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Root />
+    <ErrorBoundary>
+      <Suspense fallback={<Cargando />}>
+        <Root />
+      </Suspense>
+    </ErrorBoundary>
   </StrictMode>
 )

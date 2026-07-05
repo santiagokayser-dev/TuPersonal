@@ -4,9 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 
-    <title>TuPersonal</title>
-    <meta name="description" content="Gestión de entrenamiento personal" />
+    <title>TuPersonal — Gestión de clientes y rutinas para entrenadores personales</title>
+    <meta name="description" content="La app para entrenadores personales: gestioná clientes, armá rutinas con IA, controlá cobros y agenda desde el celular. Gratis hasta 3 clientes." />
     <meta name="build-version" content="2026-06-22-fullscreen-modal" />
+    <link rel="canonical" href="https://tupersonal.fit/" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://tupersonal.fit/" />
+    <meta property="og:title" content="TuPersonal — La herramienta que necesitás para entrenar como un pro" />
+    <meta property="og:description" content="Gestioná clientes, rutinas, cobros y agenda desde el celular. Con IA integrada para crear entrenamientos en segundos. Gratis hasta 3 clientes." />
+    <meta property="og:image" content="https://tupersonal.fit/icon-512.png" />
+    <meta property="og:locale" content="es_AR" />
+    <meta property="og:site_name" content="TuPersonal" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="TuPersonal — Gestión para entrenadores personales" />
+    <meta name="twitter:description" content="Clientes, rutinas con IA, cobros y agenda en una sola app. Gratis hasta 3 clientes." />
+    <meta name="twitter:image" content="https://tupersonal.fit/icon-512.png" />
 
     <!-- PWA -->
     <link rel="manifest" href="/manifest.webmanifest" />
@@ -22,14 +38,15 @@
     <meta name="mobile-web-app-capable" content="yes" />
 
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html { background: #111111; height: 100%; overflow: hidden; position: fixed; width: 100%; }
+      body { background: #111111; height: 100%; width: 100%; overflow: hidden; position: fixed; overscroll-behavior: none; }
+      #root { height: 100%; width: 100%; overflow: hidden; }
+      input, button, select, textarea { font-family: inherit; }
+    </style>
   </head>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { background: #111111; height: 100%; overflow: hidden; position: fixed; width: 100%; }
-    body { background: #111111; height: 100%; width: 100%; overflow: hidden; position: fixed; overscroll-behavior: none; }
-    #root { height: 100%; width: 100%; overflow: hidden; }
-    input, button, select, textarea { font-family: inherit; }
-  </style>
   <body>
     <div id="root" style="height:100%;"></div>
     <script>

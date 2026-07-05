@@ -2,8 +2,6 @@ import { useState, useRef } from "react"
 import { motion, AnimatePresence, Reorder, useDragControls } from "framer-motion"
 import ConfirmModal from "./ConfirmModal"
 import { EJERCICIOS, MUSCULO_ALIASES } from "./ejercicios"
-import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
 import { askClaude } from "./ai"
 
 const C = {
@@ -489,7 +487,11 @@ function GeneradorAI({ onRutinaGenerada, clientes, onCerrar }) {
 }
 
 // ── PDF ───────────────────────────────────────────────────────────────────────
-function generarPDF(nombre, dias) {
+async function generarPDF(nombre, dias) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ])
   const doc = new jsPDF()
   const pageW = doc.internal.pageSize.getWidth()
   doc.setFillColor(232, 113, 74)
