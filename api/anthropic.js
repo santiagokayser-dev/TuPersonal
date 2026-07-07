@@ -1,3 +1,10 @@
+import { createClient } from "@supabase/supabase-js"
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL,
+  process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY
+)
+
 export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" })
 
@@ -5,6 +12,17 @@ export default async function handler(req, res) {
   const allowed = process.env.ALLOWED_ORIGINS?.split(",") || []
   if (allowed.length && !allowed.includes(origin)) {
     return res.status(403).json({ error: "Origin not allowed" })
+  }
+
+  const authHeader = req.headers.authorization
+  if (!authHeader?.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Authentication required" })
+  }
+
+  const token = authHeader.slice(7)
+  const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+  if (authError || !user) {
+    return res.status(401).json({ error: "Invalid or expired session" })
   }
 
   const apiKey = process.env.ANTHROPIC_KEY

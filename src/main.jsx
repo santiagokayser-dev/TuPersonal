@@ -139,6 +139,14 @@ function Root() {
     setRol(null)
   }
 
+  // Scroll: la app logueada bloquea el scroll del documento (cada panel
+  // scrollea adentro); Landing y Auth necesitan scroll normal de página.
+  useEffect(() => {
+    const locked = !!session && !loading
+    document.documentElement.classList.toggle("app-locked", locked)
+    document.body.classList.toggle("app-locked", locked)
+  }, [session, loading])
+
   if (loading) return <Cargando />
   if (!session) return showAuth ? <Auth initialModo={authMode} /> : <Landing onEmpezar={() => { setAuthMode("registro"); setShowAuth(true) }} onLogin={() => { setAuthMode("login"); setShowAuth(true) }} />
   if (!rol) return <ElegirRol onElegir={setRol} />

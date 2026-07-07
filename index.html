@@ -41,9 +41,12 @@
 
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      html { background: #111111; height: 100%; overflow: hidden; position: fixed; width: 100%; }
-      body { background: #111111; height: 100%; width: 100%; overflow: hidden; position: fixed; overscroll-behavior: none; }
-      #root { height: 100%; width: 100%; overflow: hidden; }
+      html { background: #111111; width: 100%; min-height: 100%; }
+      body { background: #111111; width: 100%; min-height: 100%; }
+      /* Dentro de la app (logueado) se bloquea el scroll del documento:
+         cada panel scrollea internamente. Landing y Auth scrollean normal. */
+      html.app-locked, body.app-locked { height: 100%; overflow: hidden; position: fixed; overscroll-behavior: none; }
+      body.app-locked #root { height: 100%; width: 100%; overflow: hidden; }
       input, button, select, textarea { font-family: inherit; }
     </style>
   </head>

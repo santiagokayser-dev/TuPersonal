@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import AgendaReal from "./Agenda"
 import { EJERCICIOS } from "./ejercicios"
+import { normalizarTelefono } from "./telefono"
 import { supabase } from "./supabase"
 import { askClaude } from "./ai"
 import CreadorRutinasNuevo from "./CreadorRutinasNuevo"
@@ -340,9 +341,8 @@ function PerfilCliente({ cliente, onBack, onEliminar, onPreview, onActualizar, p
 
   const inputStyle = { background: COLORS.surface2, border: `1px solid ${COLORS.border2}`, borderRadius: 6, padding: "11px 14px", color: COLORS.text, fontSize: 14, width: "100%", outline: "none", fontFamily: "'Styrene A', -apple-system, sans-serif", boxSizing: "border-box", marginBottom: 8 }
 
-  const waUrl = datos.telefono
-    ? `https://wa.me/${datos.telefono.replace(/\D/g, "").replace(/^0/, "54").replace(/^(?!54)/, "549")}`
-    : null
+  const waTel = normalizarTelefono(datos.telefono)
+  const waUrl = waTel ? `https://wa.me/${waTel}` : null
 
   const guardarCambios = async () => {
     if (!cliente.id) return
@@ -1348,7 +1348,7 @@ function SparkLine({ data }) {
   )
 }
 
-function Finanzas({ clientes = [], user, onVerPerfil }) {
+function Finanzas({ clientes = [], user, onVerPerfil, onActualizarCliente }) {
   const [tab, setTab] = useState("resumen")
   const [clientesLocal, setClientesLocal] = useState(clientes)
   const [mpSettings, setMpSettings] = useState({ alias: "", access_token: "" })
@@ -1393,7 +1393,12 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
     const anterior = c.meses_deuda || 0
     const nueva = Math.max(0, anterior + delta)
     setActualizando(c.id)
-    await supabase.from("clientes").update({ meses_deuda: nueva }).eq("id", c.id)
+    const { error } = await supabase.from("clientes").update({ meses_deuda: nueva }).eq("id", c.id)
+    if (error) {
+      alert(`No se pudo guardar el cambio: ${error.message}`)
+      setActualizando(null)
+      return
+    }
     // Registrar pago en historial cuando se marca como cobrado
     if (nueva === 0 && anterior > 0) {
       await supabase.from("pagos_historial").insert({
@@ -1402,15 +1407,22 @@ function Finanzas({ clientes = [], user, onVerPerfil }) {
       }).then(() => { if (tab === "historial") cargarHistorial() })
     }
     setClientesLocal(prev => prev.map(x => x.id === c.id ? normCliente({ ...x, meses_deuda: nueva }) : x))
+    onActualizarCliente?.({ ...c, meses_deuda: nueva })
     setActualizando(null)
   }
 
   const enviarRecordatorio = (c) => {
     const meses = c.meses_deuda || 1
     const total = Number(c.precio) * meses
-    const msg = `Hola ${c.nombre}! 👋 Te paso un recordatorio de que tenés ${meses} mes${meses > 1 ? "es" : ""} de entrenamiento pendiente de pago, por un total de $${total.toLocaleString("es-AR")}. ¡Cualquier consulta avisame! 💪`
-    const tel = (c.telefono || "").replace(/\D/g, "")
-    window.open(`https://wa.me/${tel ? `54${tel}` : ""}?text=${encodeURIComponent(msg)}`, "_blank")
+    let msg = `Hola ${(c.nombre || "").trim().split(" ")[0]}! 👋 Te paso un recordatorio de que tenés ${meses} mes${meses > 1 ? "es" : ""} de entrenamiento pendiente de pago, por un total de $${total.toLocaleString("es-AR")}.`
+    if (mpSettings.alias) msg += ` Podés pagarlo acá: https://link.mercadopago.com.ar/${mpSettings.alias}`
+    msg += " ¡Cualquier consulta avisame! 💪"
+    const tel = normalizarTelefono(c.telefono)
+    if (!tel) {
+      alert("No pude armar el número de WhatsApp. Revisá el teléfono del cliente en su perfil (formato: 011 4555-5555 o +54 9 11 5555 5555).")
+      return
+    }
+    window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`, "_blank")
   }
 
   const guardarDiaVencimiento = async (c, dia) => {
@@ -2370,7 +2382,9 @@ export default function App({ user: initialUser, onLogout }) {
   useEffect(() => {
     const cargar = async () => {
       setCargando(true)
-      const { data } = await supabase.from("clientes").select("*").order("nombre")
+      const { data: { user: u } } = await supabase.auth.getUser()
+      if (!u) { setCargando(false); return }
+      const { data } = await supabase.from("clientes").select("*").eq("trainer_id", u.id).order("nombre")
       if (data) setClientes(data.map(normCliente))
       setCargando(false)
     }
@@ -2462,7 +2476,7 @@ export default function App({ user: initialUser, onLogout }) {
         if (error) console.error("Error guardando rutina:", error)
       }} />,
       agenda: <AgendaReal clientes={clientes} />,
-      pagos: <Finanzas clientes={clientes} user={user} onVerPerfil={setClienteSeleccionado} />,
+      pagos: <Finanzas clientes={clientes} user={user} onVerPerfil={setClienteSeleccionado} onActualizarCliente={(actualizado) => setClientes(prev => prev.map(c => c.id === actualizado.id ? normCliente(actualizado) : c))} />,
       perfil: <PerfilTrainer user={user} onLogout={onLogout} onUserUpdated={setUser} />,
     }
     return (
