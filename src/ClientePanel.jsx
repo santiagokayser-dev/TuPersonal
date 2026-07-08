@@ -46,6 +46,7 @@ const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
     trash: <><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></>,
     download: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
     user: <><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></>,
   }
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5">{icons[name]}</svg>
 }
@@ -53,11 +54,16 @@ const Icon = ({ name, size = 20, color = COLORS.textSub }) => {
 const navItems = [
   { id: "inicio", icon: "home", label: "Inicio" },
   { id: "rutina", icon: "dumbbell", label: "Rutina" },
+  { id: "agenda", icon: "calendar", label: "Agenda" },
   { id: "progreso", icon: "trendingUp", label: "Progreso" },
   { id: "chat", icon: "chat", label: "Chat" },
   { id: "pagos", icon: "wallet", label: "Pagos" },
   { id: "perfil", icon: "user", label: "Perfil" },
 ]
+// El bottom nav de mobile mantiene los 6 items originales — Agenda es
+// nueva y queda accesible desde el sidebar de escritorio y desde la
+// tarjeta "Próxima sesión" en Inicio, para no apretar la barra mobile.
+const bottomNavItems = ["inicio", "rutina", "progreso", "chat", "pagos", "perfil"]
 
 function AvatarImg({ src, ini, size = 52, radius = 8, fontSize = 17, accentColor = "#2563EB" }) {
   const [broken, setBroken] = useState(false)
@@ -298,6 +304,14 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
   const motivacion = getMotivationalMessage(perfil?.objetivo)
 
   const [avatarError, setAvatarError] = useState("")
+  const [proximaSesion, setProximaSesion] = useState(null)
+
+  useEffect(() => {
+    if (!perfil?.id) return
+    const hoy = new Date().toISOString().split("T")[0]
+    supabase.from("sesiones").select("*").eq("cliente_id", perfil.id).gte("fecha", hoy).order("fecha").order("hora").limit(1).maybeSingle()
+      .then(({ data }) => setProximaSesion(data || null))
+  }, [perfil?.id])
 
   const handleAvatarChange = async (file) => {
     setAvatarError("")
@@ -337,6 +351,22 @@ function Inicio({ perfil, onLogout, onActualizar, onNavigate }) {
           </div>
         </div>
       </div>
+
+      {/* Próxima sesión */}
+      {proximaSesion && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+          onClick={() => onNavigate?.("agenda")}
+          style={{ background: COLORS.surface, borderRadius: 14, padding: "12px 16px", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12, cursor: onNavigate ? "pointer" : "default" }}>
+          <Icon name="calendar" size={18} color={COLORS.accent} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 11, color: COLORS.textMuted, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 600 }}>Próxima sesión</div>
+            <div style={{ fontSize: 13, color: COLORS.text, fontWeight: 600 }}>
+              {new Date(proximaSesion.fecha + "T00:00:00").toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "short" })} · {proximaSesion.hora} — {proximaSesion.tipo}
+            </div>
+          </div>
+          <Icon name="chevronRight" size={16} color={COLORS.textMuted} />
+        </motion.div>
+      )}
 
       {/* Motivational banner */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
@@ -571,6 +601,66 @@ function Rutina({ perfil }) {
                   )
                 })}
               </div>
+            </div>
+          </div>
+        )
+      })}
+    </>
+  )
+}
+
+const TIPO_COLOR = {
+  Fuerza: "#818cf8", Cardio: "#67e8f9", Movilidad: "#86efac",
+  "Full body": "#d8b4fe", Powerlifting: "#fca5a5", Funcional: "#fde68a", Otro: "#999",
+}
+
+function AgendaCliente({ perfil }) {
+  const [sesiones, setSesiones] = useState([])
+  const [cargando, setCargando] = useState(true)
+
+  useEffect(() => {
+    if (!perfil?.id) { setCargando(false); return }
+    const hoy = new Date().toISOString().split("T")[0]
+    supabase.from("sesiones").select("*").eq("cliente_id", perfil.id).gte("fecha", hoy).order("fecha").order("hora")
+      .then(({ data }) => { setSesiones(data || []); setCargando(false) })
+  }, [perfil?.id])
+
+  if (cargando) return <div style={{ textAlign: "center", color: COLORS.textMuted, fontSize: 13, padding: 20 }}>Cargando...</div>
+
+  const porFecha = sesiones.reduce((acc, s) => {
+    if (!acc[s.fecha]) acc[s.fecha] = []
+    acc[s.fecha].push(s)
+    return acc
+  }, {})
+
+  return (
+    <>
+      <div style={T.h1}>Agenda</div>
+      <div style={{ fontSize: 13, color: COLORS.textMuted, marginTop: -8 }}>Tus próximas sesiones con tu entrenador</div>
+
+      {sesiones.length === 0 && (
+        <div style={{ background: COLORS.surface, borderRadius: 14, padding: 24, border: `1px dashed ${COLORS.border}`, textAlign: "center", color: COLORS.textMuted, fontSize: 13 }}>
+          Todavía no tenés sesiones agendadas. Tu entrenador las va a programar acá.
+        </div>
+      )}
+
+      {Object.entries(porFecha).map(([fecha, ss]) => {
+        const d = new Date(fecha + "T00:00:00")
+        const label = d.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" })
+        return (
+          <div key={fecha}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: COLORS.textMuted, textTransform: "capitalize", marginBottom: 6 }}>{label}</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              {ss.map(s => (
+                <div key={s.id} style={{ background: COLORS.surface, borderRadius: 12, padding: "12px 14px", border: `1px solid ${COLORS.border}`, display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 4, alignSelf: "stretch", borderRadius: 4, background: TIPO_COLOR[s.tipo] || TIPO_COLOR.Otro, flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: COLORS.text }}>{s.hora} — {s.tipo}</div>
+                    {s.notas && <div style={{ fontSize: 12, color: COLORS.textMuted, marginTop: 2 }}>{s.notas}</div>}
+                  </div>
+                  <div style={{ fontSize: 11, color: COLORS.textMuted, flexShrink: 0 }}>{s.duracion}min</div>
+                </div>
+              ))}
             </div>
           </div>
         )
@@ -1218,6 +1308,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
     const pages = {
       inicio: <Inicio perfil={perfilMock} onLogout={onLogout} onActualizar={previewMode ? () => {} : setPerfil} onNavigate={setActivePage} />,
       rutina: <Rutina perfil={perfilMock} />,
+      agenda: <AgendaCliente perfil={perfilMock} />,
       progreso: <Progreso perfil={perfilMock} onActualizar={previewMode ? () => {} : setPerfil} />,
       chat: <Chat user={user} clienteId={perfilMock?.id} trainerId={perfilMock?.trainer_id} modo="cliente" onProfileClick={() => setActivePage("perfil")} />,
       pagos: <Pagos perfil={perfilMock} />,
@@ -1232,7 +1323,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
 
   const bottomNav = (
     <nav style={{ background: COLORS.bg, borderTop: `1px solid ${COLORS.border}`, display: "flex", paddingTop: 2, paddingBottom: "env(safe-area-inset-bottom)", flexShrink: 0 }}>
-      {navItems.map(item => (
+      {navItems.filter(item => bottomNavItems.includes(item.id)).map(item => (
         <button key={item.id} onClick={() => setActivePage(item.id)}
           style={{ flex: 1, background: "none", border: "none", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "2px 0" }}>
           <Icon name={item.icon} size={22} color={activePage === item.id ? COLORS.accent : COLORS.textMuted} />
@@ -1290,9 +1381,21 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
               )
             })}
           </div>
-          <div style={{ padding: "16px 20px" }}>
+          <div style={{ padding: "8px 12px 16px" }}>
+            <div style={{ height: 1, background: COLORS.border, margin: "4px 8px 10px" }} />
+            <a href="https://wa.me/541122987419" target="_blank" rel="noopener noreferrer"
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 12px", borderRadius: 10, textDecoration: "none", color: COLORS.textSub, fontSize: 13 }}>
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Soporte por WhatsApp
+            </a>
+            <a href="https://instagram.com/tupersonal.fit" target="_blank" rel="noopener noreferrer"
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 12px", borderRadius: 10, textDecoration: "none", color: COLORS.textSub, fontSize: 13 }}>
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="ig-cliente" x1="0" y1="1" x2="1" y2="0"><stop offset="0%" stopColor="#f09433"/><stop offset="25%" stopColor="#e6683c"/><stop offset="50%" stopColor="#dc2743"/><stop offset="75%" stopColor="#cc2366"/><stop offset="100%" stopColor="#bc1888"/></linearGradient></defs><rect width="24" height="24" rx="6" fill="url(#ig-cliente)"/><circle cx="12" cy="12" r="4" stroke="#fff" strokeWidth="1.8" fill="none"/><circle cx="17.5" cy="6.5" r="1.2" fill="#fff"/><rect x="3" y="3" width="18" height="18" rx="5" stroke="#fff" strokeWidth="1.8" fill="none"/></svg>
+              Instagram
+            </a>
+            <div style={{ height: 1, background: COLORS.border, margin: "10px 8px 8px" }} />
             <button onClick={onLogout}
-              style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontFamily, padding: 0 }}>
+              style={{ background: "none", border: "none", color: COLORS.textMuted, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 12, fontFamily, padding: "9px 12px", width: "100%", textAlign: "left" }}>
               <Icon name="logout" size={16} color={COLORS.textMuted} />
               Cerrar sesión
             </button>
