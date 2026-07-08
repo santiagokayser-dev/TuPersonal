@@ -98,8 +98,11 @@ function Root() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
   const [rol, setRol] = useState(null)
-  const [showAuth, setShowAuth] = useState(false)
-  const [authMode, setAuthMode] = useState("login")
+  // Un link de invitación (?invite=trainerId) va derecho a la pantalla de
+  // registro con el contexto de invitación — no a la landing de marketing.
+  const tieneInvite = new URLSearchParams(window.location.search).has("invite")
+  const [showAuth, setShowAuth] = useState(tieneInvite)
+  const [authMode, setAuthMode] = useState(tieneInvite ? "registro" : "login")
 
   useEffect(() => {
     const handleInviteLink = async (user) => {
