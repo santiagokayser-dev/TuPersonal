@@ -32,9 +32,17 @@ function formatHora(ts) {
   return d.toLocaleDateString("es-AR", { day: "numeric", month: "short" })
 }
 
-function Avatar({ nombre, size = 42, radius = 13 }) {
+function Avatar({ nombre, avatarUrl, size = 42, radius = 13 }) {
+  const [roto, setRoto] = useState(false)
   const ac = avatarColor(nombre)
   const ini = (nombre || "?").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+  if (avatarUrl && !roto) {
+    return (
+      <div style={{ width: size, height: size, borderRadius: radius, overflow: "hidden", flexShrink: 0, boxShadow: `0 2px 8px ${ac}44` }}>
+        <img src={avatarUrl} onError={() => setRoto(true)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      </div>
+    )
+  }
   return (
     <div style={{ width: size, height: size, borderRadius: radius, background: `linear-gradient(135deg, ${ac}ee 0%, ${ac}77 100%)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * 0.33, fontWeight: 800, color: "#fff", flexShrink: 0, boxShadow: `0 2px 8px ${ac}44` }}>
       {ini}
@@ -86,7 +94,7 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfi
       {/* Header del hilo */}
       <div style={{ padding: "14px 20px", borderBottom: `1px solid ${C.border2}`, flexShrink: 0, display: "flex", alignItems: "center", gap: 12, background: C.surface }}>
         <div onClick={onProfileClick} style={{ cursor: onProfileClick ? "pointer" : "default" }}>
-          <Avatar nombre={nombreOtro} size={38} radius={12} />
+          <Avatar nombre={nombreOtro} avatarUrl={cliente?.avatar_url} size={38} radius={12} />
         </div>
         <div style={{ flex: 1 }}>
           <div onClick={onProfileClick} style={{ fontSize: 15, fontWeight: 700, color: C.text, cursor: onProfileClick ? "pointer" : "default" }}>{nombreOtro}</div>
@@ -155,7 +163,7 @@ function ConversacionItem({ c, noLeidos, lastMsg, seleccionado, onClick, cargand
     <motion.div onClick={onClick} whileHover={{ backgroundColor: isSelected ? undefined : C.surface3 }}
       style={{ display: "flex", alignItems: "center", gap: 11, padding: "10px 14px", cursor: "pointer", borderRadius: 0, background: isSelected ? `${C.accent}14` : "transparent", transition: "background 0.12s", position: "relative", borderLeft: `2px solid ${isSelected ? C.accent : "transparent"}` }}>
       <div style={{ position: "relative", flexShrink: 0 }}>
-        <Avatar nombre={c.nombre} size={40} radius={13} />
+        <Avatar nombre={c.nombre} avatarUrl={c.avatar_url} size={40} radius={13} />
         {unread > 0 && (
           <div style={{ position: "absolute", top: -2, right: -2, minWidth: 16, height: 16, borderRadius: 8, background: C.accent, border: `2px solid ${C.bg}`, fontSize: 8, fontWeight: 900, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", padding: "0 3px" }}>
             {unread > 9 ? "9+" : unread}
@@ -212,6 +220,27 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
         }
         setCargando(false)
       })
+  }, [user?.id, esCliente])
+
+  // Realtime: actualizar la lista de conversaciones (último mensaje +
+  // no leídos) sin recargar, apenas llega cualquier mensaje nuevo.
+  useEffect(() => {
+    if (esCliente || !user?.id) return
+    const channel = supabase.channel(`chat-list:${user.id}`)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "mensajes", filter: `trainer_id=eq.${user.id}` },
+        (p) => {
+          const m = p.new
+          setLastMessages(prev => ({ ...prev, [m.cliente_id]: m }))
+          if (m.sender === "cliente" && !m.leido) {
+            setNoLeidos(prev => ({ ...prev, [m.cliente_id]: (prev[m.cliente_id] || 0) + 1 }))
+          }
+        })
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("Chat list realtime no conectó:", status, err)
+        }
+      })
+    return () => supabase.removeChannel(channel)
   }, [user?.id, esCliente])
 
   const sorted = [...clientes].sort((a, b) => {
@@ -304,7 +333,7 @@ export default function Chat({ user, clientes = [], clienteId = null, trainerId 
                   <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 </button>
                 <div onClick={() => onProfileClick?.(seleccionado)} style={{ cursor: onProfileClick ? "pointer" : "default" }}>
-                  <Avatar nombre={seleccionado.nombre} size={28} radius={9} />
+                  <Avatar nombre={seleccionado.nombre} avatarUrl={seleccionado.avatar_url} size={28} radius={9} />
                 </div>
                 <div onClick={() => onProfileClick?.(seleccionado)} style={{ fontSize: 14, fontWeight: 600, color: C.text, cursor: onProfileClick ? "pointer" : "default" }}>{seleccionado.nombre}</div>
               </div>
