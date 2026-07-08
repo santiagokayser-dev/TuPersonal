@@ -1360,6 +1360,7 @@ function Finanzas({ clientes = [], user, onVerPerfil, onActualizarCliente }) {
   const [editandoVenc, setEditandoVenc] = useState(null)
   const [diaInput, setDiaInput] = useState("")
   const [confirmFn, setConfirmFn] = useState(null)
+  const [exportando, setExportando] = useState(false)
 
   useEffect(() => { setClientesLocal(clientes) }, [clientes])
 
@@ -1442,43 +1443,67 @@ function Finanzas({ clientes = [], user, onVerPerfil, onActualizarCliente }) {
     return Math.ceil((venc - hoy) / 86400000)
   }
 
-  const exportarPDF = async () => {
-    const { jsPDF, autoTable } = await loadPdf()
-    const doc = new jsPDF()
-    const mes = new Date().toLocaleDateString("es-AR", { month: "long", year: "numeric" })
-    doc.setFontSize(20); doc.setTextColor(232, 113, 74)
-    doc.text("TuPersonal — Resumen Financiero", 14, 18)
-    doc.setFontSize(11); doc.setTextColor(120, 120, 120)
-    doc.text(mes.charAt(0).toUpperCase() + mes.slice(1), 14, 26)
-    autoTable(doc, {
-      startY: 33,
-      head: [["Métrica", "Valor"]],
-      body: [
-        ["Cobrado este mes", `$${cobrado.toLocaleString("es-AR")}`],
-        ["Pendiente", `$${pendiente.toLocaleString("es-AR")}`],
-        ["Ingreso mensual potencial", `$${ingresoMensual.toLocaleString("es-AR")}`],
-        ["Tasa de cobranza", `${tasaCobranza}%`],
-        ["Ticket promedio", `$${ticketPromedio.toLocaleString("es-AR")}`],
-      ],
-      headStyles: { fillColor: [232, 113, 74] },
-    })
-    if (alDia.length > 0) {
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 8,
-        head: [["Cliente al día", "Precio/mes"]],
-        body: alDia.map(c => [c.nombre, `$${Number(c.precio).toLocaleString("es-AR")}`]),
-        headStyles: { fillColor: [34, 197, 94] },
-      })
+  const exportarExcel = async () => {
+    setExportando(true)
+    try {
+    const XLSX = await import("xlsx")
+    const mesLabel = mesActual.charAt(0).toUpperCase() + mesActual.slice(1)
+
+    // Traer historial fresco (puede no estar cargado si nunca se visitó esa pestaña)
+    const { data: historialFresco } = await supabase.from("pagos_historial").select("*").eq("trainer_id", user.id).order("fecha", { ascending: false }).limit(500)
+    const historialParaExport = historialFresco || historial
+
+    // Hoja 1: Resumen
+    const wsResumen = XLSX.utils.aoa_to_sheet([
+      ["TuPersonal — Resumen Financiero"],
+      [mesLabel],
+      [],
+      ["Métrica", "Valor"],
+      ["Cobrado este mes", cobrado],
+      ["Pendiente", pendiente],
+      ["Ingreso mensual potencial", ingresoMensual],
+      ["Tasa de cobranza", `${tasaCobranza}%`],
+      ["Ticket promedio", ticketPromedio],
+      ["Clientes al día", alDia.length],
+      ["Clientes con deuda", conDeuda.length],
+    ])
+    wsResumen["!cols"] = [{ wch: 28 }, { wch: 18 }]
+
+    // Hoja 2: Clientes (todos, con estado y deuda)
+    const clientesRows = [...conPrecio]
+      .sort((a, b) => (b.meses_deuda || 0) - (a.meses_deuda || 0))
+      .map(c => ({
+        Cliente: c.nombre,
+        "Precio/mes": Number(c.precio) || 0,
+        Estado: (c.meses_deuda || 0) > 0 ? "Con deuda" : "Al día",
+        "Meses adeudados": c.meses_deuda || 0,
+        "Total adeudado": (c.meses_deuda || 0) > 0 ? Number(c.precio) * c.meses_deuda : 0,
+        "Día de vencimiento": c.dia_vencimiento || "",
+        Email: c.email || "",
+        Teléfono: c.telefono || "",
+      }))
+    const wsClientes = XLSX.utils.json_to_sheet(clientesRows)
+    wsClientes["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 24 }, { wch: 16 }]
+
+    // Hoja 3: Historial de pagos
+    const historialRows = historialParaExport.map(p => ({
+      Fecha: new Date(p.fecha).toLocaleDateString("es-AR"),
+      Cliente: p.cliente_nombre,
+      Monto: Number(p.monto) || 0,
+      Meses: p.meses || 1,
+    }))
+    const wsHistorial = XLSX.utils.json_to_sheet(historialRows.length ? historialRows : [{ Fecha: "", Cliente: "Sin pagos registrados todavía", Monto: "", Meses: "" }])
+    wsHistorial["!cols"] = [{ wch: 14 }, { wch: 24 }, { wch: 14 }, { wch: 10 }]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen")
+    XLSX.utils.book_append_sheet(wb, wsClientes, "Clientes")
+    XLSX.utils.book_append_sheet(wb, wsHistorial, "Historial de pagos")
+
+    XLSX.writeFile(wb, `finanzas-${new Date().toISOString().slice(0, 7)}.xlsx`)
+    } finally {
+      setExportando(false)
     }
-    if (conDeuda.length > 0) {
-      autoTable(doc, {
-        startY: doc.lastAutoTable.finalY + 8,
-        head: [["Cliente con deuda", "Precio/mes", "Meses", "Total"]],
-        body: conDeuda.map(c => [c.nombre, `$${Number(c.precio).toLocaleString("es-AR")}`, c.meses_deuda, `$${(Number(c.precio) * c.meses_deuda).toLocaleString("es-AR")}`]),
-        headStyles: { fillColor: [239, 68, 68] },
-      })
-    }
-    doc.save(`finanzas-${new Date().toISOString().slice(0, 7)}.pdf`)
   }
 
   const conPrecio = clientesLocal.filter(c => Number(c.precio) > 0)
@@ -1513,9 +1538,9 @@ function Finanzas({ clientes = [], user, onVerPerfil, onActualizarCliente }) {
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <div style={T.h1}>Finanzas</div>
             {conPrecio.length > 0 && (
-              <button onClick={exportarPDF} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "5px 10px", color: COLORS.textSub, fontSize: 11, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 5 }}>
+              <button onClick={exportarExcel} disabled={exportando} style={{ background: COLORS.surface, border: `1px solid ${COLORS.border}`, borderRadius: 8, padding: "5px 10px", color: COLORS.textSub, fontSize: 11, fontWeight: 600, cursor: exportando ? "wait" : "pointer", display: "flex", alignItems: "center", gap: 5, opacity: exportando ? 0.6 : 1 }}>
                 <svg width={12} height={12} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                Informe
+                {exportando ? "Generando..." : "Informe"}
               </button>
             )}
           </div>
