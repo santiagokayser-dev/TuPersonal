@@ -2160,6 +2160,10 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
     if (!updateErr) {
       setMensaje("¡Perfil actualizado!")
       if (updateData?.user) onUserUpdated?.(updateData.user)
+      // Mostrar la foto real del servidor (no la vista previa local del
+      // archivo elegido) para detectar YA si hay un problema de acceso,
+      // en vez de recién notarlo en la próxima sesión.
+      if (avatarFile) setAvatarPreview(avatar_url)
     } else setError("No se pudo guardar")
     setGuardando(false)
   }
@@ -2475,6 +2479,7 @@ export default function App({ user: initialUser, onLogout }) {
   const [cargando, setCargando] = useState(true)
   const [previewCliente, setPreviewCliente] = useState(null)
   const [user, setUser] = useState(initialUser)
+  const [avatarSidebarRoto, setAvatarSidebarRoto] = useState(false)
   const [chatNoLeidos, setChatNoLeidos] = useState(0)
   const [drawerAbierto, setDrawerAbierto] = useState(false)
   const [chatbotAbierto, setChatbotAbierto] = useState(false)
@@ -2498,6 +2503,8 @@ export default function App({ user: initialUser, onLogout }) {
     }
     cargar()
   }, [])
+
+  useEffect(() => { setAvatarSidebarRoto(false) }, [user?.user_metadata?.avatar_url])
 
   useEffect(() => {
     if (!user?.id) return
@@ -2612,9 +2619,9 @@ export default function App({ user: initialUser, onLogout }) {
               return (
                 <button key={item.id} onClick={() => { setActivePage(item.id); setClienteSeleccionado(null) }}
                   style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, padding: "9px 0", background: "none", border: "none", cursor: "pointer", width: "100%", position: "relative" }}>
-                  {esPerfil && avatarUrl
+                  {esPerfil && avatarUrl && !avatarSidebarRoto
                     ? <div style={{ width: 22, height: 22, borderRadius: 6, overflow: "hidden", border: `2px solid ${activo ? COLORS.accent : "transparent"}` }}>
-                        <img src={avatarUrl} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                        <img src={avatarUrl} onError={() => setAvatarSidebarRoto(true)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                       </div>
                     : <Icon name={item.icon} size={22} color={activo ? COLORS.accent : COLORS.textMuted} />
                   }
