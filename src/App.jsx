@@ -2174,7 +2174,7 @@ function PerfilTrainer({ user, onLogout, onUserUpdated }) {
         <label style={{ cursor: "pointer" }}>
           <div style={{ width: 96, height: 96, borderRadius: 30, background: COLORS.surface2, border: `2px dashed ${COLORS.border2}`, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
             {avatarPreview
-              ? <img src={avatarPreview} alt="avatar" onError={() => setAvatarPreview(null)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ? <img src={avatarPreview} alt="avatar" onError={() => { setAvatarPreview(null); setError("No se pudo cargar la foto guardada. El bucket 'avatars' de Supabase puede no ser público — pedile a soporte que revise supabase-fix-avatars-bucket.sql.") }} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               : <span style={{ fontSize: 32, fontWeight: 700, color: COLORS.accent }}>{ini}</span>
             }
             <div style={{ position: "absolute", bottom: 5, right: 5, width: 24, height: 24, borderRadius: 8, background: COLORS.accent, display: "flex", alignItems: "center", justifyContent: "center" }}>
