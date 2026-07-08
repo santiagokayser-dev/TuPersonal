@@ -1446,61 +1446,144 @@ function Finanzas({ clientes = [], user, onVerPerfil, onActualizarCliente }) {
   const exportarExcel = async () => {
     setExportando(true)
     try {
-    const XLSX = await import("xlsx")
-    const mesLabel = mesActual.charAt(0).toUpperCase() + mesActual.slice(1)
+      const ExcelJS = (await import("exceljs")).default
+      const mesLabel = mesActual.charAt(0).toUpperCase() + mesActual.slice(1)
 
-    // Traer historial fresco (puede no estar cargado si nunca se visitó esa pestaña)
-    const { data: historialFresco } = await supabase.from("pagos_historial").select("*").eq("trainer_id", user.id).order("fecha", { ascending: false }).limit(500)
-    const historialParaExport = historialFresco || historial
+      // Traer historial fresco (puede no estar cargado si nunca se visitó esa pestaña)
+      const { data: historialFresco } = await supabase.from("pagos_historial").select("*").eq("trainer_id", user.id).order("fecha", { ascending: false }).limit(500)
+      const historialParaExport = historialFresco || historial
 
-    // Hoja 1: Resumen
-    const wsResumen = XLSX.utils.aoa_to_sheet([
-      ["TuPersonal — Resumen Financiero"],
-      [mesLabel],
-      [],
-      ["Métrica", "Valor"],
-      ["Cobrado este mes", cobrado],
-      ["Pendiente", pendiente],
-      ["Ingreso mensual potencial", ingresoMensual],
-      ["Tasa de cobranza", `${tasaCobranza}%`],
-      ["Ticket promedio", ticketPromedio],
-      ["Clientes al día", alDia.length],
-      ["Clientes con deuda", conDeuda.length],
-    ])
-    wsResumen["!cols"] = [{ wch: 28 }, { wch: 18 }]
+      const NARANJA = "E8714A"
+      const NARANJA_OSCURO = "C85A35"
+      const VERDE = "22C55E"
+      const ROJO = "EF4444"
+      const GRIS_CLARO = "F4F4F4"
+      const GRIS_TEXTO = "555555"
 
-    // Hoja 2: Clientes (todos, con estado y deuda)
-    const clientesRows = [...conPrecio]
-      .sort((a, b) => (b.meses_deuda || 0) - (a.meses_deuda || 0))
-      .map(c => ({
-        Cliente: c.nombre,
-        "Precio/mes": Number(c.precio) || 0,
-        Estado: (c.meses_deuda || 0) > 0 ? "Con deuda" : "Al día",
-        "Meses adeudados": c.meses_deuda || 0,
-        "Total adeudado": (c.meses_deuda || 0) > 0 ? Number(c.precio) * c.meses_deuda : 0,
-        "Día de vencimiento": c.dia_vencimiento || "",
-        Email: c.email || "",
-        Teléfono: c.telefono || "",
-      }))
-    const wsClientes = XLSX.utils.json_to_sheet(clientesRows)
-    wsClientes["!cols"] = [{ wch: 24 }, { wch: 12 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 24 }, { wch: 16 }]
+      const wb = new ExcelJS.Workbook()
+      wb.creator = "TuPersonal"
+      wb.created = new Date()
 
-    // Hoja 3: Historial de pagos
-    const historialRows = historialParaExport.map(p => ({
-      Fecha: new Date(p.fecha).toLocaleDateString("es-AR"),
-      Cliente: p.cliente_nombre,
-      Monto: Number(p.monto) || 0,
-      Meses: p.meses || 1,
-    }))
-    const wsHistorial = XLSX.utils.json_to_sheet(historialRows.length ? historialRows : [{ Fecha: "", Cliente: "Sin pagos registrados todavía", Monto: "", Meses: "" }])
-    wsHistorial["!cols"] = [{ wch: 14 }, { wch: 24 }, { wch: 14 }, { wch: 10 }]
+      const estiloHeader = (cell) => {
+        cell.font = { bold: true, color: { argb: "FFFFFFFF" }, size: 11 }
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + NARANJA } }
+        cell.alignment = { vertical: "middle", horizontal: "left" }
+        cell.border = { bottom: { style: "thin", color: { argb: "FF" + NARANJA_OSCURO } } }
+      }
 
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, wsResumen, "Resumen")
-    XLSX.utils.book_append_sheet(wb, wsClientes, "Clientes")
-    XLSX.utils.book_append_sheet(wb, wsHistorial, "Historial de pagos")
+      // ---------- Hoja 1: Resumen ----------
+      const wsResumen = wb.addWorksheet("Resumen", { views: [{ showGridLines: false }] })
+      wsResumen.columns = [{ width: 30 }, { width: 20 }]
 
-    XLSX.writeFile(wb, `finanzas-${new Date().toISOString().slice(0, 7)}.xlsx`)
+      wsResumen.mergeCells("A1:B1")
+      const titulo = wsResumen.getCell("A1")
+      titulo.value = "TuPersonal — Resumen Financiero"
+      titulo.font = { bold: true, size: 16, color: { argb: "FF" + NARANJA } }
+      wsResumen.getRow(1).height = 26
+
+      wsResumen.mergeCells("A2:B2")
+      const subtitulo = wsResumen.getCell("A2")
+      subtitulo.value = mesLabel
+      subtitulo.font = { size: 11, color: { argb: "FF" + GRIS_TEXTO }, italic: true }
+
+      wsResumen.addRow([])
+      const headerRow = wsResumen.addRow(["Métrica", "Valor"])
+      headerRow.eachCell(estiloHeader)
+
+      const metricas = [
+        ["Cobrado este mes", cobrado, "moneda"],
+        ["Pendiente", pendiente, "moneda"],
+        ["Ingreso mensual potencial", ingresoMensual, "moneda"],
+        ["Tasa de cobranza", tasaCobranza / 100, "porcentaje"],
+        ["Ticket promedio", ticketPromedio, "moneda"],
+        ["Clientes al día", alDia.length, "numero"],
+        ["Clientes con deuda", conDeuda.length, "numero"],
+      ]
+      metricas.forEach(([label, valor, formato], i) => {
+        const row = wsResumen.addRow([label, valor])
+        if (i % 2 === 1) row.eachCell(c => { c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + GRIS_CLARO } } })
+        const celdaValor = row.getCell(2)
+        if (formato === "moneda") celdaValor.numFmt = '"$"#,##0'
+        if (formato === "porcentaje") celdaValor.numFmt = "0%"
+        celdaValor.font = { bold: true }
+        if (label === "Clientes con deuda" && conDeuda.length > 0) celdaValor.font = { bold: true, color: { argb: "FF" + ROJO } }
+      })
+
+      // ---------- Hoja 2: Clientes ----------
+      const wsClientes = wb.addWorksheet("Clientes", { views: [{ state: "frozen", ySplit: 1, showGridLines: false }] })
+      wsClientes.columns = [
+        { header: "Cliente", key: "nombre", width: 26 },
+        { header: "Precio/mes", key: "precio", width: 14 },
+        { header: "Estado", key: "estado", width: 12 },
+        { header: "Meses adeudados", key: "meses", width: 16 },
+        { header: "Total adeudado", key: "total", width: 16 },
+        { header: "Día de vencimiento", key: "venc", width: 16 },
+        { header: "Email", key: "email", width: 26 },
+        { header: "Teléfono", key: "tel", width: 16 },
+      ]
+      wsClientes.getRow(1).eachCell(estiloHeader)
+      wsClientes.getRow(1).height = 20
+
+      const clientesOrdenados = [...conPrecio].sort((a, b) => (b.meses_deuda || 0) - (a.meses_deuda || 0))
+      clientesOrdenados.forEach((c, i) => {
+        const conDeudaFlag = (c.meses_deuda || 0) > 0
+        const row = wsClientes.addRow({
+          nombre: c.nombre,
+          precio: Number(c.precio) || 0,
+          estado: conDeudaFlag ? "Con deuda" : "Al día",
+          meses: c.meses_deuda || 0,
+          total: conDeudaFlag ? Number(c.precio) * c.meses_deuda : 0,
+          venc: c.dia_vencimiento || "",
+          email: c.email || "",
+          tel: c.telefono || "",
+        })
+        if (i % 2 === 1) row.eachCell(cell => { if (!cell.fill) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + GRIS_CLARO } } })
+        row.getCell("precio").numFmt = '"$"#,##0'
+        row.getCell("total").numFmt = '"$"#,##0'
+        const celdaEstado = row.getCell("estado")
+        celdaEstado.font = { bold: true, color: { argb: "FF" + (conDeudaFlag ? ROJO : VERDE) } }
+        if (conDeudaFlag) row.getCell("total").font = { bold: true, color: { argb: "FF" + ROJO } }
+      })
+      wsClientes.autoFilter = { from: "A1", to: `H${wsClientes.rowCount}` }
+
+      // ---------- Hoja 3: Historial de pagos ----------
+      const wsHistorial = wb.addWorksheet("Historial de pagos", { views: [{ state: "frozen", ySplit: 1, showGridLines: false }] })
+      wsHistorial.columns = [
+        { header: "Fecha", key: "fecha", width: 14 },
+        { header: "Cliente", key: "cliente", width: 26 },
+        { header: "Monto", key: "monto", width: 14 },
+        { header: "Meses", key: "meses", width: 10 },
+      ]
+      wsHistorial.getRow(1).eachCell(estiloHeader)
+      wsHistorial.getRow(1).height = 20
+
+      if (historialParaExport.length === 0) {
+        const row = wsHistorial.addRow({ fecha: "", cliente: "Sin pagos registrados todavía", monto: "", meses: "" })
+        row.getCell("cliente").font = { italic: true, color: { argb: "FF" + GRIS_TEXTO } }
+      } else {
+        historialParaExport.forEach((p, i) => {
+          const row = wsHistorial.addRow({
+            fecha: new Date(p.fecha).toLocaleDateString("es-AR"),
+            cliente: p.cliente_nombre,
+            monto: Number(p.monto) || 0,
+            meses: p.meses || 1,
+          })
+          if (i % 2 === 1) row.eachCell(cell => { cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF" + GRIS_CLARO } } })
+          row.getCell("monto").numFmt = '"$"#,##0'
+        })
+        wsHistorial.autoFilter = { from: "A1", to: `D${wsHistorial.rowCount}` }
+      }
+
+      const buffer = await wb.xlsx.writeBuffer()
+      const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `finanzas-${new Date().toISOString().slice(0, 7)}.xlsx`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } finally {
       setExportando(false)
     }
