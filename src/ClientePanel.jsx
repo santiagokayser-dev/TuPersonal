@@ -99,7 +99,7 @@ function AvatarPicker({ preview, onChange }) {
   )
 }
 
-function Onboarding({ user, perfilExistente, onComplete }) {
+function Onboarding({ user, perfilExistente, onComplete, onLogout }) {
   const [datos, setDatos] = useState({
     nombre: "",
     username: user.user_metadata?.username || "",
@@ -193,6 +193,12 @@ function Onboarding({ user, perfilExistente, onComplete }) {
 
   return (
     <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+      {onLogout && (
+        <button onClick={onLogout} style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: "none", color: COLORS.textMuted, fontSize: 13, cursor: "pointer", padding: 0, alignSelf: "flex-start" }}>
+          <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Volver
+        </button>
+      )}
       <div>
         <div style={{ ...T.label, marginBottom: 6 }}>Bienvenido</div>
         <div style={T.h1}>Tu perfil</div>
@@ -1296,7 +1302,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
 
   if (!previewMode && (!perfil || !perfil.nombre)) return (
     <div style={{ background: COLORS.bg, height: "var(--app-height, 100dvh)", overflowY: "auto", scrollbarWidth: "none", fontFamily }}>
-      <Onboarding user={user} perfilExistente={perfil} onComplete={(data) => setPerfil(data)} />
+      <Onboarding user={user} perfilExistente={perfil} onComplete={(data) => setPerfil(data)} onLogout={onLogout} />
     </div>
   )
 
