@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { supabase } from "./supabase"
+import { askClaude } from "./ai"
 import Chat from "./Chat"
 
 const COLORS = {
@@ -618,6 +619,117 @@ function Rutina({ perfil }) {
 const TIPO_COLOR = {
   Fuerza: "#818cf8", Cardio: "#67e8f9", Movilidad: "#86efac",
   "Full body": "#d8b4fe", Powerlifting: "#fca5a5", Funcional: "#fde68a", Otro: "#999",
+}
+
+const FAQ_SYSTEM_CLIENTE = `Sos el asistente de soporte de una app llamada TuPersonal. Esta app la usan entrenadores personales para gestionar clientes, y los CLIENTES (atletas) la usan para ver sus rutinas, registrar progreso, chatear con su entrenador, ver su agenda de sesiones y pagar su cuota. No tiene nada que ver con tareas, calendario personal, vida social ni ninguna otra función. Si alguien pregunta algo que no está en la lista de abajo, respondé en una sola oración que no sabés o que eso no es una función de la app. Nunca inventes funciones.
+
+Respuestas cortas: 1 a 3 oraciones. Sin asteriscos, sin #, sin listas con guiones. Solo texto plano. Español argentino informal.
+
+FUNCIONES DE LA APP PARA EL CLIENTE (atleta):
+
+RUTINA
+- Ver tu rutina: sección Rutina del menú
+- Ver la técnica de un ejercicio: botón "Ver técnica" que abre un video de YouTube
+- Tu entrenador es quien arma y asigna las rutinas
+
+AGENDA
+- Ver tus próximas sesiones: sección Agenda del menú
+- Tu entrenador es quien las programa
+
+PROGRESO
+- Registrar tu peso: sección Progreso → cargar peso actual
+- Ver evolución de peso: gráfico en la sección Progreso
+- Subir fotos de progreso: sección Progreso → subir foto
+- Ver cargas registradas: sección Progreso
+
+CHAT
+- Escribirle a tu entrenador: sección Chat del menú
+
+PAGOS
+- Ver tu cuota mensual: sección Pagos
+- Pagar: si tu entrenador configuró un link de MercadoPago, aparece un botón para pagar ahí mismo
+
+PERFIL
+- Cambiar tu nombre, foto o datos: sección Perfil
+- Unirte a un grupo: Perfil → sección Grupo → poner el código que te dio tu entrenador
+
+PWA (agregar como app)
+- En iPhone: Safari → compartir → "Agregar a pantalla de inicio"
+- En Android: Chrome → menú → "Agregar a pantalla de inicio"
+
+Si no sabés algo, decilo en una oración. Nunca inventes funciones que no existen. Si preguntan algo sobre entrenamiento (rutinas, series, nutrición) que no sea sobre el uso de la app, sugerí que se lo consulten a su entrenador por el Chat.`
+
+function ChatbotFAQCliente({ onClose, nombre }) {
+  const [mensajes, setMensajes] = useState([
+    { role: "assistant", text: `¡Hola${nombre ? ", " + nombre.split(" ")[0] : ""}! 👋 Soy tu asistente de TuPersonal. ¿En qué te puedo ayudar?` }
+  ])
+  const [input, setInput] = useState("")
+  const [cargando, setCargando] = useState(false)
+  const endRef = useRef(null)
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }) }, [mensajes])
+
+  const enviar = async () => {
+    const texto = input.trim()
+    if (!texto || cargando) return
+    const nuevos = [...mensajes, { role: "user", text: texto }]
+    setMensajes(nuevos)
+    setInput("")
+    setCargando(true)
+    try {
+      const apiMessages = nuevos.map(m => ({ role: m.role, content: m.text }))
+      const respuesta = await askClaude({ messages: apiMessages, max_tokens: 200, system: FAQ_SYSTEM_CLIENTE })
+      setMensajes(prev => [...prev, { role: "assistant", text: respuesta || "No pude procesar eso." }])
+    } catch {
+      setMensajes(prev => [...prev, { role: "assistant", text: "Hubo un error. Intentá de nuevo." }])
+    }
+    setCargando(false)
+  }
+
+  return (
+    <motion.div key="chatbot-cliente" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      style={{ position: "fixed", inset: 0, zIndex: 300, display: "flex", flexDirection: "column", background: COLORS.bg }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "calc(14px + env(safe-area-inset-top)) 16px 14px", borderBottom: `1px solid ${COLORS.border}`, background: COLORS.surface, flexShrink: 0 }}>
+        <div style={{ width: 36, height: 36, borderRadius: 12, background: COLORS.accent + "22", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke={COLORS.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+        </div>
+        <div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: COLORS.text }}>Asistente FAQ</div>
+          <div style={{ fontSize: 11, color: COLORS.textMuted }}>Preguntame sobre TuPersonal</div>
+        </div>
+        <button onClick={onClose} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", padding: 4 }}>
+          <svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="2.5" strokeLinecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 10, scrollbarWidth: "none" }}>
+        {mensajes.map((m, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+            <div style={{ maxWidth: "80%", padding: "10px 14px", borderRadius: m.role === "user" ? "18px 4px 18px 18px" : "4px 18px 18px 18px", background: m.role === "user" ? COLORS.accent : COLORS.surface, fontSize: 14, color: m.role === "user" ? "#fff" : COLORS.text, lineHeight: 1.5 }}>
+              {m.text}
+            </div>
+          </div>
+        ))}
+        {cargando && (
+          <div style={{ display: "flex", justifyContent: "flex-start" }}>
+            <div style={{ padding: "10px 16px", borderRadius: "4px 18px 18px 18px", background: COLORS.surface }}>
+              <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1.2 }}
+                style={{ fontSize: 18, color: COLORS.textMuted, letterSpacing: 4 }}>···</motion.div>
+            </div>
+          </div>
+        )}
+        <div ref={endRef} />
+      </div>
+      <div style={{ padding: "12px 16px", paddingBottom: "calc(12px + env(safe-area-inset-bottom))", borderTop: `1px solid ${COLORS.border}`, display: "flex", gap: 8, background: COLORS.surface, flexShrink: 0 }}>
+        <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === "Enter" && !e.shiftKey && enviar()}
+          placeholder="Escribí tu pregunta..."
+          style={{ flex: 1, background: COLORS.surface2, border: `1px solid ${COLORS.border}`, borderRadius: 12, padding: "10px 14px", color: COLORS.text, fontSize: 14, outline: "none" }} />
+        <button onClick={enviar} disabled={!input.trim() || cargando}
+          style={{ width: 42, height: 42, borderRadius: 12, background: input.trim() && !cargando ? COLORS.accent : COLORS.surface2, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, opacity: !input.trim() || cargando ? 0.4 : 1 }}>
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+        </button>
+      </div>
+    </motion.div>
+  )
 }
 
 function AgendaCliente({ perfil }) {
@@ -1257,6 +1369,7 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
   const [perfil, setPerfil] = useState(initialPerfil)
   const [cargando, setCargando] = useState(!initialPerfil)
   const [activePage, setActivePage] = useState("inicio")
+  const [chatbotAbierto, setChatbotAbierto] = useState(false)
   const isMobile = useIsMobile()
 
   useEffect(() => {
@@ -1389,6 +1502,11 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
           </div>
           <div style={{ padding: "8px 12px 16px" }}>
             <div style={{ height: 1, background: COLORS.border, margin: "4px 8px 10px" }} />
+            <button onClick={() => setChatbotAbierto(true)}
+              style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 12px", borderRadius: 10, background: "none", border: "none", cursor: "pointer", color: COLORS.textSub, fontSize: 13, fontFamily, width: "100%", textAlign: "left" }}>
+              <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={COLORS.textMuted} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2C6.477 2 2 6.477 2 12c0 1.89.525 3.66 1.438 5.168L2 22l4.832-1.438A9.956 9.956 0 0012 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+              FAQ IA
+            </button>
             <a href="https://wa.me/541122987419" target="_blank" rel="noopener noreferrer"
               style={{ display: "flex", alignItems: "center", gap: 12, padding: "9px 12px", borderRadius: 10, textDecoration: "none", color: COLORS.textSub, fontSize: 13 }}>
               <svg width={16} height={16} viewBox="0 0 24 24" fill="#25D366"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
@@ -1425,6 +1543,10 @@ export default function ClientePanel({ user, onLogout, initialPerfil = null, pre
         </div>
         {isMobile && bottomNav}
       </div>
+
+      <AnimatePresence>
+        {chatbotAbierto && <ChatbotFAQCliente onClose={() => setChatbotAbierto(false)} nombre={nombre} />}
+      </AnimatePresence>
     </div>
   )
 }
