@@ -108,15 +108,23 @@ function Root() {
     const handleInviteLink = async (user) => {
       const params = new URLSearchParams(window.location.search)
       const inviteTrainerId = params.get("invite")
-      if (inviteTrainerId && user) {
+      const rolActual = user?.user_metadata?.rol
+
+      // Nunca convertir una cuenta que ya es entrenador, ni procesar
+      // un "auto-invite" (alguien abriendo su propio link estando logueado).
+      const puedeConvertirse = inviteTrainerId && user && inviteTrainerId !== user.id && rolActual !== "trainer"
+
+      if (puedeConvertirse) {
         await supabase.from("clientes").update({ user_id: user.id }).eq("email", user.email).eq("trainer_id", inviteTrainerId)
         await supabase.auth.updateUser({ data: { rol: "cliente", trainer_id: inviteTrainerId } })
         window.history.replaceState({}, "", window.location.pathname)
         return "cliente"
       }
+      if (inviteTrainerId) window.history.replaceState({}, "", window.location.pathname)
+
       const rolParam = params.get("rol")
-      if (rolParam) return rolParam
-      return user?.user_metadata?.rol || null
+      if (rolParam && rolActual !== "trainer") return rolParam
+      return rolActual || null
     }
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
