@@ -59,7 +59,11 @@ function HiloChat({ trainerId, clienteId, miSender, nombreOtro, cliente, onProfi
     const channel = supabase.channel(`chat:${trainerId}:${clienteId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "mensajes", filter: `trainer_id=eq.${trainerId}` },
         (p) => { if (p.new.cliente_id !== clienteId) return; setMensajes(prev => prev.find(m => m.id === p.new.id) ? prev : [...prev, p.new]) })
-      .subscribe()
+      .subscribe((status, err) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.error("Chat realtime no conectó:", status, err, "— revisá que 'mensajes' esté en la publicación supabase_realtime (supabase-fix-chat-realtime.sql)")
+        }
+      })
     return () => { mounted = false; supabase.removeChannel(channel) }
   }, [trainerId, clienteId])
 
